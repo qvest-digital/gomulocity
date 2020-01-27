@@ -106,7 +106,7 @@ func (c Client) CreateNewDeviceRequest(id string) (NewDeviceRequest, error) {
 				if err != nil {
 					return NewDeviceRequest{}, fmt.Errorf("failed to decode error response body: %s", err)
 				}
-				return NewDeviceRequest{}, errResp
+				return NewDeviceRequest{}, fmt.Errorf("failed to create new-device-reuest (%d): %w", resp.StatusCode, errResp)
 			}
 			return NewDeviceRequest{}, fmt.Errorf("failed to create new-device-request with status code %d", resp.StatusCode)
 		}
@@ -169,13 +169,14 @@ func (c Client) NewDeviceRequests(reqOpts ...func(*http.Request)) (NewDeviceRequ
 			return NewDeviceRequestCollection{}, meta.AccessDeniedErr
 		default:
 			if strings.HasPrefix(resp.Header.Get("Content-Type"), meta.ErrorContentType) {
-				var errRespBody meta.Error
-				err := json.NewDecoder(resp.Body).Decode(&errRespBody)
+				var errResp meta.Error
+				err := json.NewDecoder(resp.Body).Decode(&errResp)
 				if err != nil {
 					return NewDeviceRequestCollection{}, fmt.Errorf("failed to decode error response body: %s", err)
 				}
-				return NewDeviceRequestCollection{}, errRespBody
+				return NewDeviceRequestCollection{}, fmt.Errorf("failed to find-all new-device-requests (%d): %w", resp.StatusCode, errResp)
 			}
+			return NewDeviceRequestCollection{}, fmt.Errorf("failed to find-all new-device-requests with status code %d", resp.StatusCode)
 		}
 	}
 
@@ -242,7 +243,7 @@ func (c Client) UpdateNewDeviceRequest(id, status string) (NewDeviceRequest, err
 				if err != nil {
 					return NewDeviceRequest{}, fmt.Errorf("failed to decode error response body: %s", err)
 				}
-				return NewDeviceRequest{}, errResp
+				return NewDeviceRequest{}, fmt.Errorf("failed to update new-device-request (%d): %w", resp.StatusCode, errResp)
 			}
 			return NewDeviceRequest{}, fmt.Errorf("failed to update new-device-request with status code %d", resp.StatusCode)
 		}
@@ -254,4 +255,55 @@ func (c Client) UpdateNewDeviceRequest(id, status string) (NewDeviceRequest, err
 		return NewDeviceRequest{}, fmt.Errorf("failed to decode response body: %w", err)
 	}
 	return respBody, nil
+}
+
+/*
+DeleteNewDeviceRequest deletes 'newDeviceRequest' with given ID.
+
+Can return the following errors:
+- meta.BadCredentialsErr (invalid username / password / host combination)
+- meta.AccessDeniedErr (missing user rights)
+- meta.Error (generic cloud error)
+- error (unexpected)
+
+See: https://cumulocity.com/guides/reference/device-credentials/#delete-deletes-a-new-device-request
+*/
+func (c Client) DeleteNewDeviceRequest(id string) error {
+	req, err := http.NewRequest(
+		http.MethodDelete,
+		fmt.Sprintf("%s/devicecontrol/newDeviceRequests/%s", c.BaseURL, id),
+		nil,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.SetBasicAuth(c.Username, c.Password)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return meta.BadCredentialsErr
+		case http.StatusForbidden:
+			return meta.AccessDeniedErr
+		default:
+			if strings.HasPrefix(resp.Header.Get("Content-Type"), meta.ErrorContentType) {
+				var errResp meta.Error
+				err := json.NewDecoder(resp.Body).Decode(&errResp)
+				if err != nil {
+					return fmt.Errorf("failed to decode error response body: %s", err)
+				}
+				return fmt.Errorf("failed to delete new-device-request (%d): %w", resp.StatusCode, errResp)
+			}
+			return fmt.Errorf("failed to delete new-device-request with status code %d", resp.StatusCode)
+		}
+	}
+
+	return nil
 }

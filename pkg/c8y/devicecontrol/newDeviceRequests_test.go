@@ -63,7 +63,7 @@ func TestClient_CreateNewDeviceRequest(t *testing.T) {
 			c8yRespCode:            http.StatusInternalServerError,
 			c8yRespBody:            `{"error": "myCustomError", "message": "something goes wrong.", "info": "my link"}`,
 			c8yRespContentType:     "application/vnd.com.nsn.cumulocity.error+json;q=0.7,en;q=0.3",
-			expectedErr:            errors.New("failed to request cloud: \"myCustomError\" something goes wrong. See: my link"),
+			expectedErr:            errors.New("failed to create new-device-reuest (500): request failed: \"myCustomError\" something goes wrong. See: my link"),
 			c8yExpectedRequestBody: `{"id": "nope 500"}`,
 		}, {
 			name:                   "invalid json error response",
@@ -193,7 +193,7 @@ func TestClient_NewDeviceRequests(t *testing.T) {
 			c8yRespBody:        `{"error": "myCustomError", "message": "something goes wrong.", "info": "my link"}`,
 			c8yRespContentType: "application/vnd.com.nsn.cumulocity.error+json;q=0.7,en;q=0.3",
 			expectedRequestURL: "/devicecontrol/newDeviceRequests?currentPage=9999999",
-			expectedErr:        errors.New("failed to request cloud: \"myCustomError\" something goes wrong. See: my link"),
+			expectedErr:        errors.New("failed to find-all new-device-requests (500): request failed: \"myCustomError\" something goes wrong. See: my link"),
 		}, {
 			name:               "invalid json error response",
 			c8yRespCode:        http.StatusOK,
@@ -298,7 +298,7 @@ func TestClient_UpdateNewDeviceRequest(t *testing.T) {
 			c8yRespCode:            http.StatusInternalServerError,
 			c8yRespBody:            `{"error": "myCustomError", "message": "something goes wrong.", "info": "my link"}`,
 			c8yRespContentType:     "application/vnd.com.nsn.cumulocity.error+json;q=0.7,en;q=0.3",
-			expectedErr:            errors.New("failed to request cloud: \"myCustomError\" something goes wrong. See: my link"),
+			expectedErr:            errors.New("failed to update new-device-request (500): request failed: \"myCustomError\" something goes wrong. See: my link"),
 			c8yExpectedRequestBody: `{"status": "ACCEPTED"}`,
 		}, {
 			name:                   "invalid json error response",
@@ -359,7 +359,7 @@ func TestClient_UpdateNewDeviceRequest(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(newDeviceRequest, tt.expectedNewDeviceRequest) {
-				t.Errorf("respond with unexpected newDeviceRequest. \nExpected: %#v. \nGiven: %#v", tt.expectedNewDeviceRequest, newDeviceRequest)
+				t.Errorf("respond with unexpected newDeviceRequest. Expected: %#v. Given: %#v", tt.expectedNewDeviceRequest, newDeviceRequest)
 			}
 
 			if reqBasicAuthUsername != u {
@@ -376,6 +376,101 @@ func TestClient_UpdateNewDeviceRequest(t *testing.T) {
 			var expectedC8YRequestURL = fmt.Sprintf("/devicecontrol/newDeviceRequests/%s", tt.newDeviceRequestID)
 			if reqURL != expectedC8YRequestURL {
 				t.Errorf("unexpected c8y request url. Expected %q. Given: %q", expectedC8YRequestURL, reqURL)
+			}
+		})
+	}
+}
+
+func TestClient_DeleteNewDeviceRequest(t *testing.T) {
+	tests := []struct {
+		name               string
+		newDeviceRequestID string
+		c8yRespCode        int
+		c8yRespBody        string
+		c8yRespContentType string
+		expectedErr        error
+	}{
+		{
+			name:               "happy case",
+			newDeviceRequestID: "4711",
+			c8yRespCode:        http.StatusNoContent,
+			expectedErr:        nil,
+		}, {
+			name:               "bad credentials",
+			newDeviceRequestID: "nope-401",
+			c8yRespCode:        http.StatusUnauthorized,
+			c8yRespBody:        `{}`,
+			expectedErr:        meta.BadCredentialsErr,
+		}, {
+			name:               "access denied",
+			newDeviceRequestID: "nope-403",
+			c8yRespCode:        http.StatusForbidden,
+			c8yRespBody:        `{}`,
+			expectedErr:        meta.AccessDeniedErr,
+		}, {
+			name:               "unexpected error",
+			newDeviceRequestID: "nope-500",
+			c8yRespCode:        http.StatusInternalServerError,
+			c8yRespBody:        `{"error": "myCustomError", "message": "something goes wrong.", "info": "my link"}`,
+			c8yRespContentType: "application/vnd.com.nsn.cumulocity.error+json;q=0.7,en;q=0.3",
+			expectedErr:        errors.New("failed to delete new-device-request (500): request failed: \"myCustomError\" something goes wrong. See: my link"),
+		}, {
+			name:               "invalid json error response",
+			newDeviceRequestID: "nope-500-1",
+			c8yRespCode:        http.StatusInternalServerError,
+			c8yRespBody:        `#`,
+			expectedErr:        errors.New("failed to decode error response body: invalid character '#' looking for beginning of value"),
+			c8yRespContentType: "application/vnd.com.nsn.cumulocity.error+json;q=0.7,en;q=0.3",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var reqBasicAuthUsername, reqBasicAuthPassword, reqURL, reqMethod string
+
+			testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+				reqURL = req.URL.String()
+				reqMethod = req.Method
+				defer req.Body.Close()
+
+				reqBasicAuthUsername, reqBasicAuthPassword, _ = req.BasicAuth()
+				res.Header().Set("Content-Type", tt.c8yRespContentType)
+				res.WriteHeader(tt.c8yRespCode)
+				_, err := res.Write([]byte(tt.c8yRespBody))
+				if err != nil {
+					t.Fatalf("failed to write resp body: %s", err)
+				}
+			}))
+			defer testServer.Close()
+
+			u := "<username>"
+			p := "<password>"
+			c := Client{
+				HTTPClient: testServer.Client(),
+				BaseURL:    testServer.URL,
+				Username:   u,
+				Password:   p,
+			}
+
+			err := c.DeleteNewDeviceRequest(tt.newDeviceRequestID)
+			if fmt.Sprint(err) != fmt.Sprint(tt.expectedErr) {
+				t.Fatalf("respond with unexpected error. Expected: %s. Given: %s.", tt.expectedErr, err)
+			}
+
+			if reqBasicAuthUsername != u {
+				t.Errorf("unexpected c8y request basic-auth username. Expected %q. Given: %q", u, reqBasicAuthUsername)
+			}
+			if reqBasicAuthPassword != p {
+				t.Errorf("unexpected c8y request basic-auth password. Expected %q. Given: %q", p, reqBasicAuthPassword)
+			}
+
+			var expectedC8YRequestURL = fmt.Sprintf("/devicecontrol/newDeviceRequests/%s", tt.newDeviceRequestID)
+			if reqURL != expectedC8YRequestURL {
+				t.Errorf("unexpected c8y request url. Expected %q. Given: %q", expectedC8YRequestURL, reqURL)
+			}
+
+			if reqMethod != http.MethodDelete {
+				t.Errorf("c8y called with unexpeted method. Expected %q. Given: %q", http.MethodDelete, reqMethod)
 			}
 		})
 	}

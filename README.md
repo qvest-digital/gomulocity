@@ -39,3 +39,7 @@ Update newDeviceRequest:
 ```go
     err := 'c8y.Client'.Devicecontrol.UpdateNewDeviceRequest(<newDeviceRequestID>, <newDeviceRequestStatus>)
 ```
+Delete newDeviceRequest:
+```go
+    err := 'c8y.Client'.Devicecontrol.DeleteNewDeviceRequest(<newDeviceRequestID>)
+```

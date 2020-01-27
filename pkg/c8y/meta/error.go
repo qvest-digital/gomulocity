@@ -19,7 +19,7 @@ type Error struct {
 }
 
 func (e Error) Error() string {
-	return fmt.Sprintf("failed to request cloud: %q %s See: %s", e.ErrorType, e.Message, e.Info)
+	return fmt.Sprintf("request failed: %q %s See: %s", e.ErrorType, e.Message, e.Info)
 }
 
 var ErrorContentType = "application/vnd.com.nsn.cumulocity.error+json"
