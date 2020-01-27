@@ -7,21 +7,22 @@ import (
 	"fmt"
 	"github.com/tarent/gomulocity/pkg/c8y/meta"
 	"net/http"
+	"strings"
 )
 
 var NewDeviceRequestAlreadyExistsErr = errors.New("'newDeviceRequest' with ID already exists")
 
 /*
-NewDeviceRequest represent cumulocity's 'application/vnd.com.nsn.cumulocity.NewDeviceRequest+json' without 'PagingStatistics'.
+NewDeviceRequest represent cumulocity's 'application/vnd.com.nsn.cumulocity.NewDeviceRequest+json'.
 See: https://cumulocity.com/guides/reference/device-credentials/#newdevicerequest-application-vnd-com-nsn-cumulocity-newdevicerequest-json
 */
 type NewDeviceRequest struct {
-	ID     string `json:"id"`
+	ID     string `json:"id,omitempty"`
 	Status string `json:"status,omitempty"`
 	Self   string `json:"self,omitempty"`
 }
 
-var newDeviceRequestType = "application/vnd.com.nsn.cumulocity.NewDeviceRequest+json"
+var newDeviceRequestContentType = "application/vnd.com.nsn.cumulocity.NewDeviceRequest+json"
 
 /*
 /*
@@ -36,7 +37,7 @@ type NewDeviceRequestCollection struct {
 	Next              string                `json:"next"`
 }
 
-var newDeviceRequestCollectionType = "application/vnd.com.nsn.cumulocity.newDeviceRequestCollection+json"
+var newDeviceRequestCollectionContentType = "application/vnd.com.nsn.cumulocity.newDeviceRequestCollection+json"
 
 /*
 CreateNewDeviceRequest creates a 'newDeviceRequest' with the given id.
@@ -45,6 +46,7 @@ Return created 'newDeviceRequest' on success.
 Can return the following errors:
 - meta.BadCredentialsErr (invalid username / password / host combination)
 - meta.AccessDeniedErr (missing user rights)
+- meta.Error (generic cloud error)
 - NewDeviceRequestAlreadyExistsErr ('newDeviceRequest' with given id already exists)
 - error (unexpected)
 
@@ -71,8 +73,8 @@ func (c Client) CreateNewDeviceRequest(id string) (NewDeviceRequest, error) {
 	req.SetBasicAuth(c.Username, c.Password)
 
 	h := req.Header
-	h.Add("Content-Type", newDeviceRequestType)
-	h.Add("Accept", newDeviceRequestType)
+	h.Add("Content-Type", newDeviceRequestContentType)
+	h.Add("Accept", newDeviceRequestContentType)
 	req.Header = h
 
 	resp, err := c.HTTPClient.Do(req)
@@ -88,24 +90,25 @@ func (c Client) CreateNewDeviceRequest(id string) (NewDeviceRequest, error) {
 		case http.StatusForbidden:
 			return NewDeviceRequest{}, meta.AccessDeniedErr
 		case http.StatusUnprocessableEntity:
-			var errRespBody meta.ErrorBody
-			err := json.NewDecoder(resp.Body).Decode(&errRespBody)
+			var errResp meta.Error
+			err := json.NewDecoder(resp.Body).Decode(&errResp)
 			if err != nil {
 				return NewDeviceRequest{}, fmt.Errorf("failed to decode error response body: %s", err)
 			}
-			if errRespBody.Error == "devicecontrol/Non Unique Result" {
+			if errResp.ErrorType == "devicecontrol/Non Unique Result" {
 				return NewDeviceRequest{}, NewDeviceRequestAlreadyExistsErr
 			}
-			return NewDeviceRequest{}, fmt.Errorf("failed to create new-device-request. Status: %d: %q %s See: %s",
-				resp.StatusCode, errRespBody.Error, errRespBody.Message, errRespBody.Info)
+			return NewDeviceRequest{}, errResp
 		default:
-			var errRespBody meta.ErrorBody
-			err := json.NewDecoder(resp.Body).Decode(&errRespBody)
-			if err != nil {
-				return NewDeviceRequest{}, fmt.Errorf("failed to decode error response body: %s", err)
+			if strings.HasPrefix(resp.Header.Get("Content-Type"), meta.ErrorContentType) {
+				var errResp meta.Error
+				err := json.NewDecoder(resp.Body).Decode(&errResp)
+				if err != nil {
+					return NewDeviceRequest{}, fmt.Errorf("failed to decode error response body: %s", err)
+				}
+				return NewDeviceRequest{}, errResp
 			}
-			return NewDeviceRequest{}, fmt.Errorf("failed to create new-device-request. Status: %d: %q %s See: %s",
-				resp.StatusCode, errRespBody.Error, errRespBody.Message, errRespBody.Info)
+			return NewDeviceRequest{}, fmt.Errorf("failed to create new-device-request with status code %d", resp.StatusCode)
 		}
 	}
 
@@ -125,6 +128,7 @@ Return created 'NewDeviceRequestCollection' on success.
 Can return the following errors:
 - meta.BadCredentialsErr (invalid username / password / host combination)
 - meta.AccessDeniedErr (missing user rights)
+- meta.Error (generic cloud error)
 - error (unexpected)
 
 See: https://cumulocity.com/guides/reference/device-credentials/#get-returns-all-new-device-requests
@@ -148,7 +152,7 @@ func (c Client) NewDeviceRequests(reqOpts ...func(*http.Request)) (NewDeviceRequ
 	req.SetBasicAuth(c.Username, c.Password)
 
 	h := req.Header
-	h.Add("Accept", newDeviceRequestCollectionType)
+	h.Add("Accept", newDeviceRequestCollectionContentType)
 	req.Header = h
 
 	resp, err := c.HTTPClient.Do(req)
@@ -164,13 +168,14 @@ func (c Client) NewDeviceRequests(reqOpts ...func(*http.Request)) (NewDeviceRequ
 		case http.StatusForbidden:
 			return NewDeviceRequestCollection{}, meta.AccessDeniedErr
 		default:
-			var errRespBody meta.ErrorBody
-			err := json.NewDecoder(resp.Body).Decode(&errRespBody)
-			if err != nil {
-				return NewDeviceRequestCollection{}, fmt.Errorf("failed to decode error response body: %s", err)
+			if strings.HasPrefix(resp.Header.Get("Content-Type"), meta.ErrorContentType) {
+				var errRespBody meta.Error
+				err := json.NewDecoder(resp.Body).Decode(&errRespBody)
+				if err != nil {
+					return NewDeviceRequestCollection{}, fmt.Errorf("failed to decode error response body: %s", err)
+				}
+				return NewDeviceRequestCollection{}, errRespBody
 			}
-			return NewDeviceRequestCollection{}, fmt.Errorf("failed to find-all new-device-requests. Status: %d: %q %s See: %s",
-				resp.StatusCode, errRespBody.Error, errRespBody.Message, errRespBody.Info)
 		}
 	}
 
@@ -178,6 +183,75 @@ func (c Client) NewDeviceRequests(reqOpts ...func(*http.Request)) (NewDeviceRequ
 	err = json.NewDecoder(resp.Body).Decode(&respBody)
 	if err != nil {
 		return NewDeviceRequestCollection{}, fmt.Errorf("failed to decode response body: %w", err)
+	}
+	return respBody, nil
+}
+
+/*
+UpdateNewDeviceRequest updates status of 'newDeviceRequest' with given ID.
+
+Can return the following errors:
+- meta.BadCredentialsErr (invalid username / password / host combination)
+- meta.AccessDeniedErr (missing user rights)
+- meta.Error (generic cloud error)
+- error (unexpected)
+
+See: https://cumulocity.com/guides/reference/device-credentials/#put-updates-a-new-device-request
+*/
+func (c Client) UpdateNewDeviceRequest(id, status string) (NewDeviceRequest, error) {
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(NewDeviceRequest{
+		Status: status,
+	})
+	if err != nil {
+		return NewDeviceRequest{}, fmt.Errorf("failed to encode request body: %w", err)
+	}
+
+	req, err := http.NewRequest(
+		http.MethodPut,
+		fmt.Sprintf("%s/devicecontrol/newDeviceRequests/%s", c.BaseURL, id),
+		&buf,
+	)
+	if err != nil {
+		return NewDeviceRequest{}, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.SetBasicAuth(c.Username, c.Password)
+
+	h := req.Header
+	h.Add("Content-Type", newDeviceRequestContentType)
+	h.Add("Accept", newDeviceRequestContentType)
+	req.Header = h
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return NewDeviceRequest{}, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return NewDeviceRequest{}, meta.BadCredentialsErr
+		case http.StatusForbidden:
+			return NewDeviceRequest{}, meta.AccessDeniedErr
+		default:
+			if strings.HasPrefix(resp.Header.Get("Content-Type"), meta.ErrorContentType) {
+				var errResp meta.Error
+				err := json.NewDecoder(resp.Body).Decode(&errResp)
+				if err != nil {
+					return NewDeviceRequest{}, fmt.Errorf("failed to decode error response body: %s", err)
+				}
+				return NewDeviceRequest{}, errResp
+			}
+			return NewDeviceRequest{}, fmt.Errorf("failed to update new-device-request with status code %d", resp.StatusCode)
+		}
+	}
+
+	var respBody NewDeviceRequest
+	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	if err != nil {
+		return NewDeviceRequest{}, fmt.Errorf("failed to decode response body: %w", err)
 	}
 	return respBody, nil
 }

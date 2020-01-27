@@ -1,6 +1,8 @@
 package devicecontrol
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type Client struct {
 	HTTPClient *http.Client
