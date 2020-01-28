@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	jsoncompare "github.com/orasik/gocomparejson"
-	"github.com/tarent/gomulocity/pkg/c8y/meta"
+	"github.com/tarent/gomulocity/generic"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -40,14 +40,14 @@ func TestClient_CreateNewDeviceRequest(t *testing.T) {
 			newDeviceRequestID:     "nope 401",
 			c8yRespCode:            http.StatusUnauthorized,
 			c8yRespBody:            `{}`,
-			expectedErr:            meta.BadCredentialsErr,
+			expectedErr:            generic.BadCredentialsErr,
 			c8yExpectedRequestBody: `{"id": "nope 401"}`,
 		}, {
 			name:                   "access denied",
 			newDeviceRequestID:     "nope 403",
 			c8yRespCode:            http.StatusForbidden,
 			c8yRespBody:            `{}`,
-			expectedErr:            meta.AccessDeniedErr,
+			expectedErr:            generic.AccessDeniedErr,
 			c8yExpectedRequestBody: `{"id": "nope 403"}`,
 		}, {
 			name:                   "device already exists",
@@ -155,7 +155,7 @@ func TestClient_NewDeviceRequests(t *testing.T) {
 	}{
 		{
 			name:               "happy case",
-			reqOpts:            meta.Page(4),
+			reqOpts:            generic.Page(4),
 			c8yRespCode:        http.StatusOK,
 			c8yRespBody:        `{"self": "selfURL", "newDeviceRequests":[{"id": "rID1", "status": "ACCEPTED", "self":"rSelf1"}], "statistics": {"totalRecords":0, "pageSize":5, "currentPage":1}, "prev":"prevURL", "next":"nextURL"}`,
 			expectedRequestURL: "/devicecontrol/newDeviceRequests?currentPage=4",
@@ -164,7 +164,7 @@ func TestClient_NewDeviceRequests(t *testing.T) {
 				NewDeviceRequests: []NewDeviceRequest{
 					{ID: "rID1", Status: "ACCEPTED", Self: "rSelf1"},
 				},
-				Statistics: meta.PagingStatistics{
+				Statistics: generic.PagingStatistics{
 					TotalRecords: 0,
 					PageSize:     5,
 					CurrentPage:  1,
@@ -175,20 +175,20 @@ func TestClient_NewDeviceRequests(t *testing.T) {
 			expectedErr: nil,
 		}, {
 			name:               "bad credentials",
-			reqOpts:            meta.Page(1),
+			reqOpts:            generic.Page(1),
 			c8yRespCode:        http.StatusUnauthorized,
 			c8yRespBody:        `{}`,
 			expectedRequestURL: "/devicecontrol/newDeviceRequests?currentPage=1",
-			expectedErr:        meta.BadCredentialsErr,
+			expectedErr:        generic.BadCredentialsErr,
 		}, {
 			name:               "access denied",
 			c8yRespCode:        http.StatusForbidden,
 			c8yRespBody:        `{}`,
 			expectedRequestURL: "/devicecontrol/newDeviceRequests",
-			expectedErr:        meta.AccessDeniedErr,
+			expectedErr:        generic.AccessDeniedErr,
 		}, {
 			name:               "unexpected error",
-			reqOpts:            meta.Page(9999999),
+			reqOpts:            generic.Page(9999999),
 			c8yRespCode:        http.StatusInternalServerError,
 			c8yRespBody:        `{"error": "myCustomError", "message": "something goes wrong.", "info": "my link"}`,
 			c8yRespContentType: "application/vnd.com.nsn.cumulocity.error+json;q=0.7,en;q=0.3",
@@ -282,14 +282,14 @@ func TestClient_UpdateNewDeviceRequest(t *testing.T) {
 			c8yRespCode:            http.StatusUnauthorized,
 			c8yRespBody:            `{}`,
 			c8yExpectedRequestBody: `{"status": "ACCEPTED"}`,
-			expectedErr:            meta.BadCredentialsErr,
+			expectedErr:            generic.BadCredentialsErr,
 		}, {
 			name:                   "access denied",
 			newDeviceRequestID:     "nope-403",
 			newDeviceRequestStatus: "ACCEPTED",
 			c8yRespCode:            http.StatusForbidden,
 			c8yRespBody:            `{}`,
-			expectedErr:            meta.AccessDeniedErr,
+			expectedErr:            generic.AccessDeniedErr,
 			c8yExpectedRequestBody: `{"status": "ACCEPTED"}`,
 		}, {
 			name:                   "unexpected error",
@@ -400,13 +400,13 @@ func TestClient_DeleteNewDeviceRequest(t *testing.T) {
 			newDeviceRequestID: "nope-401",
 			c8yRespCode:        http.StatusUnauthorized,
 			c8yRespBody:        `{}`,
-			expectedErr:        meta.BadCredentialsErr,
+			expectedErr:        generic.BadCredentialsErr,
 		}, {
 			name:               "access denied",
 			newDeviceRequestID: "nope-403",
 			c8yRespCode:        http.StatusForbidden,
 			c8yRespBody:        `{}`,
-			expectedErr:        meta.AccessDeniedErr,
+			expectedErr:        generic.AccessDeniedErr,
 		}, {
 			name:               "unexpected error",
 			newDeviceRequestID: "nope-500",

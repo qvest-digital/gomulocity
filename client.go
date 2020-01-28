@@ -1,7 +1,7 @@
-package c8y
+package gomulocity
 
 import (
-	"github.com/tarent/gomulocity/pkg/c8y/devicecontrol"
+	"github.com/tarent/gomulocity/devicecontrol"
 	"net/http"
 	"time"
 )

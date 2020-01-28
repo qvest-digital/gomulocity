@@ -6,8 +6,8 @@ Example:
 ```go
 import (
 	"fmt"
-	"github.com/tarent/gomulocity/pkg/c8y/devicecontrol"
-	"github.com/tarent/gomulocity/pkg/c8y/meta"
+	"github.com/tarent/gomulocity/devicecontrol"
+	"github.com/tarent/gomulocity/generic"
 	"net/http"
 	"testing"
 )
@@ -29,17 +29,17 @@ func main() {
 ### Device credentials
 Create newDeviceRequest:
 ```go
-    newDeviceRequest, err := 'c8y.Client'.Devicecontrol.CreateNewDeviceRequest(<newDeviceRequestID>)
+    newDeviceRequest, err := 'gomulocity.Client'.Devicecontrol.CreateNewDeviceRequest(<newDeviceRequestID>)
 ```
 Find all newDeviceRequest (newDeviceRequestCollection):
 ```go
-    newDeviceRequestCollection, err := 'c8y.Client'.Devicecontrol.NewDeviceRequestCollections(meta.Page(3))
+    newDeviceRequestCollection, err := 'gomulocity.Client'.Devicecontrol.NewDeviceRequestCollections(meta.Page(3))
 ```
 Update newDeviceRequest:
 ```go
-    err := 'c8y.Client'.Devicecontrol.UpdateNewDeviceRequest(<newDeviceRequestID>, <newDeviceRequestStatus>)
+    err := 'gomulocity.Client'.Devicecontrol.UpdateNewDeviceRequest(<newDeviceRequestID>, <newDeviceRequestStatus>)
 ```
 Delete newDeviceRequest:
 ```go
-    err := 'c8y.Client'.Devicecontrol.DeleteNewDeviceRequest(<newDeviceRequestID>)
+    err := 'gomulocity.Client'.Devicecontrol.DeleteNewDeviceRequest(<newDeviceRequestID>)
 ```
