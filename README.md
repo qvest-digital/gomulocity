@@ -26,7 +26,7 @@ func main() {
 
 ## 'devicecontrol'-API
 
-### Device credentials
+### newDeviceRequest
 Create newDeviceRequest:
 ```go
     newDeviceRequest, err := 'gomulocity.Client'.Devicecontrol.CreateNewDeviceRequest(<newDeviceRequestID>)
@@ -42,4 +42,10 @@ Update newDeviceRequest:
 Delete newDeviceRequest:
 ```go
     err := 'gomulocity.Client'.Devicecontrol.DeleteNewDeviceRequest(<newDeviceRequestID>)
+```
+
+### deviceCredentials
+Create DeviceCredentials:
+```go
+    createdDeviceCredentials, err := 'gomulocity.Client'.Devicecontrol.CreateDeviceCredentials(<deviceID>)
 ```
