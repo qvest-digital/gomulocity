@@ -2,12 +2,14 @@ package gomulocity
 
 import (
 	"github.com/tarent/gomulocity/devicecontrol"
+	"github.com/tarent/gomulocity/deviceinformation"
 	"net/http"
 	"time"
 )
 
 type Client struct {
-	DeviceControl devicecontrol.Client
+	DeviceControl     devicecontrol.Client
+	DeviceInformation deviceinformation.Client
 }
 
 func NewClient(baseURL, username, password string) Client {
@@ -16,6 +18,7 @@ func NewClient(baseURL, username, password string) Client {
 	}
 
 	return Client{
-		DeviceControl: devicecontrol.Client{HTTPClient: &hc, BaseURL: baseURL, Username: username, Password: password},
+		DeviceControl:     devicecontrol.Client{HTTPClient: &hc, BaseURL: baseURL, Username: username, Password: password},
+		DeviceInformation: deviceinformation.Client{HTTPClient: &hc, BaseURL: baseURL, Username: username, Password: password},
 	}
 }
