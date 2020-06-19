@@ -1,9 +1,16 @@
 package gomulocity_event
 
-import "time"
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"log"
+	"net/url"
+	"time"
+)
 
-func NewEventsApi() Events {
-	return &events{}
+func NewEventsApi(client Client) Events {
+	return &events{client, "/event/events"}
 }
 
 type Events interface {
@@ -12,7 +19,7 @@ type Events interface {
 	DeleteEvent(eventId string)
 
 	Get(eventId string) *Event
-	GetForDevice(source string) *EventCollection
+	GetForDevice(source string) (*EventCollection, error)
 	Find(query EventQuery) *EventCollection
 	NextPage(c *EventCollection) *EventCollection
 	PrevPage(c *EventCollection) *EventCollection
@@ -26,7 +33,10 @@ type EventQuery struct {
 	Source       string
 }
 
-type events struct{}
+type events struct {
+	client   Client
+	basePath string
+}
 
 func (e *events) CreateEvent(event CreateEvent) {
 }
@@ -37,8 +47,23 @@ func (e *events) DeleteEvent(eventId string) {
 func (e *events) Get(eventId string) *Event {
 	return nil
 }
-func (e *events) GetForDevice(source string) *EventCollection {
-	return nil
+func (e *events) GetForDevice(source string) (*EventCollection, error) {
+	params := url.Values{}
+	params.Add("source", source)
+	response, err := e.client.get(fmt.Sprintf("%s?%s", e.basePath, params.Encode()))
+
+	var result EventCollection
+	if len(response) > 0 {
+		err = json.Unmarshal(response, &result)
+		if err != nil {
+			log.Printf("Error while parsing response JSON: %s", err.Error())
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("GetForDevice: response body was empty")
+	}
+
+	return &result, nil
 }
 func (e *events) Find(query EventQuery) *EventCollection {
 	return nil
@@ -47,5 +72,9 @@ func (e *events) NextPage(c *EventCollection) *EventCollection {
 	return nil
 }
 func (e *events) PrevPage(c *EventCollection) *EventCollection {
+	return nil
+}
+
+func request(c *EventCollection) *EventCollection {
 	return nil
 }
