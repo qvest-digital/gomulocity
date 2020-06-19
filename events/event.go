@@ -2,7 +2,6 @@ package gomulocity_event
 
 import (
 	"github.com/tarent/gomulocity/generic"
-	"net/url"
 	"time"
 )
 
@@ -22,6 +21,7 @@ type UpdateEvent struct {
 	Text string `json:"test"`
 }
 
+// ---- Event
 // application/vnd.com.nsn.cumulocity.event+json
 type Event struct {
 	Id           string    `json:"id"`
@@ -30,17 +30,18 @@ type Event struct {
 	CreationTime time.Time `json:"creationTime"`
 	Text         string    `json:"test"`
 	Source       struct {
-		Id   string  `json:"id"`
-		Self url.URL `json:"self"`
+		Id   string `json:"id"`
+		Self string `json:"self"`
 	} `json:"source"`
-	Self url.URL `json:"self"`
+	Self string `json:"self"`
 }
 
 // application/vnd.com.nsn.cumulocity.eventCollection+json
+// ---- EventCollection
 type EventCollection struct {
-	Next       *url.URL                  `json:"next"`
-	Self       *url.URL                  `json:"self"`
-	Prev       *url.URL                  `json:"prev"`
+	Next       string                    `json:"next"`
+	Self       string                    `json:"self"`
+	Prev       string                    `json:"prev"`
 	Events     []Event                   `json:"events"`
 	Statistics *generic.PagingStatistics `json:"statistics"` // ToDo: Check for dependencies vs. module singularity!
 }

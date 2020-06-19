@@ -3,7 +3,6 @@ package gomulocity_event
 import (
 	"fmt"
 	"github.com/tarent/gomulocity/generic"
-	"net/url"
 	"testing"
 )
 
@@ -19,11 +18,11 @@ func TestEventCollection_CurrentPage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			selfUrl, _ := url.Parse(fmt.Sprintf("http://0815.cumulocity.com/event/events?pageSize=100&currentPage=%d", tt.givenPage))
+			selfUrl := fmt.Sprintf("http://0815.cumulocity.com/event/events?pageSize=100&currentPage=%d", tt.givenPage)
 			c := &EventCollection{
-				Next:   nil,
+				Next:   "",
 				Self:   selfUrl,
-				Prev:   nil,
+				Prev:   "",
 				Events: []Event{},
 				Statistics: &generic.PagingStatistics{
 					PageSize:    5,
