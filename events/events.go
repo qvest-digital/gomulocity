@@ -17,7 +17,7 @@ func NewEventsApi(client Client) Events {
 type Events interface {
 	CreateEvent(event *CreateEvent) error
 	UpdateEvent(event UpdateEvent)
-	DeleteEvent(eventId string)
+	DeleteEvent(eventId string) error
 
 	Get(eventId string) (*Event, error)
 	GetForDevice(source string) (*EventCollection, error)
@@ -58,10 +58,13 @@ func (e *events) CreateEvent(event *CreateEvent) error {
 
 	return nil
 }
+
 func (e *events) UpdateEvent(event UpdateEvent) {
 }
-func (e *events) DeleteEvent(eventId string) {
+func (e *events) DeleteEvent(eventId string) error {
+	return nil
 }
+
 func (e *events) Get(eventId string) (*Event, error) {
 	response, status, err := e.client.get(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)))
 

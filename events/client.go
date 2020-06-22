@@ -14,6 +14,10 @@ type Client struct {
 	Password   string
 }
 
+func (client *Client) delete(path string, body []byte) ([]byte, int, error) {
+	return nil, 0, nil
+}
+
 func (client *Client) post(path string, body []byte) ([]byte, int, error) {
 	url := client.BaseURL + path
 
