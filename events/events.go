@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"time"
 )
@@ -14,7 +15,7 @@ func NewEventsApi(client Client) Events {
 }
 
 type Events interface {
-	CreateEvent(event CreateEvent)
+	CreateEvent(event *CreateEvent) error
 	UpdateEvent(event UpdateEvent)
 	DeleteEvent(eventId string)
 
@@ -38,7 +39,24 @@ type events struct {
 	basePath string
 }
 
-func (e *events) CreateEvent(event CreateEvent) {
+func (e *events) CreateEvent(event *CreateEvent) error {
+	bytes, err := json.Marshal(event)
+	if err != nil {
+		log.Printf("Error while marhalling the event: %s", err.Error())
+	}
+
+	response, status, err := e.client.post(e.basePath, bytes)
+	if err != nil {
+		log.Printf("Error while posting a new event: %s", err.Error())
+		return err
+	}
+	if status != http.StatusCreated {
+		var msg map[string]interface{}
+		_ = json.Unmarshal(response, &msg)
+		return errors.New(fmt.Sprintf("Event creation failed. Server returns error: %s", msg["error"]))
+	}
+
+	return nil
 }
 func (e *events) UpdateEvent(event UpdateEvent) {
 }

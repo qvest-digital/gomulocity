@@ -5,16 +5,17 @@ import (
 	"time"
 )
 
-var contentType = "application/vnd.com.nsn.cumulocity.event+json"
+type Source struct {
+	Id   string `json:"id"`
+	Self string `json:"self,omitempty"`
+}
 
 // application/vnd.com.nsn.cumulocity.event+json
 type CreateEvent struct {
 	Type   string    `json:"type"`
 	Time   time.Time `json:"time"`
 	Text   string    `json:"test"`
-	Source struct {
-		Id string `json:"id"`
-	} `json:"source"`
+	Source Source    `json:"source"`
 }
 
 type UpdateEvent struct {
@@ -29,11 +30,8 @@ type Event struct {
 	Time         time.Time `json:"time"`
 	CreationTime time.Time `json:"creationTime"`
 	Text         string    `json:"test"`
-	Source       struct {
-		Id   string `json:"id"`
-		Self string `json:"self"`
-	} `json:"source"`
-	Self string `json:"self"`
+	Source       Source    `json:"source"`
+	Self         string    `json:"self"`
 }
 
 // application/vnd.com.nsn.cumulocity.eventCollection+json

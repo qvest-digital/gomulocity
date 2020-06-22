@@ -14,10 +14,10 @@ type Client struct {
 	Password   string
 }
 
-func (client *Client) post(path string, body string) ([]byte, int, error) {
+func (client *Client) post(path string, body []byte) ([]byte, int, error) {
 	url := client.BaseURL + path
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBufferString(body))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
 		log.Printf("Error: While creating a request: %s", err.Error())
 		return nil, 0, err
