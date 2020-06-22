@@ -7,12 +7,6 @@ import (
 	"testing"
 )
 
-type ClientMock struct{}
-
-func (c *ClientMock) Do(req *http.Request) (*http.Response, error) {
-	return &http.Response{}, nil
-}
-
 var DeviceId = "1111111"
 var EventId = "2222222"
 var event = `{
