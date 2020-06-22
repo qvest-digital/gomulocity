@@ -14,31 +14,31 @@ type Client struct {
 	Password   string
 }
 
-func (client *Client) post(path string, body string) ([]byte, error) {
+func (client *Client) post(path string, body string) ([]byte, int, error) {
 	url := client.BaseURL + path
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBufferString(body))
 	if err != nil {
 		log.Printf("Error: While creating a request: %s", err.Error())
-		return nil, err
+		return nil, 0, err
 	}
 
 	return client.request(req)
 }
 
-func (client *Client) get(path string) ([]byte, error) {
+func (client *Client) get(path string) ([]byte, int, error) {
 	url := client.BaseURL + path
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		log.Printf("Error: While creating a request: %s", err.Error())
-		return nil, err
+		return nil, 0, err
 	}
 
 	return client.request(req)
 }
 
-func (client *Client) request(req *http.Request) ([]byte, error) {
+func (client *Client) request(req *http.Request) ([]byte, int, error) {
 	log.Printf("HTTP %s on URL %s", req.Method, req.URL)
 
 	req.SetBasicAuth(client.Username, client.Password)
@@ -46,7 +46,7 @@ func (client *Client) request(req *http.Request) ([]byte, error) {
 	resp, err := client.HTTPClient.Do(req)
 	if err != nil {
 		log.Printf("An error occured: %s", err.Error())
-		return nil, err
+		return nil, 0, err
 	}
 	log.Printf("Got status %d", resp.StatusCode)
 	defer resp.Body.Close()
@@ -54,9 +54,9 @@ func (client *Client) request(req *http.Request) ([]byte, error) {
 	result, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Error while reading from stream: %s", err.Error())
-		return nil, err
+		return nil, 0, err
 	}
 
 	log.Printf("Debug: Response body was: %s", result)
-	return result, nil
+	return result, resp.StatusCode, nil
 }

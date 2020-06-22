@@ -18,7 +18,7 @@ type Events interface {
 	UpdateEvent(event UpdateEvent)
 	DeleteEvent(eventId string)
 
-	Get(eventId string) *Event
+	Get(eventId string) (*Event, error)
 	GetForDevice(source string) (*EventCollection, error)
 	Find(query EventQuery) *EventCollection
 	NextPage(c *EventCollection) *EventCollection
@@ -44,13 +44,32 @@ func (e *events) UpdateEvent(event UpdateEvent) {
 }
 func (e *events) DeleteEvent(eventId string) {
 }
-func (e *events) Get(eventId string) *Event {
-	return nil
+func (e *events) Get(eventId string) (*Event, error) {
+	response, status, err := e.client.get(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)))
+
+	if status != 200 {
+		log.Printf("Event with id %s was not found", eventId)
+		return nil, nil
+	}
+
+	var result Event
+	if len(response) > 0 {
+		err = json.Unmarshal(response, &result)
+		if err != nil {
+			log.Printf("Error while parsing response JSON: %s", err.Error())
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("GetEvent: response body was empty")
+	}
+
+	return &result, nil
 }
+
 func (e *events) GetForDevice(source string) (*EventCollection, error) {
 	params := url.Values{}
 	params.Add("source", source)
-	response, err := e.client.get(fmt.Sprintf("%s?%s", e.basePath, params.Encode()))
+	response, _, err := e.client.get(fmt.Sprintf("%s?%s", e.basePath, params.Encode()))
 
 	var result EventCollection
 	if len(response) > 0 {
