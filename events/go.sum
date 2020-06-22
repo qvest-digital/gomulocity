@@ -1,0 +1,3 @@
+github.com/orasik/gocomparejson v0.0.0-20171229174629-2835e0393d0f/go.mod h1:oedqrMK95caM7GZZtl46wFqiSp7//yGGU5KM1hFdTRg=
+github.com/tarent/gomulocity v0.0.0-20200618145517-4672ed43fce1 h1:155RHJKsxtpVi74UiXe8olfnxSD+araIfNwVYwRICIk=
+github.com/tarent/gomulocity v0.0.0-20200618145517-4672ed43fce1/go.mod h1:FbC+MQkBDgT+YCt96IiEWlXmOIck6CCgmf+z4Qt5iKs=
