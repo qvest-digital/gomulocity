@@ -13,7 +13,7 @@ func TestEvents_Delete_Event_Success(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		capturedUrl = r.URL.String()
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusNoContent)
 	}))
 
 	// given: A test server
@@ -23,7 +23,7 @@ func TestEvents_Delete_Event_Success(t *testing.T) {
 	api := buildEventsApi(ts.URL)
 
 	t.Run("delete successful", func(t *testing.T) {
-		err := api.DeleteEvent("7411")
+		err := api.DeleteEvent(eventId)
 
 		if err != nil {
 			t.Fatalf("DeleteEvent() got an unexpected error: %s", err.Error())

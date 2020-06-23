@@ -14,8 +14,15 @@ type Client struct {
 	Password   string
 }
 
-func (client *Client) delete(path string, body []byte) ([]byte, int, error) {
-	return nil, 0, nil
+func (client *Client) delete(path string) ([]byte, int, error) {
+	url := client.BaseURL + path
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		log.Printf("Error: While creating a request: %s", err.Error())
+		return nil, 0, err
+	}
+
+	return client.request(req)
 }
 
 func (client *Client) post(path string, body []byte) ([]byte, int, error) {

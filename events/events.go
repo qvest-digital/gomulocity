@@ -62,7 +62,15 @@ func (e *events) CreateEvent(event *CreateEvent) error {
 func (e *events) UpdateEvent(event UpdateEvent) {
 }
 func (e *events) DeleteEvent(eventId string) error {
-	return nil
+	body, status, err := e.client.delete(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)))
+
+	if status != http.StatusNoContent {
+		var msg map[string]interface{}
+		_ = json.Unmarshal(body, &msg)
+		return errors.New(fmt.Sprintf("Event creation failed. Server returns error: %s", msg["error"]))
+	}
+
+	return err
 }
 
 func (e *events) Get(eventId string) (*Event, error) {
