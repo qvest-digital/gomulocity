@@ -16,52 +16,32 @@ type Client struct {
 
 func (client *Client) delete(path string) ([]byte, int, error) {
 	url := client.BaseURL + path
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
-	if err != nil {
-		log.Printf("Error: While creating a request: %s", err.Error())
-		return nil, 0, err
-	}
-
-	return client.request(req)
+	return client.request(http.MethodDelete, url, []byte{})
 }
 
 func (client *Client) put(path string, body []byte) ([]byte, int, error) {
 	url := client.BaseURL + path
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(body))
-	if err != nil {
-		log.Printf("Error: While creating a request: %s", err.Error())
-		return nil, 0, err
-	}
-
-	return client.request(req)
+	return client.request(http.MethodPut, url, body)
 }
 
 func (client *Client) post(path string, body []byte) ([]byte, int, error) {
 	url := client.BaseURL + path
-
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
-	if err != nil {
-		log.Printf("Error: While creating a request: %s", err.Error())
-		return nil, 0, err
-	}
-
-	return client.request(req)
+	return client.request(http.MethodPost, url, body)
 }
 
 func (client *Client) get(path string) ([]byte, int, error) {
 	url := client.BaseURL + path
+	return client.request(http.MethodGet, url, []byte{})
+}
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+func (client *Client) request(method, url string, body []byte) ([]byte, int, error) {
+	log.Printf("HTTP %s on URL %s", method, url)
+
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	if err != nil {
 		log.Printf("Error: While creating a request: %s", err.Error())
 		return nil, 0, err
 	}
-
-	return client.request(req)
-}
-
-func (client *Client) request(req *http.Request) ([]byte, int, error) {
-	log.Printf("HTTP %s on URL %s", req.Method, req.URL)
 
 	req.SetBasicAuth(client.Username, client.Password)
 
