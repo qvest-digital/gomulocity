@@ -17,13 +17,13 @@ func createEventHttpServer(status int) *httptest.Server {
 
 		var event CreateEvent
 		_ = json.Unmarshal(body, &event)
-		eventCapture = &event
+		createEventCapture = &event
 
 		w.WriteHeader(status)
 	}))
 }
 
-var eventCapture *CreateEvent
+var createEventCapture *CreateEvent
 
 // given: A create event
 var createEvent = &CreateEvent{
@@ -48,12 +48,12 @@ func TestEvents_Create_Event_Success(t *testing.T) {
 			t.Fatalf("CreateEvent() got an unexpected error: %s", err.Error())
 		}
 
-		if eventCapture == nil {
+		if createEventCapture == nil {
 			t.Fatalf("CreateEvent() Captured event is nil.")
 		}
 
-		if !reflect.DeepEqual(createEvent, eventCapture) {
-			t.Errorf("CreateEvent() event = %v, want %v", createEvent, eventCapture)
+		if !reflect.DeepEqual(createEvent, createEventCapture) {
+			t.Errorf("CreateEvent() event = %v, want %v", createEvent, createEventCapture)
 		}
 	})
 }

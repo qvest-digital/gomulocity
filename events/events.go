@@ -16,7 +16,7 @@ func NewEventsApi(client Client) Events {
 
 type Events interface {
 	CreateEvent(event *CreateEvent) error
-	UpdateEvent(event UpdateEvent)
+	UpdateEvent(eventId string, event *UpdateEvent) error
 	DeleteEvent(eventId string) error
 
 	Get(eventId string) (*Event, error)
@@ -59,8 +59,24 @@ func (e *events) CreateEvent(event *CreateEvent) error {
 	return nil
 }
 
-func (e *events) UpdateEvent(event UpdateEvent) {
+func (e *events) UpdateEvent(eventId string, event *UpdateEvent) error {
+	bytes, err := json.Marshal(event)
+	if err != nil {
+		log.Printf("Error while marhalling the update event: %s", err.Error())
+	}
+	path := fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId))
+
+	body, status, err := e.client.put(path, bytes)
+
+	if status != http.StatusOK {
+		var msg map[string]interface{}
+		_ = json.Unmarshal(body, &msg)
+		return errors.New(fmt.Sprintf("Event update failed. Server returns error: %s", msg["error"]))
+	}
+
+	return err
 }
+
 func (e *events) DeleteEvent(eventId string) error {
 	body, status, err := e.client.delete(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)))
 

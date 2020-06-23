@@ -25,6 +25,17 @@ func (client *Client) delete(path string) ([]byte, int, error) {
 	return client.request(req)
 }
 
+func (client *Client) put(path string, body []byte) ([]byte, int, error) {
+	url := client.BaseURL + path
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(body))
+	if err != nil {
+		log.Printf("Error: While creating a request: %s", err.Error())
+		return nil, 0, err
+	}
+
+	return client.request(req)
+}
+
 func (client *Client) post(path string, body []byte) ([]byte, int, error) {
 	url := client.BaseURL + path
 
