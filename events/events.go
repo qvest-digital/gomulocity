@@ -91,7 +91,6 @@ func (e *events) UpdateEvent(eventId string, event *UpdateEvent) error {
 	path := fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId))
 
 	body, status, err := e.client.put(path, bytes)
-
 	if status != http.StatusOK {
 		return createErrorFromResponse(body)
 	}
@@ -112,7 +111,7 @@ func (e *events) DeleteEvent(eventId string) error {
 func (e *events) Get(eventId string) (*Event, error) {
 	body, status, err := e.client.get(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)))
 
-	if status != 200 {
+	if status != http.StatusOK {
 		log.Printf("Event with id %s was not found", eventId)
 		return nil, nil
 	}
@@ -136,69 +135,35 @@ func (e *events) GetForDevice(source string) (*EventCollection, error) {
 }
 
 func (e *events) Find(query EventQuery) (*EventCollection, error) {
-	body, status, err := e.client.get(fmt.Sprintf("%s?%s", e.basePath, query.QueryParams()))
-
-	if status != http.StatusOK {
-		return nil, createErrorFromResponse(body)
-	}
-
-	var result EventCollection
-	if len(body) > 0 {
-		err = json.Unmarshal(body, &result)
-		if err != nil {
-			log.Printf("Error while parsing response JSON: %s", err.Error())
-			return nil, err
-		}
-	} else {
-		return nil, errors.New("Find: response body was empty")
-	}
-
-	return &result, nil
+	return e.getCommon(fmt.Sprintf("%s?%s", e.basePath, query.QueryParams()))
 }
 
 func (e *events) NextPage(c *EventCollection) (*EventCollection, error) {
-	if c.Next == "" {
-		log.Print("No next reference given. Returning nil.")
-		return nil, nil
-	}
-
-	nextUrl, err := url.Parse(c.Next)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Unparsable URL given for Next: '%s'", c.Next))
-	}
-
-	body, status, err := e.client.get(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
-
-	if status != http.StatusOK {
-		return nil, createErrorFromResponse(body)
-	}
-
-	var result EventCollection
-	if len(body) > 0 {
-		err = json.Unmarshal(body, &result)
-		if err != nil {
-			log.Printf("Error while parsing response JSON: %s", err.Error())
-			return nil, err
-		}
-	} else {
-		return nil, errors.New("Find: response body was empty")
-	}
-
-	return &result, nil
+	return e.getPage(c.Next)
 }
 
 func (e *events) PreviousPage(c *EventCollection) (*EventCollection, error) {
-	if c.Prev == "" {
-		log.Print("No previous reference given. Returning nil.")
+	return e.getPage(c.Prev)
+}
+
+func (e *events) getPage(reference string) (*EventCollection, error) {
+	if reference == "" {
+		log.Print("No page reference given. Returning nil.")
 		return nil, nil
 	}
 
-	nextUrl, err := url.Parse(c.Prev)
+	nextUrl, err := url.Parse(reference)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Unparsable URL given for Prev: '%s'", c.Next))
+		return nil, errors.New(fmt.Sprintf("Unparsable URL given for page reference: '%s'", reference))
 	}
 
-	body, status, err := e.client.get(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+	return e.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+}
+
+// -- internal
+
+func (e *events) getCommon(path string) (*EventCollection, error) {
+	body, status, err := e.client.get(path)
 
 	if status != http.StatusOK {
 		return nil, createErrorFromResponse(body)
@@ -212,7 +177,7 @@ func (e *events) PreviousPage(c *EventCollection) (*EventCollection, error) {
 			return nil, err
 		}
 	} else {
-		return nil, errors.New("Find: response body was empty")
+		return nil, errors.New("GetCollection: response body was empty")
 	}
 
 	return &result, nil
