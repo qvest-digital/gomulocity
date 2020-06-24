@@ -68,6 +68,13 @@ type Alarm struct {
 	// TODO: object - 0..n additional properties of the alarm.
 }
 
+type AlarmUpdate struct {
+	Text   		string `json:"text"`
+	Status		Status `json:"status"`
+	Severity	Severity `json:"severity"`
+	// TODO: object - 0..n additional properties of the alarm.
+}
+
 
 /*
 /*
@@ -170,7 +177,7 @@ Can return the following errors:
 
 See: https://cumulocity.com/guides/reference/alarms/#alarm-collection
 */
-func (c Client) GetAlarms(gaf GetAlarmsFilter, reqOpts ...func(*http.Request)) (AlarmCollection, error) {
+func (c Client) GetAlarms(alarmsFilter AlarmsFilter, reqOpts ...func(*http.Request)) (AlarmCollection, error) {
 	req, err := http.NewRequest(
 		http.MethodGet,
 		fmt.Sprintf("%s%s", c.BaseURL, alarmApiPath),
@@ -186,7 +193,7 @@ func (c Client) GetAlarms(gaf GetAlarmsFilter, reqOpts ...func(*http.Request)) (
 		}
 	}
 
-	gaf.appendFilter(req)
+	alarmsFilter.appendFilter(req)
 
 	req.SetBasicAuth(c.Username, c.Password)
 
@@ -238,7 +245,7 @@ Can return the following errors:
 
 See: https://cumulocity.com/guides/reference/alarms/#update-an-alarm
 */
-func (c Client) UpdateAlarm(alarm Alarm, ID string) (Alarm, error) {
+func (c Client) UpdateAlarm(alarm AlarmUpdate, ID string) (Alarm, error) {
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(alarm)
 	if err != nil {
@@ -308,7 +315,7 @@ Can return the following errors:
 
 See: https://cumulocity.com/guides/reference/alarms/#put-bulk-update-of-alarm-collection
 */
-func (c Client) UpdateAlarms(gaf GetAlarmsFilter, newStatus string) error {
+func (c Client) UpdateAlarms(updateAlarmsFilter UpdateAlarmsFilter, newStatus string) error {
 	alarmStatus := struct {
 		Status	string `json:"status"`
 	}{
@@ -329,7 +336,7 @@ func (c Client) UpdateAlarms(gaf GetAlarmsFilter, newStatus string) error {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	gaf.appendFilter(req)
+	updateAlarmsFilter.appendFilter(req)
 	fmt.Printf("Request: %s\n", buf.String())
 	fmt.Printf("send UPDATE request: %s\n", req.URL.String())
 
@@ -380,7 +387,7 @@ Can return the following errors:
 
 See: https://cumulocity.com/guides/reference/alarms/#delete-delete-an-alarm-collection
 */
-func (c Client) DeleteAlarms(daf DeleteAlarmsFilter) error {
+func (c Client) DeleteAlarms(alarmsFilter AlarmsFilter) error {
 	req, err := http.NewRequest(
 		http.MethodDelete,
 		//http.MethodDelete,
@@ -391,7 +398,7 @@ func (c Client) DeleteAlarms(daf DeleteAlarmsFilter) error {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	daf.appendFilter(req)
+	alarmsFilter.appendFilter(req)
 
 	fmt.Printf("send DELETE request: %s\n", req.URL.String())
 

@@ -10,7 +10,7 @@ import (
 /*
 See: https://cumulocity.com/guides/reference/alarms/#delete-delete-an-alarm-collection
  */
-type DeleteAlarmsFilter struct {
+type AlarmsFilter struct {
 	Status				Status	// Comma separated alarm statuses, for example ACTIVE,CLEARED.
 	SourceId 			string	// Source device id.
 	WithSourceAssets	bool	// When set to true also alarms for related source assets will be removed.
@@ -26,73 +26,18 @@ type DeleteAlarmsFilter struct {
 }
 
 /*
-https://cumulocity.com/guides/reference/alarms/#alarm-api
+https://cumulocity.com/guides/reference/alarms/#put-bulk-update-of-alarm-collection
  */
-type GetAlarmsFilter struct {
+type UpdateAlarmsFilter struct {
 	Status				Status
 	SourceId 			string
-	WithSourceAssets	bool
-	WithSourceDevices	bool
 	Resolved			string
 	Severity			Severity
 	DateFrom			time.Time
 	DateTo				time.Time
-	Type				string
 }
 
-func (daf DeleteAlarmsFilter) buildFilter() (string, error) {
-	filter := ""
-
-	if len(daf.Status) > 0 {
-		addFilter(filter, "status", fmt.Sprintf("%s", daf.Status))
-	}
-
-	if len(daf.SourceId) > 0 {
-		addFilter(filter, "source", daf.SourceId)
-	}
-
-	if daf.WithSourceAssets {
-		if len(daf.SourceId) == 0 {
-			return filter, fmt.Errorf("failed to build filter: when 'WithSourceAssets' parameter is defined also SourceID must be set.")
-		}
-		addFilter(filter, "withSourceAssets", "true")
-	}
-
-	if daf.WithSourceDevices {
-		if len(daf.SourceId) == 0 {
-			return filter, fmt.Errorf("failed to build filter: when 'WithSourceDevices' parameter is defined also SourceID must be set.")
-		}
-		addFilter(filter, "withSourceDevices", "true")
-	}
-
-	if len(daf.Resolved) > 0 {
-		resolved, err := strconv.ParseBool(daf.Resolved)
-		if err != nil {
-			return filter, fmt.Errorf("failed to build filter: if 'Resolved' parameter is set, only 'true' and 'false' values are accepted.")
-		}
-		addFilter(filter, "resolved", strconv.FormatBool(resolved))
-	}
-
-	if len(daf.Severity) > 0 {
-		addFilter(filter, "severity", fmt.Sprintf("%s", daf.Severity))
-	}
-
-	if !daf.DateFrom.IsZero() {
-		addFilter(filter, "dateFrom", daf.DateFrom.Format(time.RFC3339))
-	}
-
-	if !daf.DateTo.IsZero() {
-		addFilter(filter, "dateTo", daf.DateTo.Format(time.RFC3339))
-	}
-
-	if len(daf.Type) > 0 {
-		addFilter(filter, "type", daf.Type)
-	}
-
-	return filter, nil
-}
-
-func (daf DeleteAlarmsFilter) appendFilter(r *http.Request) error {
+func (daf AlarmsFilter) appendFilter(r *http.Request) error {
 	q := r.URL.Query()
 
 	if len(daf.Status) > 0 {
@@ -145,7 +90,7 @@ func (daf DeleteAlarmsFilter) appendFilter(r *http.Request) error {
 	return nil
 }
 
-func (gaf GetAlarmsFilter) appendFilter(r *http.Request) error {
+func (gaf UpdateAlarmsFilter) appendFilter(r *http.Request) error {
 	q := r.URL.Query()
 
 	if len(gaf.Status) > 0 {
@@ -154,20 +99,6 @@ func (gaf GetAlarmsFilter) appendFilter(r *http.Request) error {
 
 	if len(gaf.SourceId) > 0 {
 		q.Set("source", gaf.SourceId)
-	}
-
-	if gaf.WithSourceAssets {
-		if len(gaf.SourceId) == 0 {
-			return fmt.Errorf("failed to build filter: when 'WithSourceAssets' parameter is defined also SourceID must be set.")
-		}
-		q.Set("withSourceAssets", "true")
-	}
-
-	if gaf.WithSourceDevices {
-		if len(gaf.SourceId) == 0 {
-			return fmt.Errorf("failed to build filter: when 'WithSourceDevices' parameter is defined also SourceID must be set.")
-		}
-		q.Set("withSourceDevices", "true")
 	}
 
 	if len(gaf.Resolved) > 0 {
@@ -190,20 +121,6 @@ func (gaf GetAlarmsFilter) appendFilter(r *http.Request) error {
 		q.Set("dateTo", gaf.DateTo.Format(time.RFC3339))
 	}
 
-	if len(gaf.Type) > 0 {
-		q.Set("type", gaf.Type)
-	}
-
 	r.URL.RawQuery = q.Encode()
 	return nil
-}
-
-func addFilter(filter string, filterName string, filterValue string) {
-	if len(filter) > 0 {
-		filter = filter + "&"
-	} else {
-		filter = "?"
-	}
-
-	filter = filter + filterName + "=" + filterValue
 }
