@@ -33,8 +33,8 @@ func TestEvents_FindWithFilter(t *testing.T) {
 		},
 		{
 			"ForDateAndFragmentType",
-			EventQuery{DateFrom: dateFrom, DateTo: dateTo, FragmentType: "FragmentType_1"},
-			"dateFrom=2020-06-01T01:00:00.00Z&dateTo=2020-06-30T01:00:00.00Z&fragmentType=FragmentType_1",
+			EventQuery{DateFrom: &dateFrom, DateTo: &dateTo, FragmentType: "FragmentType_1"},
+			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z&fragmentType=FragmentType_1",
 		},
 		{
 			"ForFragmentTypeAndType",
@@ -44,17 +44,17 @@ func TestEvents_FindWithFilter(t *testing.T) {
 		{
 			"ForSourceAndType",
 			EventQuery{Source: "4711", Type: "Type_1"},
-			"type=Type_1&source=4711",
+			"source=4711&type=Type_1",
 		},
 		{
 			"ForTimeAndType",
-			EventQuery{DateFrom: dateFrom, DateTo: dateTo, Type: "Type_1"},
-			"dateFrom=2020-06-01T01:00:00.00Z&dateTo=2020-06-30T01:00:00.00Z&Type=Type_1",
+			EventQuery{DateFrom: &dateFrom, DateTo: &dateTo, Type: "Type_1"},
+			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z&type=Type_1",
 		},
 		{
 			"ForDateAndFragmentTypeAndType",
-			EventQuery{DateFrom: dateFrom, DateTo: dateTo, FragmentType: "FragmentType_1", Type: "Type_1"},
-			"dateFrom=2020-06-01T01:00:00.00Z&dateTo=2020-06-30T01:00:00.00Z&fragmentType=FragmentType_1&Type=Type_1",
+			EventQuery{DateFrom: &dateFrom, DateTo: &dateTo, FragmentType: "FragmentType_1", Type: "Type_1"},
+			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z&fragmentType=FragmentType_1&type=Type_1",
 		},
 		{
 			"ForFragmentType",
@@ -68,38 +68,38 @@ func TestEvents_FindWithFilter(t *testing.T) {
 		},
 		{
 			"ForSourceAndTimeAndType",
-			EventQuery{Source: "4711", DateFrom: dateFrom, DateTo: dateTo, Type: "Type_1"},
-			"source=4711&dateFrom=2020-06-01T01:00:00.00Z&dateTo=2020-06-30T01:00:00.00Z&Type=Type_1",
+			EventQuery{Source: "4711", DateFrom: &dateFrom, DateTo: &dateTo, Type: "Type_1"},
+			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z&source=4711&type=Type_1",
 		},
 		{
 			"ForTime",
-			EventQuery{DateFrom: dateFrom, DateTo: dateTo},
-			"dateFrom=2020-06-01T01:00:00.00Z&dateTo=2020-06-30T01:00:00.00Z",
+			EventQuery{DateFrom: &dateFrom, DateTo: &dateTo},
+			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z",
 		},
 		{
 			"ForSourceAndDateAndFragmentTypeAndType",
-			EventQuery{Source: "4711", DateFrom: dateFrom, DateTo: dateTo, FragmentType: "FragmentType_1", Type: "Type_1"},
-			"source=4711&dateFrom=2020-06-01T01:00:00.00Z&dateTo=2020-06-30T01:00:00.00Z&fragmentType=FragmentType_1&Type=Type_1",
+			EventQuery{Source: "4711", DateFrom: &dateFrom, DateTo: &dateTo, FragmentType: "FragmentType_1", Type: "Type_1"},
+			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z&fragmentType=FragmentType_1&source=4711&type=Type_1",
 		},
 		{
 			"ForSourceAndFragmentTypeAndType",
 			EventQuery{Source: "4711", FragmentType: "FragmentType_1", Type: "Type_1"},
-			"source=4711&fragmentType=FragmentType_1&Type=Type_1",
+			"fragmentType=FragmentType_1&source=4711&type=Type_1",
 		},
 		{
 			"ForType",
 			EventQuery{Type: "Type_1"},
-			"Type=Type_1",
+			"type=Type_1",
 		},
 		{
 			"ForSourceAndFragmentType",
 			EventQuery{Source: "4711", FragmentType: "FragmentType_1"},
-			"source=4711&fragmentType=FragmentType_1",
+			"fragmentType=FragmentType_1&source=4711",
 		},
 		{
 			"ForSourceAndTime",
-			EventQuery{Source: "4711", FragmentType: "FragmentType_1"},
-			"source=4711&dateFrom=2020-06-01T01:00:00.00Z&dateTo=2020-06-30T01:00:00.00Z",
+			EventQuery{Source: "4711", DateFrom: &dateFrom, DateTo: &dateTo},
+			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z&source=4711",
 		},
 	}
 

@@ -21,17 +21,43 @@ type Events interface {
 
 	Get(eventId string) (*Event, error)
 	GetForDevice(source string) (*EventCollection, error)
-	Find(query EventQuery) *EventCollection
+	Find(query EventQuery) (*EventCollection, error)
 	NextPage(c *EventCollection) *EventCollection
 	PrevPage(c *EventCollection) *EventCollection
 }
 
 type EventQuery struct {
-	DateFrom     time.Time
-	DateTo       time.Time
+	DateFrom     *time.Time
+	DateTo       *time.Time
 	FragmentType string
 	Type         string
 	Source       string
+}
+
+func (q EventQuery) QueryParams() string {
+	params := url.Values{}
+
+	if q.DateFrom != nil {
+		params.Add("dateFrom", q.DateFrom.Format(time.RFC3339))
+	}
+
+	if q.DateTo != nil {
+		params.Add("dateTo", q.DateTo.Format(time.RFC3339))
+	}
+
+	if len(q.FragmentType) > 0 {
+		params.Add("fragmentType", q.FragmentType)
+	}
+
+	if len(q.Type) > 0 {
+		params.Add("type", q.Type)
+	}
+
+	if len(q.Source) > 0 {
+		params.Add("source", q.Source)
+	}
+
+	return params.Encode()
 }
 
 type events struct {
@@ -129,16 +155,31 @@ func (e *events) GetForDevice(source string) (*EventCollection, error) {
 
 	return &result, nil
 }
-func (e *events) Find(query EventQuery) *EventCollection {
-	return nil
+func (e *events) Find(query EventQuery) (*EventCollection, error) {
+	body, status, err := e.client.get(fmt.Sprintf("%s?%s", e.basePath, query.QueryParams()))
+
+	if status != http.StatusOK {
+		var msg map[string]interface{}
+		_ = json.Unmarshal(body, &msg)
+		return nil, errors.New(fmt.Sprintf("Query failed. Server returns error: %s", msg["error"]))
+	}
+
+	var result EventCollection
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &result)
+		if err != nil {
+			log.Printf("Error while parsing response JSON: %s", err.Error())
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("Find: response body was empty")
+	}
+
+	return &result, nil
 }
 func (e *events) NextPage(c *EventCollection) *EventCollection {
 	return nil
 }
 func (e *events) PrevPage(c *EventCollection) *EventCollection {
-	return nil
-}
-
-func request(c *EventCollection) *EventCollection {
 	return nil
 }
