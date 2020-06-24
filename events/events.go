@@ -71,15 +71,13 @@ func (e *events) CreateEvent(event *CreateEvent) error {
 		log.Printf("Error while marhalling the event: %s", err.Error())
 	}
 
-	response, status, err := e.client.post(e.basePath, bytes)
+	body, status, err := e.client.post(e.basePath, bytes)
 	if err != nil {
 		log.Printf("Error while posting a new event: %s", err.Error())
 		return err
 	}
 	if status != http.StatusCreated {
-		var msg map[string]interface{}
-		_ = json.Unmarshal(response, &msg)
-		return errors.New(fmt.Sprintf("Event creation failed. Server returns error: %s", msg["error"]))
+		return createErrorFromResponse(body)
 	}
 
 	return nil
@@ -95,9 +93,7 @@ func (e *events) UpdateEvent(eventId string, event *UpdateEvent) error {
 	body, status, err := e.client.put(path, bytes)
 
 	if status != http.StatusOK {
-		var msg map[string]interface{}
-		_ = json.Unmarshal(body, &msg)
-		return errors.New(fmt.Sprintf("Event update failed. Server returns error: %s", msg["error"]))
+		return createErrorFromResponse(body)
 	}
 
 	return err
@@ -107,16 +103,14 @@ func (e *events) DeleteEvent(eventId string) error {
 	body, status, err := e.client.delete(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)))
 
 	if status != http.StatusNoContent {
-		var msg map[string]interface{}
-		_ = json.Unmarshal(body, &msg)
-		return errors.New(fmt.Sprintf("Event creation failed. Server returns error: %s", msg["error"]))
+		return createErrorFromResponse(body)
 	}
 
 	return err
 }
 
 func (e *events) Get(eventId string) (*Event, error) {
-	response, status, err := e.client.get(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)))
+	body, status, err := e.client.get(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)))
 
 	if status != 200 {
 		log.Printf("Event with id %s was not found", eventId)
@@ -124,8 +118,8 @@ func (e *events) Get(eventId string) (*Event, error) {
 	}
 
 	var result Event
-	if len(response) > 0 {
-		err = json.Unmarshal(response, &result)
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &result)
 		if err != nil {
 			log.Printf("Error while parsing response JSON: %s", err.Error())
 			return nil, err
@@ -138,30 +132,14 @@ func (e *events) Get(eventId string) (*Event, error) {
 }
 
 func (e *events) GetForDevice(source string) (*EventCollection, error) {
-	params := url.Values{}
-	params.Add("source", source)
-	response, _, err := e.client.get(fmt.Sprintf("%s?%s", e.basePath, params.Encode()))
-
-	var result EventCollection
-	if len(response) > 0 {
-		err = json.Unmarshal(response, &result)
-		if err != nil {
-			log.Printf("Error while parsing response JSON: %s", err.Error())
-			return nil, err
-		}
-	} else {
-		return nil, errors.New("GetForDevice: response body was empty")
-	}
-
-	return &result, nil
+	return e.Find(EventQuery{Source: source})
 }
+
 func (e *events) Find(query EventQuery) (*EventCollection, error) {
 	body, status, err := e.client.get(fmt.Sprintf("%s?%s", e.basePath, query.QueryParams()))
 
 	if status != http.StatusOK {
-		var msg map[string]interface{}
-		_ = json.Unmarshal(body, &msg)
-		return nil, errors.New(fmt.Sprintf("Query failed. Server returns error: %s", msg["error"]))
+		return nil, createErrorFromResponse(body)
 	}
 
 	var result EventCollection
@@ -177,9 +155,17 @@ func (e *events) Find(query EventQuery) (*EventCollection, error) {
 
 	return &result, nil
 }
+
 func (e *events) NextPage(c *EventCollection) *EventCollection {
 	return nil
 }
+
 func (e *events) PrevPage(c *EventCollection) *EventCollection {
 	return nil
+}
+
+func createErrorFromResponse(responseBody []byte) error {
+	var msg map[string]interface{}
+	_ = json.Unmarshal(responseBody, &msg)
+	return errors.New(fmt.Sprintf("Request failed. Server returns error: {%s: %s}", msg["error"], msg["message"]))
 }

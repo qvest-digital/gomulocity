@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	url "net/url"
+	"strings"
 	"testing"
 	"time"
 )
@@ -119,4 +120,58 @@ func TestEvents_FindWithFilter(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestEvents_ReturnsCollection(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(fmt.Sprintf(eventCollectionTemplate, event)))
+	}))
+	defer ts.Close()
+
+	t.Run("Returning error", func(t *testing.T) {
+		api := buildEventsApi(ts.URL)
+
+		collection, err := api.Find(EventQuery{})
+
+		if err != nil {
+			t.Fatalf("Find() - Error given but no expected")
+		}
+
+		if len(collection.Events) != 1 {
+			t.Fatalf("Find() = Collection size = %v, want %v", len(collection.Events), 1)
+		}
+
+		event := collection.Events[0]
+		if event.Id != eventId {
+			t.Fatalf("Find() = Collection event id = %v, want %v", event.Id, eventId)
+		}
+	})
+}
+
+func TestEvents_FindReturnsError(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		error := `{
+			"error": "undefined/validationError",
+			"message": "My fancy error",
+			"info": "https://www.cumulocity.com/guides/reference-guide/#error_reporting"
+		}`
+
+		w.WriteHeader(400)
+		_, _ = w.Write([]byte(error))
+	}))
+	defer ts.Close()
+
+	t.Run("Returning error", func(t *testing.T) {
+		api := buildEventsApi(ts.URL)
+
+		_, err := api.Find(EventQuery{})
+
+		if err == nil {
+			t.Fatalf("Find() - Error expected")
+		}
+
+		if strings.Contains(err.Error(), "{undefined/validationError: My fancy error}") == false {
+			t.Errorf("Find() = '%v', want '%v'", err.Error(), "My fancy error")
+		}
+	})
 }
