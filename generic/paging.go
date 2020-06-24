@@ -11,6 +11,7 @@ See: https://cumulocity.com/guides/reference/rest-implementation/#pagingstatisti
 */
 type PagingStatistics struct {
 	TotalRecords int `json:"totalRecords"`
+	TotalPages   int `json:"totalPages"`
 	PageSize     int `json:"pageSize"`
 	CurrentPage  int `json:"currentPage"`
 }
