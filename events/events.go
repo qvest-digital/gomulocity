@@ -22,8 +22,8 @@ type Events interface {
 	Get(eventId string) (*Event, error)
 	GetForDevice(source string) (*EventCollection, error)
 	Find(query EventQuery) (*EventCollection, error)
-	NextPage(c *EventCollection) *EventCollection
-	PrevPage(c *EventCollection) *EventCollection
+	NextPage(c *EventCollection) (*EventCollection, error)
+	PreviousPage(c *EventCollection) (*EventCollection, error)
 }
 
 type EventQuery struct {
@@ -156,12 +156,66 @@ func (e *events) Find(query EventQuery) (*EventCollection, error) {
 	return &result, nil
 }
 
-func (e *events) NextPage(c *EventCollection) *EventCollection {
-	return nil
+func (e *events) NextPage(c *EventCollection) (*EventCollection, error) {
+	if c.Next == "" {
+		log.Print("No next reference given. Returning nil.")
+		return nil, nil
+	}
+
+	nextUrl, err := url.Parse(c.Next)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Unparsable URL given for Next: '%s'", c.Next))
+	}
+
+	body, status, err := e.client.get(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+
+	if status != http.StatusOK {
+		return nil, createErrorFromResponse(body)
+	}
+
+	var result EventCollection
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &result)
+		if err != nil {
+			log.Printf("Error while parsing response JSON: %s", err.Error())
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("Find: response body was empty")
+	}
+
+	return &result, nil
 }
 
-func (e *events) PrevPage(c *EventCollection) *EventCollection {
-	return nil
+func (e *events) PreviousPage(c *EventCollection) (*EventCollection, error) {
+	if c.Prev == "" {
+		log.Print("No previous reference given. Returning nil.")
+		return nil, nil
+	}
+
+	nextUrl, err := url.Parse(c.Prev)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Unparsable URL given for Prev: '%s'", c.Next))
+	}
+
+	body, status, err := e.client.get(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+
+	if status != http.StatusOK {
+		return nil, createErrorFromResponse(body)
+	}
+
+	var result EventCollection
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &result)
+		if err != nil {
+			log.Printf("Error while parsing response JSON: %s", err.Error())
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("Find: response body was empty")
+	}
+
+	return &result, nil
 }
 
 func createErrorFromResponse(responseBody []byte) error {
