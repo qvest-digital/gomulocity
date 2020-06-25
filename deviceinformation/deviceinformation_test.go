@@ -27,8 +27,8 @@ func TestClient_GetDeviceInformation(t *testing.T) {
 					},
 				},
 			},
-			respCode:         http.StatusOK,
-			respBody:         responseBodyDeviceInformation,
+			respCode: http.StatusOK,
+			respBody: ResponseBodyDeviceInformation,
 		},
 		{
 			name:              "unauthorized",

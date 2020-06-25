@@ -7,7 +7,6 @@ import (
 	"github.com/tarent/gomulocity/generic"
 	"github.com/tarent/gomulocity/models"
 	"net/http"
-	"strings"
 )
 
 const (
@@ -16,77 +15,117 @@ const (
 	manageObjectContentType = "application/vnd.com.nsn.cumulocity.managedObject+json"
 )
 
-func (c Client) GetManageObjects(fragmentFilter string) ([]models.ManagedObject, error) {
+//monkey patch to test GetManagedObjects method
+var manageObjectPagingStatics = newManagedObjectPagingStatics
+
+type ManagedObjectsPagingStatics struct {
+	Statistics generic.PagingStatistics `json:"statistics"`
+}
+
+func newManagedObjectPagingStatics(c Client) (ManagedObjectsPagingStatics, error) {
 	req, err := http.NewRequest(
 		http.MethodGet,
-		fmt.Sprintf("%v%v", c.BaseURL, manageObjectPath),
+		fmt.Sprintf("%v/inventory/managedObjects", c.BaseURL),
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize rest request: %w", err)
+		return ManagedObjectsPagingStatics{}, fmt.Errorf("failed to initialize inventoryCollection request: %w", err)
 	}
 
 	req.SetBasicAuth(c.Username, c.Password)
 
-	//TODO: Add pagination
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute rest request: %w", err)
+		return ManagedObjectsPagingStatics{}, fmt.Errorf("failed to execute inventoryCollection request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		switch resp.StatusCode {
 		case http.StatusUnauthorized:
-			return []models.ManagedObject{}, generic.BadCredentialsErr
+			return ManagedObjectsPagingStatics{}, generic.BadCredentialsErr
 		case http.StatusForbidden:
-			return []models.ManagedObject{}, generic.AccessDeniedErr
+			return ManagedObjectsPagingStatics{}, generic.AccessDeniedErr
 		default:
-			return []models.ManagedObject{}, fmt.Errorf("received an unexpected status code: %v", resp.StatusCode)
+			return ManagedObjectsPagingStatics{}, fmt.Errorf("received an unexpected status code: %v", resp.StatusCode)
 		}
 	}
 
-	temporaryObjectData := struct {
-		ManageObjects    []models.ManagedObject   `json:"manageObjects"`
-		PagingStatistics generic.PagingStatistics `json:"statistics"`
-	}{}
-
-	if err = json.NewDecoder(resp.Body).Decode(&temporaryObjectData); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response body: %w", err)
+	inventoryReqCollection := ManagedObjectsPagingStatics{}
+	if err := json.NewDecoder(resp.Body).Decode(&inventoryReqCollection); err != nil {
+		return ManagedObjectsPagingStatics{}, fmt.Errorf("failed to unmarshal inventoryRequestCollection: %w", err)
 	}
-
-	if len(fragmentFilter) == 0 {
-		fragmentsFilter(fragmentFilter, &temporaryObjectData.ManageObjects)
-	}
-	return temporaryObjectData.ManageObjects, nil
+	return inventoryReqCollection, nil
 }
 
-func fragmentsFilter(filter string, objects *[]models.ManagedObject) {
-	if objects != nil {
-		for _, object := range *objects {
-			var datapoints []models.Datapoints
+func (c Client) GetManagedObjects(fragmentFilter string) ([]models.ManagedObject, error) {
+	InventoryReqCollection, err := manageObjectPagingStatics(c)
+	if err != nil {
+		return []models.ManagedObject{}, err
+	}
+	var aggregatedManagedObjects []models.ManagedObject
 
-			if object.C8yDashboard.Children.ID.Config.Datapoints != nil {
-				dps := object.C8yDashboard.Children.ID.Config.Datapoints
+	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%v%v", c.BaseURL, manageObjectPath), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize rest request: %w", err)
+	}
+	if len(fragmentFilter) > 0 {
+		query := request.URL.Query()
+		query.Add("fragmentType", fragmentFilter)
+		request.URL.RawQuery = query.Encode()
+	}
+	request.SetBasicAuth(c.Username, c.Password)
 
-				for _, datapoint := range dps {
-					if strings.ToLower(datapoint.Fragment) == strings.ToLower(filter) {
-						datapoints = append(datapoints, datapoint)
-					}
-				}
+	for InventoryReqCollection.Statistics.PageSize >= InventoryReqCollection.Statistics.CurrentPage {
+		req := generic.Page(InventoryReqCollection.Statistics.CurrentPage)
+		req(request)
+
+		resp, err := c.HTTPClient.Do(request)
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute rest request: %w", err)
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			switch resp.StatusCode {
+			case http.StatusUnauthorized:
+				return []models.ManagedObject{}, generic.BadCredentialsErr
+			case http.StatusForbidden:
+				return []models.ManagedObject{}, generic.AccessDeniedErr
+			default:
+				return []models.ManagedObject{}, fmt.Errorf("received an unexpected status code: %v", resp.StatusCode)
 			}
-			object.C8yDashboard.Children.ID.Config.Datapoints = datapoints
 		}
+
+		tempData := struct {
+			inventoryData models.InventoryStructure
+		}{}
+		if err = json.NewDecoder(resp.Body).Decode(&tempData.inventoryData); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal response body: %w", err)
+		}
+		resp.Body.Close()
+
+		for _, tempObject := range tempData.inventoryData.ManagedObject {
+			aggregatedManagedObjects = append(aggregatedManagedObjects, tempObject)
+		}
+		InventoryReqCollection.Statistics.CurrentPage++
 	}
+
+	return aggregatedManagedObjects, nil
 }
 
-func (c Client) CreateManagedObject(name, binarySwitch string) (models.NewManagedObject, error) {
+func (c Client) CreateManagedObject(name, state string) (models.NewManagedObject, error) {
 	data := struct {
 		Name         string `json:"name"`
-		BinarySwitch string `json:"com_cumulocity_model_BinarySwitch"`
+		BinarySwitch struct {
+			State string `json:"state"`
+		} `json:"com_cumulocity_model_BinarySwitch"`
 	}{
-		Name:         name,
-		BinarySwitch: binarySwitch,
+		Name: name,
+		BinarySwitch: struct {
+			State string `json:"state"`
+		}{
+			State: state,
+		},
 	}
 
 	body, err := json.Marshal(data)

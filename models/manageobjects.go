@@ -1,20 +1,19 @@
 package models
 
-type ManagedObject struct {
-	ID       string      `json:"id"`
-	Name     string      `json:"name"`
-	IsDevice interface{} `json:"c8y_IsDevice"`
+type (
+	InventoryStructure struct {
+		ManagedObject []ManagedObject `json:"managedObjects"`
+	}
 
-	C8yDashboard struct {
-		Children struct {
-			ID struct {
-				Config struct {
-					Datapoints []Datapoints `json:"datapoints"`
-				} `json:"config"`
-			}
-		} `json:"children"`
-	} `json:"c8y_Dashboard"`
-}
+	ManagedObject struct {
+		ID             string `json:"id"`
+		Owner          string `json:"owner"`
+		C8YTemperature struct {
+			Unit  string  `json:"unit"`
+			Value float64 `json:"value"`
+		} `json:"c8y_Temperature,omitempty"`
+	}
+)
 
 type NewManagedObject struct {
 	Self         string `json:"self"`
