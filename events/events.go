@@ -157,7 +157,17 @@ func (e *events) getPage(reference string) (*EventCollection, error) {
 		return nil, errors.New(fmt.Sprintf("Unparsable URL given for page reference: '%s'", reference))
 	}
 
-	return e.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+	collection, err := e.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(collection.Events) == 0 {
+		log.Print("Returned collection is empty. Returning nil.")
+		return nil, nil
+	}
+
+	return collection, nil
 }
 
 // -- internal
