@@ -122,6 +122,56 @@ func TestEvents_FindWithFilter(t *testing.T) {
 	}
 }
 
+func TestEvents_Find_HandlesPageSize(t *testing.T) {
+	tests := []struct {
+		name        string
+		pageSize    int
+		errExpected bool
+	}{
+		{"Negative", -1, true},
+		{"Zero", 0, false},
+		{"Max", 2000, false},
+		{"too large", 2001, true},
+		{"in range", 10, false},
+	}
+
+	// given: A test server
+	var capturedUrl string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedUrl = r.URL.String()
+		_, _ = w.Write([]byte(fmt.Sprintf(eventCollectionTemplate, event)))
+	}))
+	defer ts.Close()
+
+	// and: the api as system under test
+	api := buildEventsApi(ts.URL)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			query := EventQuery{
+				Source:   deviceId,
+				PageSize: tt.pageSize,
+			}
+			_, err := api.Find(query)
+
+			if tt.errExpected && err != nil {
+				t.Errorf("Find() error expected %v, was %v", tt.errExpected, err == nil)
+			}
+
+			if !tt.errExpected {
+				contains := strings.Contains(capturedUrl, fmt.Sprintf("pageSize=%d", tt.pageSize))
+
+				if tt.pageSize != 0 && !contains {
+					t.Errorf("Find() expected pageSize '%d' in url. '%s' given", tt.pageSize, capturedUrl)
+				}
+
+				if tt.pageSize == 0 && contains {
+					t.Error("Find() expected no pageSize in url on value 0")
+				}
+			}
+		})
+	}
+}
+
 func TestEvents_ReturnsCollection(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(fmt.Sprintf(eventCollectionTemplate, event)))

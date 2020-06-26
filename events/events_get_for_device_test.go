@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -59,7 +60,7 @@ func TestEvents_GetForDevice_ExistingId(t *testing.T) {
 	api := buildEventsApi(ts.URL)
 
 	t.Run("existing device id", func(t *testing.T) {
-		collection, err := api.GetForDevice(deviceId)
+		collection, err := api.GetForDevice(deviceId, 5)
 
 		if err != nil {
 			t.Fatalf("GetForDevice() got an unexpected error: %s", err.Error())
@@ -80,6 +81,52 @@ func TestEvents_GetForDevice_ExistingId(t *testing.T) {
 	})
 }
 
+func TestEvents_GetForDevice_HandlesPageSize(t *testing.T) {
+	tests := []struct {
+		name        string
+		pageSize    int
+		errExpected bool
+	}{
+		{"Negative", -1, true},
+		{"Zero", 0, false},
+		{"Max", 2000, false},
+		{"too large", 2001, true},
+		{"in range", 10, false},
+	}
+
+	// given: A test server
+	var capturedUrl string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedUrl = r.URL.String()
+		_, _ = w.Write([]byte(fmt.Sprintf(eventCollectionTemplate, event)))
+	}))
+	defer ts.Close()
+
+	// and: the api as system under test
+	api := buildEventsApi(ts.URL)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := api.GetForDevice(deviceId, tt.pageSize)
+
+			if tt.errExpected && err != nil {
+				t.Errorf("GetForDevice() error expected %v, was %v", tt.errExpected, err == nil)
+			}
+
+			if !tt.errExpected {
+				contains := strings.Contains(capturedUrl, fmt.Sprintf("pageSize=%d", tt.pageSize))
+
+				if tt.pageSize != 0 && !contains {
+					t.Errorf("GetForDevice() expected pageSize '%d' in url. '%s' given", tt.pageSize, capturedUrl)
+				}
+
+				if tt.pageSize == 0 && contains {
+					t.Error("GetForDevice() expected no pageSize in url on value 0")
+				}
+			}
+		})
+	}
+}
+
 func TestEvents_GetForDevice_NotExistingId(t *testing.T) {
 	// given: A test server
 	ts := buildHttpServer(200, fmt.Sprintf(eventCollectionTemplate, ""))
@@ -89,7 +136,7 @@ func TestEvents_GetForDevice_NotExistingId(t *testing.T) {
 	api := buildEventsApi(ts.URL)
 
 	t.Run("non existing device id", func(t *testing.T) {
-		collection, err := api.GetForDevice(deviceId)
+		collection, err := api.GetForDevice(deviceId, 5)
 
 		if err != nil {
 			t.Fatalf("GetForDevice() got an unexpected error: %s", err.Error())
@@ -116,7 +163,7 @@ func TestEvents_GetForDevice_MalformedResponse(t *testing.T) {
 	api := buildEventsApi(ts.URL)
 
 	t.Run("malformed json", func(t *testing.T) {
-		_, err := api.GetForDevice(deviceId)
+		_, err := api.GetForDevice(deviceId, 5)
 
 		if err == nil {
 			t.Errorf("GetForDevice() Expected error - non given")

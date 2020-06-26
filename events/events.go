@@ -20,7 +20,7 @@ type Events interface {
 	DeleteEvent(eventId string) error
 
 	Get(eventId string) (*Event, error)
-	GetForDevice(source string) (*EventCollection, error)
+	GetForDevice(source string, pageSize int) (*EventCollection, error)
 	Find(query EventQuery) (*EventCollection, error)
 	NextPage(c *EventCollection) (*EventCollection, error)
 	PreviousPage(c *EventCollection) (*EventCollection, error)
@@ -32,6 +32,7 @@ type EventQuery struct {
 	FragmentType string
 	Type         string
 	Source       string
+	PageSize     int
 }
 
 func (q EventQuery) QueryParams() string {
@@ -43,6 +44,10 @@ func (q EventQuery) QueryParams() string {
 
 	if q.DateTo != nil {
 		params.Add("dateTo", q.DateTo.Format(time.RFC3339))
+	}
+
+	if q.PageSize > 0 {
+		params.Add("pageSize", fmt.Sprintf("%d", q.PageSize))
 	}
 
 	if len(q.FragmentType) > 0 {
@@ -130,8 +135,8 @@ func (e *events) Get(eventId string) (*Event, error) {
 	return &result, nil
 }
 
-func (e *events) GetForDevice(source string) (*EventCollection, error) {
-	return e.Find(EventQuery{Source: source})
+func (e *events) GetForDevice(source string, pageSize int) (*EventCollection, error) {
+	return e.Find(EventQuery{Source: source, PageSize: pageSize})
 }
 
 func (e *events) Find(query EventQuery) (*EventCollection, error) {
