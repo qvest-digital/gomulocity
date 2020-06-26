@@ -34,7 +34,7 @@ var eventUpdate = &UpdateEvent{
 
 func TestEvents_Update_Event_Success(t *testing.T) {
 	// given: A test server
-	ts := updateEventHttpServer(200)
+	ts := updateEventHttpServer(204)
 	defer ts.Close()
 
 	// and: the api as system under test

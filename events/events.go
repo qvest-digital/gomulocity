@@ -91,7 +91,7 @@ func (e *events) UpdateEvent(eventId string, event *UpdateEvent) error {
 	path := fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId))
 
 	body, status, err := e.client.put(path, bytes)
-	if status != http.StatusOK {
+	if status != http.StatusNoContent {
 		return createErrorFromResponse(body)
 	}
 
