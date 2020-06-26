@@ -35,7 +35,11 @@ type EventQuery struct {
 	PageSize     int
 }
 
-func (q EventQuery) QueryParams() string {
+func (q EventQuery) QueryParams() (string, error) {
+	if q.PageSize < 0 || q.PageSize > 2000 {
+		return "", errors.New(fmt.Sprintf("The page size must be between 1 and 2000. Was %d", q.PageSize))
+	}
+
 	params := url.Values{}
 
 	if q.DateFrom != nil {
@@ -62,7 +66,7 @@ func (q EventQuery) QueryParams() string {
 		params.Add("source", q.Source)
 	}
 
-	return params.Encode()
+	return params.Encode(), nil
 }
 
 type events struct {
@@ -140,7 +144,12 @@ func (e *events) GetForDevice(source string, pageSize int) (*EventCollection, er
 }
 
 func (e *events) Find(query EventQuery) (*EventCollection, error) {
-	return e.getCommon(fmt.Sprintf("%s?%s", e.basePath, query.QueryParams()))
+	queryParams, err := query.QueryParams()
+	if err != nil {
+		return nil, err
+	}
+
+	return e.getCommon(fmt.Sprintf("%s?%s", e.basePath, queryParams))
 }
 
 func (e *events) NextPage(c *EventCollection) (*EventCollection, error) {

@@ -153,8 +153,10 @@ func TestEvents_Find_HandlesPageSize(t *testing.T) {
 			}
 			_, err := api.Find(query)
 
-			if tt.errExpected && err != nil {
-				t.Errorf("Find() error expected %v, was %v", tt.errExpected, err == nil)
+			if tt.errExpected {
+				if err == nil {
+					t.Error("GetForDevice() error expected but was nil")
+				}
 			}
 
 			if !tt.errExpected {

@@ -108,8 +108,10 @@ func TestEvents_GetForDevice_HandlesPageSize(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := api.GetForDevice(deviceId, tt.pageSize)
 
-			if tt.errExpected && err != nil {
-				t.Errorf("GetForDevice() error expected %v, was %v", tt.errExpected, err == nil)
+			if tt.errExpected {
+				if err == nil {
+					t.Error("GetForDevice() error expected but was nil")
+				}
 			}
 
 			if !tt.errExpected {
