@@ -15,26 +15,23 @@ type Client struct {
 }
 
 func (client *Client) delete(path string) ([]byte, int, error) {
-	url := client.BaseURL + path
-	return client.request(http.MethodDelete, url, []byte{})
+	return client.request(http.MethodDelete, path, []byte{})
 }
 
 func (client *Client) put(path string, body []byte) ([]byte, int, error) {
-	url := client.BaseURL + path
-	return client.request(http.MethodPut, url, body)
+	return client.request(http.MethodPut, path, body)
 }
 
 func (client *Client) post(path string, body []byte) ([]byte, int, error) {
-	url := client.BaseURL + path
-	return client.request(http.MethodPost, url, body)
+	return client.request(http.MethodPost, path, body)
 }
 
 func (client *Client) get(path string) ([]byte, int, error) {
-	url := client.BaseURL + path
-	return client.request(http.MethodGet, url, []byte{})
+	return client.request(http.MethodGet, path, []byte{})
 }
 
-func (client *Client) request(method, url string, body []byte) ([]byte, int, error) {
+func (client *Client) request(method, path string, body []byte) ([]byte, int, error) {
+	url := client.BaseURL + path
 	log.Printf("HTTP %s on URL %s", method, url)
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
