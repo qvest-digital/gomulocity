@@ -154,7 +154,6 @@ func (e *events) Get(eventId string) (*Event, *generic.Error) {
 		return nil, clientError(fmt.Sprintf("Error while getting an event: %s", err.Error()), "Get")
 	}
 	if status != http.StatusOK {
-		log.Printf("Event with id %s was not found", eventId)
 		return nil, nil
 	}
 
