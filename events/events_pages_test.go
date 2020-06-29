@@ -20,7 +20,7 @@ func TestEvents_NextPage_Success(t *testing.T) {
 	api := buildEventsApi(ts.URL)
 
 	// when: We create an existing collection and call `NextPage`
-	collection := createCollection("https://t0818.cumulocity.com/event/events?source=1111111&pageSize=5&currentPage=3", "")
+	collection := createCollection(ts.URL+"/event/events?source=1111111&pageSize=5&currentPage=3", "")
 	expectedUrl := ts.URL + "/event/events?source=1111111&pageSize=5&currentPage=3"
 	nextCollection, _ := api.NextPage(collection)
 
@@ -68,7 +68,7 @@ func TestEvents_NextPage_Empty(t *testing.T) {
 	api := buildEventsApi(ts.URL)
 
 	// when: We call `NextPage` with a given URL
-	collection := createCollection("https://t0818.cumulocity.com/event/events?source=1111111&pageSize=5&currentPage=3", "")
+	collection := createCollection(ts.URL+"/event/events?source=1111111&pageSize=5&currentPage=3", "")
 	nextCollection, _ := api.NextPage(collection)
 
 	// then: `nextCollection` ist `nil`
@@ -88,7 +88,7 @@ func TestEvents_NextPage_Error(t *testing.T) {
 	api := buildEventsApi(ts.URL)
 
 	// when: We call `NextPage` with a given URL
-	collection := createCollection("https://t0818.cumulocity.com/event/events?source=1111111&pageSize=5&currentPage=3", "")
+	collection := createCollection(ts.URL+"/event/events?source=1111111&pageSize=5&currentPage=3", "")
 	_, err := api.NextPage(collection)
 
 	// then: an error occurred
@@ -110,7 +110,7 @@ func TestEvents_PreviousPage_Success(t *testing.T) {
 	api := buildEventsApi(ts.URL)
 
 	// when: We create an existing collection and call `PreviousPage`
-	collection := createCollection("", "https://t0818.cumulocity.com/event/events?source=1111111&pageSize=5&currentPage=1")
+	collection := createCollection("", ts.URL+"/event/events?source=1111111&pageSize=5&currentPage=1")
 	expectedUrl := ts.URL + "/event/events?source=1111111&pageSize=5&currentPage=1"
 	nextCollection, _ := api.PreviousPage(collection)
 
@@ -158,7 +158,7 @@ func TestEvents_PreviousPage_Empty(t *testing.T) {
 	api := buildEventsApi(ts.URL)
 
 	// when: We call `PreviousPage` with a given URL
-	collection := createCollection("https://t0818.cumulocity.com/event/events?source=1111111&pageSize=5&currentPage=3", "")
+	collection := createCollection(ts.URL+"/event/events?source=1111111&pageSize=5&currentPage=3", "")
 	nextCollection, _ := api.NextPage(collection)
 
 	// then: `previousCollection` ist `nil`
@@ -178,7 +178,7 @@ func TestEvents_PreviousPage_Error(t *testing.T) {
 	api := buildEventsApi(ts.URL)
 
 	// when: We call `PreviousPage` with a given URL
-	collection := createCollection("", "https://t0818.cumulocity.com/event/events?source=1111111&pageSize=5&currentPage=1")
+	collection := createCollection("", ts.URL+"/event/events?source=1111111&pageSize=5&currentPage=1")
 	_, error := api.PreviousPage(collection)
 
 	// then: an error occurred
