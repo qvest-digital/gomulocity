@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -11,7 +12,7 @@ import (
 See: https://cumulocity.com/guides/reference/alarms/#delete-delete-an-alarm-collection
  */
 type AlarmsFilter struct {
-	Status				Status	// Comma separated alarm statuses, for example ACTIVE,CLEARED.
+	Status				[]Status	// Comma separated alarm statuses, for example ACTIVE,CLEARED.
 	SourceId 			string	// Source device id.
 	WithSourceAssets	bool	// When set to true also alarms for related source assets will be removed.
 								// When this parameter is provided also source must be defined.
@@ -41,7 +42,12 @@ func (daf AlarmsFilter) appendFilter(r *http.Request) error {
 	q := r.URL.Query()
 
 	if len(daf.Status) > 0 {
-		q.Set("status", fmt.Sprintf("%s", daf.Status))
+		var statusesAsString []string
+		for _, status := range daf.Status {
+			fmt.Println(status)
+			statusesAsString = append(statusesAsString, string(status))
+		}
+		q.Set("status", strings.Join(statusesAsString, ","))
 	}
 
 	if len(daf.SourceId) > 0 {

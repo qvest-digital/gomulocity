@@ -20,20 +20,20 @@ const (
 type Status string
 const (
 	ACTIVE Status = "ACTIVE"
-	ACKNOWLEDGED = "ACKNOWLEDGED"
-	CLEARED = "CLEARED"
+	ACKNOWLEDGED Status = "ACKNOWLEDGED"
+	CLEARED Status = "CLEARED"
 )
 
 type Severity string
 const (
 	CRITICAL Severity = "CRITICAL"
-	MAJOR = "MAJOR"
-	MINOR = "MINOR"
-	WARNING = "WARNING"
+	MAJOR Severity = "MAJOR"
+	MINOR Severity = "MINOR"
+	WARNING Severity = "WARNING"
 )
 
 /*
-Alarm represent cumulocity's 'application/vnd.com.nsn.cumulocity.alarm+json'.
+Represents cumulocity's alarm 'application/vnd.com.nsn.cumulocity.alarm+json'.
 See: https://cumulocity.com/guides/reference/alarms/#alarm
 */
 type NewAlarm struct {
@@ -46,6 +46,7 @@ type NewAlarm struct {
 	Status		Status `json:"status"`
 	Severity	Severity `json:"severity"`
 	// TODO: object - 0..n additional properties of the alarm.
+	//other []interface{}
 }
 
 type Alarm struct {
@@ -84,9 +85,9 @@ See: https://cumulocity.com/guides/reference/alarms/#alarm-collection
 type AlarmCollection struct {
 	Self              string                   `json:"self"`
 	Alarms 			  []Alarm       		   `json:"alarms"`
-	Statistics        generic.PagingStatistics `json:"statistics"`
-	Prev              string                   `json:"prev"`
-	Next              string                   `json:"next"`
+	Statistics        generic.PagingStatistics `json:"statistics,omitempty"`
+	Prev              string                   `json:"prev,omitempty"`
+	Next              string                   `json:"next,omitempty"`
 }
 
 /*
@@ -194,6 +195,7 @@ func (c Client) GetAlarms(alarmsFilter AlarmsFilter, reqOpts ...func(*http.Reque
 	}
 
 	alarmsFilter.appendFilter(req)
+	fmt.Printf("send GET request: %s\n", req.URL.String())
 
 	req.SetBasicAuth(c.Username, c.Password)
 
@@ -230,6 +232,69 @@ func (c Client) GetAlarms(alarmsFilter AlarmsFilter, reqOpts ...func(*http.Reque
 	err = json.NewDecoder(resp.Body).Decode(&respBody)
 	if err != nil {
 		return AlarmCollection{}, fmt.Errorf("failed to decode response body: %w", err)
+	}
+	return respBody, nil
+}
+
+/*
+Get alarm by ID.
+
+Return alarm on success.
+Can return the following errors:
+- generic.BadCredentialsErr (invalid username / password / host combination)
+- generic.AccessDeniedErr (missing user rights)
+- generic.Error (generic cloud error)
+- error (unexpected)
+
+See: https://cumulocity.com/guides/reference/alarms/#alarm-collection
+*/
+func (c Client) GetAlarm(id string) (Alarm, error) {
+	req, err := http.NewRequest(
+		http.MethodGet,
+		fmt.Sprintf("%s%s/%s", c.BaseURL, alarmApiPath, id),
+		nil,
+	)
+	if err != nil {
+		return Alarm{}, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	fmt.Printf("send GET request: %s\n", req.URL.String())
+
+	req.SetBasicAuth(c.Username, c.Password)
+
+	h := req.Header
+	h.Add("Accept", alarmType)
+	req.Header = h
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return Alarm{}, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return Alarm{}, generic.BadCredentialsErr
+		case http.StatusForbidden:
+			return Alarm{}, generic.AccessDeniedErr
+		default:
+			if strings.HasPrefix(resp.Header.Get("Content-Type"), generic.ErrorContentType) {
+				var errResp generic.Error
+				err := json.NewDecoder(resp.Body).Decode(&errResp)
+				if err != nil {
+					return Alarm{}, fmt.Errorf("failed to decode error response body: %s", err)
+				}
+				return Alarm{}, fmt.Errorf("failed to find-all alarms (%d): %w", resp.StatusCode, errResp)
+			}
+			return Alarm{}, fmt.Errorf("failed to find-all alarms with status code %d", resp.StatusCode)
+		}
+	}
+
+	var respBody Alarm
+	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	if err != nil {
+		return Alarm{}, fmt.Errorf("failed to decode response body: %w", err)
 	}
 	return respBody, nil
 }
@@ -315,9 +380,9 @@ Can return the following errors:
 
 See: https://cumulocity.com/guides/reference/alarms/#put-bulk-update-of-alarm-collection
 */
-func (c Client) UpdateAlarms(updateAlarmsFilter UpdateAlarmsFilter, newStatus string) error {
+func (c Client) UpdateAlarms(updateAlarmsFilter UpdateAlarmsFilter, newStatus Status) error {
 	alarmStatus := struct {
-		Status	string `json:"status"`
+		Status	Status `json:"status"`
 	}{
 		Status: newStatus,
 	}
