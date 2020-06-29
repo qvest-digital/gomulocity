@@ -180,24 +180,22 @@ func TestEvents_ReturnsCollection(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	t.Run("Returning error", func(t *testing.T) {
-		api := buildEventsApi(ts.URL)
+	api := buildEventsApi(ts.URL)
 
-		collection, err := api.Find(EventQuery{})
+	collection, err := api.Find(EventQuery{})
 
-		if err != nil {
-			t.Fatalf("Find() - Error given but no expected")
-		}
+	if err != nil {
+		t.Fatalf("Find() - Error given but no expected")
+	}
 
-		if len(collection.Events) != 1 {
-			t.Fatalf("Find() = Collection size = %v, want %v", len(collection.Events), 1)
-		}
+	if len(collection.Events) != 1 {
+		t.Fatalf("Find() = Collection size = %v, want %v", len(collection.Events), 1)
+	}
 
-		event := collection.Events[0]
-		if event.Id != eventId {
-			t.Fatalf("Find() = Collection event id = %v, want %v", event.Id, eventId)
-		}
-	})
+	event := collection.Events[0]
+	if event.Id != eventId {
+		t.Fatalf("Find() = Collection event id = %v, want %v", event.Id, eventId)
+	}
 }
 
 func TestEvents_FindReturnsError(t *testing.T) {
@@ -213,17 +211,15 @@ func TestEvents_FindReturnsError(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	t.Run("Returning error", func(t *testing.T) {
-		api := buildEventsApi(ts.URL)
+	api := buildEventsApi(ts.URL)
 
-		_, err := api.Find(EventQuery{})
+	_, err := api.Find(EventQuery{})
 
-		if err == nil {
-			t.Fatalf("Find() - Error expected")
-		}
+	if err == nil {
+		t.Fatalf("Find() - Error expected")
+	}
 
-		if err.Message != "My fancy error" {
-			t.Errorf("Find() = '%v', want '%v'", err.Message, "My fancy error")
-		}
-	})
+	if err.Message != "My fancy error" {
+		t.Errorf("Find() = '%v', want '%v'", err.Message, "My fancy error")
+	}
 }

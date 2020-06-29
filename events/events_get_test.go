@@ -12,21 +12,19 @@ func TestEvents_Get_ExistingId(t *testing.T) {
 	// and: the api as system under test
 	api := buildEventsApi(ts.URL)
 
-	t.Run("existing device id", func(t *testing.T) {
-		event, err := api.Get(deviceId)
+	event, err := api.Get(deviceId)
 
-		if err != nil {
-			t.Fatalf("Get() got an unexpected error: %s", err.Error())
-		}
+	if err != nil {
+		t.Fatalf("Get() got an unexpected error: %s", err.Error())
+	}
 
-		if event == nil {
-			t.Fatalf("Get() returns an unexpected nil event.")
-		}
+	if event == nil {
+		t.Fatalf("Get() returns an unexpected nil event.")
+	}
 
-		if event.Id != eventId {
-			t.Errorf("Get() event id = %v, want %v", event.Id, eventId)
-		}
-	})
+	if event.Id != eventId {
+		t.Errorf("Get() event id = %v, want %v", event.Id, eventId)
+	}
 }
 
 func TestEvents_Get_NotExistingId(t *testing.T) {
@@ -37,19 +35,17 @@ func TestEvents_Get_NotExistingId(t *testing.T) {
 	// and: the api as system under test
 	api := buildEventsApi(ts.URL)
 
-	t.Run("non existing device id", func(t *testing.T) {
-		event, err := api.Get(eventId)
+	event, err := api.Get(eventId)
 
-		if err != nil {
-			t.Fatalf("Get() got an unexpected error: %s", err.Error())
-			return
-		}
+	if err != nil {
+		t.Fatalf("Get() got an unexpected error: %s", err.Error())
+		return
+	}
 
-		if event != nil {
-			t.Fatalf("Get() got an unexpected event. Should be nil.")
-			return
-		}
-	})
+	if event != nil {
+		t.Fatalf("Get() got an unexpected event. Should be nil.")
+		return
+	}
 }
 
 func TestEvents_Get_MalformedJson(t *testing.T) {
@@ -60,12 +56,10 @@ func TestEvents_Get_MalformedJson(t *testing.T) {
 	// and: the api as system under test
 	api := buildEventsApi(ts.URL)
 
-	t.Run("non existing device id", func(t *testing.T) {
-		_, err := api.Get(eventId)
+	_, err := api.Get(eventId)
 
-		if err == nil {
-			t.Error("Get() Error expected but nil was given")
-			return
-		}
-	})
+	if err == nil {
+		t.Error("Get() Error expected but nil was given")
+		return
+	}
 }

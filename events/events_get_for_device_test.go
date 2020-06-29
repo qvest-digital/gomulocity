@@ -59,26 +59,24 @@ func TestEvents_GetForDevice_ExistingId(t *testing.T) {
 	// and: the api as system under test
 	api := buildEventsApi(ts.URL)
 
-	t.Run("existing device id", func(t *testing.T) {
-		collection, err := api.GetForDevice(deviceId, 5)
+	collection, err := api.GetForDevice(deviceId, 5)
 
-		if err != nil {
-			t.Fatalf("GetForDevice() got an unexpected error: %s", err.Error())
-		}
+	if err != nil {
+		t.Fatalf("GetForDevice() got an unexpected error: %s", err.Error())
+	}
 
-		if collection == nil {
-			t.Fatalf("GetForDevice() got no explict error but the collection was nil.")
-		}
+	if collection == nil {
+		t.Fatalf("GetForDevice() got no explict error but the collection was nil.")
+	}
 
-		if len(collection.Events) != 1 {
-			t.Fatalf("GetForDevice() events count = %v, want %v", len(collection.Events), 1)
-		}
+	if len(collection.Events) != 1 {
+		t.Fatalf("GetForDevice() events count = %v, want %v", len(collection.Events), 1)
+	}
 
-		event := collection.Events[0]
-		if event.Id != eventId {
-			t.Errorf("GetForDevice() event id = %v, want %v", event.Id, eventId)
-		}
-	})
+	event := collection.Events[0]
+	if event.Id != eventId {
+		t.Errorf("GetForDevice() event id = %v, want %v", event.Id, eventId)
+	}
 }
 
 func TestEvents_GetForDevice_HandlesPageSize(t *testing.T) {
@@ -137,23 +135,21 @@ func TestEvents_GetForDevice_NotExistingId(t *testing.T) {
 	// and: the api as system under test
 	api := buildEventsApi(ts.URL)
 
-	t.Run("non existing device id", func(t *testing.T) {
-		collection, err := api.GetForDevice(deviceId, 5)
+	collection, err := api.GetForDevice(deviceId, 5)
 
-		if err != nil {
-			t.Fatalf("GetForDevice() got an unexpected error: %s", err.Error())
-			return
-		}
+	if err != nil {
+		t.Fatalf("GetForDevice() got an unexpected error: %s", err.Error())
+		return
+	}
 
-		if collection == nil {
-			t.Fatalf("GetForDevice() got no explict error but the collection was nil.")
-			return
-		}
+	if collection == nil {
+		t.Fatalf("GetForDevice() got no explict error but the collection was nil.")
+		return
+	}
 
-		if len(collection.Events) != 0 {
-			t.Fatalf("GetForDevice() events count = %v, want %v", len(collection.Events), 0)
-		}
-	})
+	if len(collection.Events) != 0 {
+		t.Fatalf("GetForDevice() events count = %v, want %v", len(collection.Events), 0)
+	}
 }
 
 func TestEvents_GetForDevice_MalformedResponse(t *testing.T) {
@@ -164,12 +160,10 @@ func TestEvents_GetForDevice_MalformedResponse(t *testing.T) {
 	// and: the api as system under test
 	api := buildEventsApi(ts.URL)
 
-	t.Run("malformed json", func(t *testing.T) {
-		_, err := api.GetForDevice(deviceId, 5)
+	_, err := api.GetForDevice(deviceId, 5)
 
-		if err == nil {
-			t.Errorf("GetForDevice() Expected error - non given")
-			return
-		}
-	})
+	if err == nil {
+		t.Errorf("GetForDevice() Expected error - non given")
+		return
+	}
 }

@@ -22,17 +22,15 @@ func TestEvents_Delete_Event_Success(t *testing.T) {
 	// and: the api as system under test
 	api := buildEventsApi(ts.URL)
 
-	t.Run("delete successful", func(t *testing.T) {
-		err := api.DeleteEvent(eventId)
+	err := api.DeleteEvent(eventId)
 
-		if err != nil {
-			t.Fatalf("DeleteEvent() got an unexpected error: %s", err.Error())
-		}
+	if err != nil {
+		t.Fatalf("DeleteEvent() got an unexpected error: %s", err.Error())
+	}
 
-		if strings.Contains(capturedUrl, eventId) == false {
-			t.Errorf("DeleteEvent() The target URL does not contains the event Id: url: %s - expected eventId %s", capturedUrl, eventId)
-		}
-	})
+	if strings.Contains(capturedUrl, eventId) == false {
+		t.Errorf("DeleteEvent() The target URL does not contains the event Id: url: %s - expected eventId %s", capturedUrl, eventId)
+	}
 }
 
 func TestEvents_Delete_Event_NotFound(t *testing.T) {
@@ -43,12 +41,10 @@ func TestEvents_Delete_Event_NotFound(t *testing.T) {
 	// and: the api as system under test
 	api := buildEventsApi(ts.URL)
 
-	t.Run("non existing device id", func(t *testing.T) {
-		err := api.DeleteEvent(eventId)
+	err := api.DeleteEvent(eventId)
 
-		if err == nil {
-			t.Errorf("DeleteEvent() expected error on 404 - not found")
-			return
-		}
-	})
+	if err == nil {
+		t.Errorf("DeleteEvent() expected error on 404 - not found")
+		return
+	}
 }
