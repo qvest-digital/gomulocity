@@ -80,7 +80,7 @@ func (e *events) CreateEvent(event *CreateEvent) error {
 		log.Printf("Error while marhalling the event: %s", err.Error())
 	}
 
-	body, status, err := e.client.post(e.basePath, bytes)
+	body, status, err := e.client.post(e.basePath, bytes, EmptyHeader())
 	if err != nil {
 		log.Printf("Error while posting a new event: %s", err.Error())
 		return err
@@ -99,7 +99,7 @@ func (e *events) UpdateEvent(eventId string, event *UpdateEvent) error {
 	}
 	path := fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId))
 
-	body, status, err := e.client.put(path, bytes)
+	body, status, err := e.client.put(path, bytes, EmptyHeader())
 	if status != http.StatusNoContent {
 		return createErrorFromResponse(body)
 	}
@@ -108,7 +108,7 @@ func (e *events) UpdateEvent(eventId string, event *UpdateEvent) error {
 }
 
 func (e *events) DeleteEvent(eventId string) error {
-	body, status, err := e.client.delete(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)))
+	body, status, err := e.client.delete(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)), EmptyHeader())
 
 	if status != http.StatusNoContent {
 		return createErrorFromResponse(body)
@@ -118,7 +118,7 @@ func (e *events) DeleteEvent(eventId string) error {
 }
 
 func (e *events) Get(eventId string) (*Event, error) {
-	body, status, err := e.client.get(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)))
+	body, status, err := e.client.get(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)), EmptyHeader())
 
 	if status != http.StatusOK {
 		log.Printf("Event with id %s was not found", eventId)
@@ -187,7 +187,7 @@ func (e *events) getPage(reference string) (*EventCollection, error) {
 // -- internal
 
 func (e *events) getCommon(path string) (*EventCollection, error) {
-	body, status, err := e.client.get(path)
+	body, status, err := e.client.get(path, EmptyHeader())
 
 	if status != http.StatusOK {
 		return nil, createErrorFromResponse(body)
