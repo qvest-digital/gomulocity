@@ -222,8 +222,8 @@ func TestEvents_FindReturnsError(t *testing.T) {
 			t.Fatalf("Find() - Error expected")
 		}
 
-		if strings.Contains(err.Error(), "{undefined/validationError: My fancy error}") == false {
-			t.Errorf("Find() = '%v', want '%v'", err.Error(), "My fancy error")
+		if err.Message != "My fancy error" {
+			t.Errorf("Find() = '%v', want '%v'", err.Message, "My fancy error")
 		}
 	})
 }
