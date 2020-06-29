@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/tarent/gomulocity/generic"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -46,7 +47,7 @@ type NewAlarm struct {
 	Status		Status `json:"status"`
 	Severity	Severity `json:"severity"`
 	// TODO: object - 0..n additional properties of the alarm.
-	//other []interface{}
+	//Other map[string]interface{}
 }
 
 type Alarm struct {
@@ -251,7 +252,7 @@ See: https://cumulocity.com/guides/reference/alarms/#alarm-collection
 func (c Client) GetAlarm(id string) (Alarm, error) {
 	req, err := http.NewRequest(
 		http.MethodGet,
-		fmt.Sprintf("%s%s/%s", c.BaseURL, alarmApiPath, id),
+		fmt.Sprintf("%s%s/%s", c.BaseURL, alarmApiPath, url.QueryEscape(id)),
 		nil,
 	)
 	if err != nil {
@@ -310,7 +311,7 @@ Can return the following errors:
 
 See: https://cumulocity.com/guides/reference/alarms/#update-an-alarm
 */
-func (c Client) UpdateAlarm(alarm AlarmUpdate, ID string) (Alarm, error) {
+func (c Client) UpdateAlarm(alarm AlarmUpdate, id string) (Alarm, error) {
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(alarm)
 	if err != nil {
@@ -319,7 +320,7 @@ func (c Client) UpdateAlarm(alarm AlarmUpdate, ID string) (Alarm, error) {
 
 	req, err := http.NewRequest(
 		http.MethodPut,
-		fmt.Sprintf("%s%s/%s", c.BaseURL, alarmApiPath, ID),
+		fmt.Sprintf("%s%s/%s", c.BaseURL, alarmApiPath, url.QueryEscape(id)),
 		&buf,
 	)
 	if err != nil {
