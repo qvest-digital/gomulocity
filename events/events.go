@@ -90,6 +90,7 @@ func (e *events) CreateEvent(event *CreateEvent) (*Event, error) {
 	bytes, err := json.Marshal(event)
 	if err != nil {
 		log.Printf("Error while marhalling the event: %s", err.Error())
+		return nil, err
 	}
 
 	body, status, err := e.client.post(e.basePath, bytes, AcceptHeader(EVENT_ACCEPT_HEADER))
@@ -108,6 +109,7 @@ func (e *events) UpdateEvent(eventId string, event *UpdateEvent) (*Event, error)
 	bytes, err := json.Marshal(event)
 	if err != nil {
 		log.Printf("Error while marhalling the update event: %s", err.Error())
+		return nil, err
 	}
 	path := fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId))
 
