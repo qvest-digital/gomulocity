@@ -14,12 +14,12 @@ type Source struct {
 type CreateEvent struct {
 	Type   string    `json:"type"`
 	Time   time.Time `json:"time"`
-	Text   string    `json:"test"`
+	Text   string    `json:"text"`
 	Source Source    `json:"source"`
 }
 
 type UpdateEvent struct {
-	Text string `json:"test"`
+	Text string `json:"text"`
 }
 
 // ---- Event
@@ -29,7 +29,7 @@ type Event struct {
 	Type         string    `json:"type"`
 	Time         time.Time `json:"time"`
 	CreationTime time.Time `json:"creationTime"`
-	Text         string    `json:"test"`
+	Text         string    `json:"text"`
 	Source       Source    `json:"source"`
 	Self         string    `json:"self"`
 }
