@@ -18,7 +18,7 @@ func NewEventsApi(client Client) Events {
 
 type Events interface {
 	CreateEvent(event *CreateEvent) (*Event, error)
-	UpdateEvent(eventId string, event *UpdateEvent) error
+	UpdateEvent(eventId string, event *UpdateEvent) (*Event, error)
 	DeleteEvent(eventId string) error
 
 	Get(eventId string) (*Event, error)
@@ -105,19 +105,30 @@ func (e *events) CreateEvent(event *CreateEvent) (*Event, error) {
 	return &result, nil
 }
 
-func (e *events) UpdateEvent(eventId string, event *UpdateEvent) error {
+func (e *events) UpdateEvent(eventId string, event *UpdateEvent) (*Event, error) {
 	bytes, err := json.Marshal(event)
 	if err != nil {
 		log.Printf("Error while marhalling the update event: %s", err.Error())
 	}
 	path := fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId))
 
-	body, status, err := e.client.put(path, bytes, EmptyHeader())
-	if status != http.StatusNoContent {
-		return createErrorFromResponse(body)
+	body, status, err := e.client.put(path, bytes, AcceptHeader(EVENT_ACCEPT_HEADER))
+	if status != http.StatusOK {
+		return nil, createErrorFromResponse(body)
 	}
 
-	return err
+	var result Event
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &result)
+		if err != nil {
+			log.Printf("Error while parsing response JSON: %s", err.Error())
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("GetEvent: response body was empty")
+	}
+
+	return &result, err
 }
 
 func (e *events) DeleteEvent(eventId string) error {
