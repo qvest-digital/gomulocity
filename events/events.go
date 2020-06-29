@@ -76,6 +76,16 @@ type events struct {
 	basePath string
 }
 
+func (e *events) DeleteEvent(eventId string) error {
+	body, status, err := e.client.delete(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)), EmptyHeader())
+
+	if status != http.StatusNoContent {
+		return createErrorFromResponse(body)
+	}
+
+	return err
+}
+
 func (e *events) CreateEvent(event *CreateEvent) (*Event, error) {
 	bytes, err := json.Marshal(event)
 	if err != nil {
@@ -91,18 +101,7 @@ func (e *events) CreateEvent(event *CreateEvent) (*Event, error) {
 		return nil, createErrorFromResponse(body)
 	}
 
-	var result Event
-	if len(body) > 0 {
-		err = json.Unmarshal(body, &result)
-		if err != nil {
-			log.Printf("Error while parsing response JSON: %s", err.Error())
-			return nil, err
-		}
-	} else {
-		return nil, errors.New("GetEvent: response body was empty")
-	}
-
-	return &result, nil
+	return parseEventResponse(body)
 }
 
 func (e *events) UpdateEvent(eventId string, event *UpdateEvent) (*Event, error) {
@@ -113,54 +112,30 @@ func (e *events) UpdateEvent(eventId string, event *UpdateEvent) (*Event, error)
 	path := fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId))
 
 	body, status, err := e.client.put(path, bytes, AcceptHeader(EVENT_ACCEPT_HEADER))
+	if err != nil {
+		log.Printf("Error while updating an event: %s", err.Error())
+		return nil, err
+	}
 	if status != http.StatusOK {
 		return nil, createErrorFromResponse(body)
 	}
 
-	var result Event
-	if len(body) > 0 {
-		err = json.Unmarshal(body, &result)
-		if err != nil {
-			log.Printf("Error while parsing response JSON: %s", err.Error())
-			return nil, err
-		}
-	} else {
-		return nil, errors.New("GetEvent: response body was empty")
-	}
-
-	return &result, err
-}
-
-func (e *events) DeleteEvent(eventId string) error {
-	body, status, err := e.client.delete(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)), EmptyHeader())
-
-	if status != http.StatusNoContent {
-		return createErrorFromResponse(body)
-	}
-
-	return err
+	return parseEventResponse(body)
 }
 
 func (e *events) Get(eventId string) (*Event, error) {
 	body, status, err := e.client.get(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)), EmptyHeader())
 
+	if err != nil {
+		log.Printf("Error while getting an event: %s", err.Error())
+		return nil, err
+	}
 	if status != http.StatusOK {
 		log.Printf("Event with id %s was not found", eventId)
 		return nil, nil
 	}
 
-	var result Event
-	if len(body) > 0 {
-		err = json.Unmarshal(body, &result)
-		if err != nil {
-			log.Printf("Error while parsing response JSON: %s", err.Error())
-			return nil, err
-		}
-	} else {
-		return nil, errors.New("GetEvent: response body was empty")
-	}
-
-	return &result, nil
+	return parseEventResponse(body)
 }
 
 func (e *events) GetForDevice(source string, pageSize int) (*EventCollection, error) {
@@ -182,6 +157,23 @@ func (e *events) NextPage(c *EventCollection) (*EventCollection, error) {
 
 func (e *events) PreviousPage(c *EventCollection) (*EventCollection, error) {
 	return e.getPage(c.Prev)
+}
+
+// -- internal
+
+func parseEventResponse(body []byte) (*Event, error) {
+	var result Event
+	if len(body) > 0 {
+		err := json.Unmarshal(body, &result)
+		if err != nil {
+			log.Printf("Error while parsing response JSON: %s", err.Error())
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("GetEvent: response body was empty")
+	}
+
+	return &result, nil
 }
 
 func (e *events) getPage(reference string) (*EventCollection, error) {
@@ -207,8 +199,6 @@ func (e *events) getPage(reference string) (*EventCollection, error) {
 
 	return collection, nil
 }
-
-// -- internal
 
 func (e *events) getCommon(path string) (*EventCollection, error) {
 	body, status, err := e.client.get(path, EmptyHeader())
