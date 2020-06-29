@@ -10,12 +10,14 @@ import (
 	"time"
 )
 
+const EVENT_ACCEPT_HEADER = "application/vnd.com.nsn.cumulocity.eventApi+json"
+
 func NewEventsApi(client Client) Events {
 	return &events{client, "/event/events"}
 }
 
 type Events interface {
-	CreateEvent(event *CreateEvent) error
+	CreateEvent(event *CreateEvent) (*Event, error)
 	UpdateEvent(eventId string, event *UpdateEvent) error
 	DeleteEvent(eventId string) error
 
@@ -74,22 +76,33 @@ type events struct {
 	basePath string
 }
 
-func (e *events) CreateEvent(event *CreateEvent) error {
+func (e *events) CreateEvent(event *CreateEvent) (*Event, error) {
 	bytes, err := json.Marshal(event)
 	if err != nil {
 		log.Printf("Error while marhalling the event: %s", err.Error())
 	}
 
-	body, status, err := e.client.post(e.basePath, bytes, EmptyHeader())
+	body, status, err := e.client.post(e.basePath, bytes, AcceptHeader(EVENT_ACCEPT_HEADER))
 	if err != nil {
 		log.Printf("Error while posting a new event: %s", err.Error())
-		return err
+		return nil, err
 	}
 	if status != http.StatusCreated {
-		return createErrorFromResponse(body)
+		return nil, createErrorFromResponse(body)
 	}
 
-	return nil
+	var result Event
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &result)
+		if err != nil {
+			log.Printf("Error while parsing response JSON: %s", err.Error())
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("GetEvent: response body was empty")
+	}
+
+	return &result, nil
 }
 
 func (e *events) UpdateEvent(eventId string, event *UpdateEvent) error {

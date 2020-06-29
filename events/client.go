@@ -14,10 +14,12 @@ type Client struct {
 	Password   string
 }
 
+// Returns an empty header map
 func EmptyHeader() map[string][]string {
 	return map[string][]string{}
 }
 
+// Returns a pre filled header map with an "Accept" header.
 func AcceptHeader(accept string) map[string][]string {
 	return map[string][]string{"Accept": {accept}}
 }
