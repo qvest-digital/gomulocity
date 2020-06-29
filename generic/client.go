@@ -1,4 +1,4 @@
-package gomulocity_event
+package generic
 
 import (
 	"bytes"
@@ -24,19 +24,19 @@ func AcceptHeader(accept string) map[string][]string {
 	return map[string][]string{"Accept": {accept}}
 }
 
-func (client *Client) delete(path string, header map[string][]string) ([]byte, int, error) {
+func (client *Client) Delete(path string, header map[string][]string) ([]byte, int, error) {
 	return client.request(http.MethodDelete, path, []byte{}, header)
 }
 
-func (client *Client) put(path string, body []byte, header map[string][]string) ([]byte, int, error) {
+func (client *Client) Put(path string, body []byte, header map[string][]string) ([]byte, int, error) {
 	return client.request(http.MethodPut, path, body, header)
 }
 
-func (client *Client) post(path string, body []byte, header map[string][]string) ([]byte, int, error) {
+func (client *Client) Post(path string, body []byte, header map[string][]string) ([]byte, int, error) {
 	return client.request(http.MethodPost, path, body, header)
 }
 
-func (client *Client) get(path string, header map[string][]string) ([]byte, int, error) {
+func (client *Client) Get(path string, header map[string][]string) ([]byte, int, error) {
 	return client.request(http.MethodGet, path, []byte{}, header)
 }
 

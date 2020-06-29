@@ -1,7 +1,8 @@
-package gomulocity_event
+package events
 
 import (
 	"fmt"
+	"github.com/tarent/gomulocity/generic"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -10,7 +11,7 @@ import (
 
 func buildEventsApi(url string) Events {
 	httpClient := http.DefaultClient
-	client := Client{
+	client := generic.Client{
 		HTTPClient: httpClient,
 		BaseURL:    url,
 		Username:   "foo",

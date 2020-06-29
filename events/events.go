@@ -1,4 +1,4 @@
-package gomulocity_event
+package events
 
 import (
 	"encoding/json"
@@ -15,7 +15,7 @@ const EVENT_ACCEPT_HEADER = "application/vnd.com.nsn.cumulocity.eventApi+json"
 // Creates a new events api object
 // client - Must be a gomulocity client.
 // returns - The `Events`-api object
-func NewEventsApi(client Client) Events {
+func NewEventsApi(client generic.Client) Events {
 	return &events{client, "/event/events"}
 }
 
@@ -94,12 +94,12 @@ func (q EventQuery) QueryParams() (string, *generic.Error) {
 }
 
 type events struct {
-	client   Client
+	client   generic.Client
 	basePath string
 }
 
 func (e *events) DeleteEvent(eventId string) *generic.Error {
-	body, status, err := e.client.delete(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)), EmptyHeader())
+	body, status, err := e.client.Delete(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)), generic.EmptyHeader())
 
 	if err != nil {
 		return clientError(fmt.Sprintf("Error while deleting an event: %s", err.Error()), "DeleteEvent")
@@ -118,7 +118,7 @@ func (e *events) CreateEvent(event *CreateEvent) (*Event, *generic.Error) {
 		return nil, clientError(fmt.Sprintf("Error while marhalling the event: %s", err.Error()), "CreateEvent")
 	}
 
-	body, status, err := e.client.post(e.basePath, bytes, AcceptHeader(EVENT_ACCEPT_HEADER))
+	body, status, err := e.client.Post(e.basePath, bytes, generic.AcceptHeader(EVENT_ACCEPT_HEADER))
 	if err != nil {
 		return nil, clientError(fmt.Sprintf("Error while posting a new event: %s", err.Error()), "CreateEvent")
 	}
@@ -136,7 +136,7 @@ func (e *events) UpdateEvent(eventId string, event *UpdateEvent) (*Event, *gener
 	}
 
 	path := fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId))
-	body, status, err := e.client.put(path, bytes, AcceptHeader(EVENT_ACCEPT_HEADER))
+	body, status, err := e.client.Put(path, bytes, generic.AcceptHeader(EVENT_ACCEPT_HEADER))
 	if err != nil {
 		return nil, clientError(fmt.Sprintf("Error while updating an event: %s", err.Error()), "UpdateEvent")
 	}
@@ -148,7 +148,7 @@ func (e *events) UpdateEvent(eventId string, event *UpdateEvent) (*Event, *gener
 }
 
 func (e *events) Get(eventId string) (*Event, *generic.Error) {
-	body, status, err := e.client.get(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)), EmptyHeader())
+	body, status, err := e.client.Get(fmt.Sprintf("%s/%s", e.basePath, url.QueryEscape(eventId)), generic.EmptyHeader())
 
 	if err != nil {
 		return nil, clientError(fmt.Sprintf("Error while getting an event: %s", err.Error()), "Get")
@@ -222,7 +222,7 @@ func (e *events) getPage(reference string) (*EventCollection, *generic.Error) {
 }
 
 func (e *events) getCommon(path string) (*EventCollection, *generic.Error) {
-	body, status, err := e.client.get(path, EmptyHeader())
+	body, status, err := e.client.Get(path, generic.EmptyHeader())
 
 	if status != http.StatusOK {
 		return nil, createErrorFromResponse(body)

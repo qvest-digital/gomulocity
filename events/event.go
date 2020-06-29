@@ -1,4 +1,4 @@
-package gomulocity_event
+package events
 
 import (
 	"github.com/tarent/gomulocity/generic"
