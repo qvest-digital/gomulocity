@@ -18,6 +18,15 @@ const (
 	MEASUREMENTS_API = "measurement/measurements/"
 )
 
+type MeasurementsApiClient struct {
+	Client generic.Client
+}
+
+func NewMeasurementsApiClient (httpclient generic.Client) MeasurementsApiClient{
+	return MeasurementsApiClient{
+		Client : httpclient
+	}
+}
 func (c Client) getMeasurement(id string) (Measurement, error) {
 	req, err := http.NewRequest(
 		http.MethodGet,
