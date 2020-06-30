@@ -9,22 +9,21 @@ import (
 )
 
 func JsonFromObject(a interface{}) (string, error) {
+	value := reflect.ValueOf(a)
+
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
+	} else if value.Kind() != reflect.Struct {
+		return "", errors.New("input is not a struct or pointer of struct")
+	}
+
 	m := make(map[string]interface{})
-	ptr := reflect.ValueOf(a)
-	if ptr.Kind() != reflect.Ptr {
-		return "", errors.New("No pointer of struct!")
-	}
+	valueType := value.Type()
 
-	value := ptr.Elem()
-	if value.Kind() != reflect.Struct {
-		return "", errors.New("No struct!")
-	}
-
-	t := value.Type()
 	for i := 0; i < value.NumField(); i++ {
-		field := t.Field(i)
+		field := valueType.Field(i)
 		fieldName := field.Name
-		fmt.Println(t.Field(i).Tag)
+		fmt.Println(valueType.Field(i).Tag)
 		// Ignore myself
 		if fieldName == "JsonObject" {
 			continue

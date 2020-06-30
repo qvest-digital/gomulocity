@@ -12,6 +12,46 @@ func TestJsonc_ErrorOnNoStruct(t *testing.T) {
 	}
 }
 
+func TestJsonc_SuccessOnPlainStruct(t *testing.T) {
+	type A struct {
+		B string
+		C int
+	}
+
+	a := A{B: "Foo", C: 4711}
+
+	j, err := JsonFromObject(a)
+
+	if err != nil {
+		t.Errorf("JsonFromObject - unexpected error %v", err)
+	}
+
+	want := `{"B":"Foo","C":4711}`
+	if j != want {
+		t.Errorf("JsonFromObject - json = %v, want %v", j, want)
+	}
+}
+
+func TestJsonc_SuccessOnPointerStruct(t *testing.T) {
+	type A struct {
+		B string
+		C int
+	}
+
+	a := &A{B: "Foo", C: 4711}
+
+	j, err := JsonFromObject(a)
+
+	if err != nil {
+		t.Errorf("JsonFromObject - unexpected error %v", err)
+	}
+
+	want := `{"B":"Foo","C":4711}`
+	if j != want {
+		t.Errorf("JsonFromObject - json = %v, want %v", j, want)
+	}
+}
+
 func TestJsonc_MarshalStandardFields(t *testing.T) {
 	type A struct {
 		B string
