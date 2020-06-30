@@ -45,14 +45,14 @@ type AlarmApi interface {
 }
 
 type alarmApi struct {
-	client   generic.Client
+	client   *generic.Client
 	basePath string
 }
 
 // Creates a new alarm api object
 // client - Must be a gomulocity client.
 // returns - The `alarm`-api object
-func NewAlarmApi(client generic.Client) AlarmApi {
+func NewAlarmApi(client *generic.Client) AlarmApi {
 	return &alarmApi{client, ALARM_API_PATH}
 }
 
