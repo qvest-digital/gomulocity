@@ -13,7 +13,7 @@ See: https://cumulocity.com/guides/reference/alarms/#delete-delete-an-alarm-coll
  */
 type AlarmFilter struct {
 	Status				[]Status	// Comma separated alarm statuses, for example ACTIVE,CLEARED.
-									// Please note: when resolved parameter is set then status parameter will be ignored
+									// PLEASE NOTE: when resolved parameter is set then status parameter will be ignored
 	SourceId 			string		// Source device id.
 	WithSourceAssets	bool		// When set to true also alarms for related source assets will be removed.
 									// When this parameter is provided also source must be defined.
@@ -34,7 +34,7 @@ https://cumulocity.com/guides/reference/alarms/#put-bulk-update-of-alarm-collect
 type UpdateAlarmsFilter struct {
 	Status				Status
 	SourceId 			string
-	Resolved			string
+	Resolved			string // PLEASE NOTE: when status parameter is set then resolved parameter will be ignored
 	Severity			Severity
 	DateFrom			*time.Time
 	DateTo				*time.Time
