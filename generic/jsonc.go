@@ -13,7 +13,9 @@ func JsonFromObject(a interface{}) (string, error) {
 
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
-	} else if value.Kind() != reflect.Struct {
+	}
+
+	if value.Kind() != reflect.Struct {
 		return "", errors.New("input is not a struct or pointer of struct")
 	}
 
