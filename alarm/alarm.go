@@ -76,13 +76,12 @@ Represents cumulocity's alarm structure for update purposes.
 See: https://cumulocity.com/guides/reference/alarms/#update-an-alarm
 */
 type UpdateAlarm struct {
-	Text     string   `json:"text"`
-	Status   Status   `json:"status"`
-	Severity Severity `json:"severity"`
+	Text     string   `json:"text,omitempty"`
+	Status   Status   `json:"status,omitempty"`
+	Severity Severity `json:"severity,omitempty"`
 	// TODO: object - 0..n additional properties of the alarm.
 }
 
-/*
 /*
 AlarmCollection represent cumulocity's 'application/vnd.com.nsn.cumulocity.alarmCollection+json'.
 See: https://cumulocity.com/guides/reference/alarms/#alarm-collection

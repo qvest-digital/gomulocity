@@ -140,11 +140,8 @@ Updates the status of many alarms at once searching by filter.
 See: https://cumulocity.com/guides/reference/alarms/#put-bulk-update-of-alarm-collection
 */
 func (alarmApi *alarmApi) UpdateMany(updateAlarmsFilter *UpdateAlarmsFilter, newStatus Status) *generic.Error {
-	alarmStatus := struct {
-		Status	Status `json:"status"`
-	}{
-		Status: newStatus,
-	}
+	alarmStatus := UpdateAlarm {Status: newStatus}
+
 	bytes, err := json.Marshal(alarmStatus)
 	if err != nil {
 		return clientError(fmt.Sprintf("Error while marhalling the update of alarm: %s", err.Error()), "UpdateMany")
@@ -157,10 +154,6 @@ func (alarmApi *alarmApi) UpdateMany(updateAlarmsFilter *UpdateAlarmsFilter, new
 
 	path := fmt.Sprintf("%s?%s", alarmApi.basePath, filter)
 	headers := generic.AcceptHeader(ALARM_TYPE)
-	//contentType := generic.ContentTypeHeader(ALARM_TYPE)
-	//for k, v := range contentType {
-	//	headers[k] = v
-	//}
 
 	body, status, err := alarmApi.client.Put(path, bytes, headers)
 	if err != nil {

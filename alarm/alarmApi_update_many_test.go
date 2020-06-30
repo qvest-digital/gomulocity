@@ -15,10 +15,10 @@ func updateManyAlarmsHttpServer(status int) *httptest.Server {
 		defer r.Body.Close()
 		body, _ := ioutil.ReadAll(r.Body)
 
-		var statusUpdate StatusUpdate
+		var statusUpdate UpdateAlarm
 		_ = json.Unmarshal(body, &statusUpdate)
 		statusUpdateCapture = &statusUpdate
-		updateUrlCapture = r.URL.Path
+		updateUrlCapture = r.URL.String()
 		requestCapture = r
 
 		w.WriteHeader(status)
@@ -27,15 +27,11 @@ func updateManyAlarmsHttpServer(status int) *httptest.Server {
 	}))
 }
 
-type StatusUpdate struct {
-	Status	Status `json:"status"`
-}
-
-var statusUpdateCapture *StatusUpdate
+var statusUpdateCapture *UpdateAlarm
 
 // given: A new alarm status and an updateAlarmsFilter
 var newAlarmStatus = ACKNOWLEDGED
-var expectedStatusUpdate = StatusUpdate {
+var expectedStatusUpdate = &UpdateAlarm {
 	Status:   newAlarmStatus,
 }
 
@@ -69,7 +65,7 @@ func TestAlarmApi_UpdateMany_Alarm_Success_SendsData(t *testing.T) {
 		t.Errorf("UpdateManyAlarms() The target URL does not contains the request parameters: url: [%s] - expected [%s]", updateUrlCapture, expectedUpdateFilter)
 	}
 
-	if alarmUpdateCapture == nil {
+	if statusUpdateCapture == nil {
 		t.Fatalf("UpdateManyAlarms() Captured alarm is nil.")
 	}
 
