@@ -13,12 +13,14 @@ See: https://cumulocity.com/guides/reference/alarms/#delete-delete-an-alarm-coll
  */
 type AlarmFilter struct {
 	Status				[]Status	// Comma separated alarm statuses, for example ACTIVE,CLEARED.
+									// Please note: when resolved parameter is set then status parameter will be ignored
 	SourceId 			string		// Source device id.
 	WithSourceAssets	bool		// When set to true also alarms for related source assets will be removed.
 									// When this parameter is provided also source must be defined.
 	WithSourceDevices	bool		// When set to true also alarms for related source devices will be removed.
 									// When this parameter is provided also source must be defined.
-	Resolved			string		// When set to true only resolved alarms will be removed (the one with status CLEARED),
+	Resolved			string		// When this parameter is provided then status parameter will be ignored.
+									// When set to true only resolved alarms will be removed (the one with status CLEARED),
 									// false means alarms with status ACTIVE or ACKNOWLEDGED.
 	Severity			Severity	// Alarm severity, for example MINOR.
 	DateFrom			*time.Time	// Start date or date and time of alarm occurrence.

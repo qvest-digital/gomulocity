@@ -33,7 +33,7 @@ type AlarmApi interface {
 
 	// Returns an alarm collection, found by the given alarm query parameters.
 	// All query parameters are AND concatenated.
-	Find(query *AlarmFilter, pageSize int) (*AlarmCollection, *generic.Error)
+	Find(query *AlarmFilter, pageSize ...int) (*AlarmCollection, *generic.Error)
 
 	// Gets the next page from an existing alarm collection.
 	// If there is no next page, nil is returned.
@@ -85,7 +85,7 @@ func (alarmApi *alarmApi) Create(newAlarm *NewAlarm) (*Alarm, *generic.Error) {
 }
 
 /*
-Gets an alarm for a given ID.
+Gets an alarm for a given Id.
 
 Returns 'Alarm' on success or nil if the id does not exist.
 
@@ -105,7 +105,7 @@ func (alarmApi *alarmApi) Get(alarmId string) (*Alarm, *generic.Error) {
 }
 
 /*
-Updates the alarm with given ID.
+Updates the alarm with given Id.
 
 See: https://cumulocity.com/guides/reference/alarms/#update-an-alarm
 */
@@ -157,10 +157,10 @@ func (alarmApi *alarmApi) UpdateMany(updateAlarmsFilter *UpdateAlarmsFilter, new
 
 	path := fmt.Sprintf("%s?%s", alarmApi.basePath, filter)
 	headers := generic.AcceptHeader(ALARM_TYPE)
-	contentType := generic.ContentTypeHeader(ALARM_TYPE)
-	for k, v := range contentType {
-		headers[k] = v
-	}
+	//contentType := generic.ContentTypeHeader(ALARM_TYPE)
+	//for k, v := range contentType {
+	//	headers[k] = v
+	//}
 
 	body, status, err := alarmApi.client.Put(path, bytes, headers)
 	if err != nil {
@@ -201,29 +201,32 @@ func (alarmApi *alarmApi) GetForDevice(sourceId string, pageSize int) (*AlarmCol
 	return alarmApi.Find(&AlarmFilter{SourceId: sourceId}, pageSize)
 }
 
-func (e *alarmApi) Find(alarmFilter *AlarmFilter, pageSize int) (*AlarmCollection, *generic.Error) {
+func (alarmApi *alarmApi) Find(alarmFilter *AlarmFilter, pageSize ...int) (*AlarmCollection, *generic.Error) {
 	queryParams, err := alarmFilter.QueryParams()
 	if err != nil {
 		return nil, clientError(fmt.Sprintf("Error while building query parameters to search for alarms: %s", err.Error()), "FindAlarms")
 	}
 
-	pageSizeParams, err := generic.PageSizeParameter(pageSize)
-	if err != nil {
-		return nil, clientError(fmt.Sprintf("Error while building pageSize parameter to fetch alarms: %s", err.Error()), "FindAlarms")
-	}
-	if len(queryParams) > 0 && len(pageSizeParams) > 0 {
-		pageSizeParams = "&"+pageSizeParams
+	var pageSizeParams string
+	if len(pageSize) > 0 {
+		pageSizeParams, err = generic.PageSizeParameter(pageSize[0])
+		if err != nil {
+			return nil, clientError(fmt.Sprintf("Error while building pageSize parameter to fetch alarms: %s", err.Error()), "FindAlarms")
+		}
+		if len(queryParams) > 0 && len(pageSizeParams) > 0 {
+			pageSizeParams = "&"+pageSizeParams
+		}
 	}
 
-	return e.getCommon(fmt.Sprintf("%s?%s%s", e.basePath, queryParams, pageSizeParams))
+	return alarmApi.getCommon(fmt.Sprintf("%s?%s%s", alarmApi.basePath, queryParams, pageSizeParams))
 }
 
-func (e *alarmApi) NextPage(c *AlarmCollection) (*AlarmCollection, *generic.Error) {
-	return e.getPage(c.Next)
+func (alarmApi *alarmApi) NextPage(c *AlarmCollection) (*AlarmCollection, *generic.Error) {
+	return alarmApi.getPage(c.Next)
 }
 
-func (e *alarmApi) PreviousPage(c *AlarmCollection) (*AlarmCollection, *generic.Error) {
-	return e.getPage(c.Prev)
+func (alarmApi *alarmApi) PreviousPage(c *AlarmCollection) (*AlarmCollection, *generic.Error) {
+	return alarmApi.getPage(c.Prev)
 }
 
 
@@ -243,7 +246,7 @@ func parseAlarmResponse(body []byte) (*Alarm, *generic.Error) {
 	return &result, nil
 }
 
-func (e *alarmApi) getPage(reference string) (*AlarmCollection, *generic.Error) {
+func (alarmApi *alarmApi) getPage(reference string) (*AlarmCollection, *generic.Error) {
 	if reference == "" {
 		log.Print("No page reference given. Returning nil.")
 		return nil, nil
@@ -254,7 +257,7 @@ func (e *alarmApi) getPage(reference string) (*AlarmCollection, *generic.Error) 
 		return nil, clientError(fmt.Sprintf("Unparsable URL given for page reference: '%s'", reference), "GetPage")
 	}
 
-	collection, err2 := e.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+	collection, err2 := alarmApi.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
 	if err2 != nil {
 		return nil, err2
 	}
@@ -267,8 +270,8 @@ func (e *alarmApi) getPage(reference string) (*AlarmCollection, *generic.Error) 
 	return collection, nil
 }
 
-func (e *alarmApi) getCommon(path string) (*AlarmCollection, *generic.Error) {
-	body, status, err := e.client.Get(path, generic.AcceptHeader(ALARM_COLLECTION_TYPE))
+func (alarmApi *alarmApi) getCommon(path string) (*AlarmCollection, *generic.Error) {
+	body, status, err := alarmApi.client.Get(path, generic.AcceptHeader(ALARM_COLLECTION_TYPE))
 
 	if status != http.StatusOK {
 		return nil, createErrorFromResponse(body)
