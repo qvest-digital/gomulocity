@@ -21,8 +21,7 @@ func bulkStatusUpdateAlarmsHttpServer(status int) *httptest.Server {
 		requestCapture = r
 
 		w.WriteHeader(status)
-		response, _ := json.Marshal("")
-		_, _ = w.Write(response)
+		_, _ = w.Write(nil)
 	}))
 }
 
