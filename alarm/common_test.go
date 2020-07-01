@@ -15,7 +15,7 @@ func buildAlarmApi(url string) AlarmApi {
 		Username:   "foo",
 		Password:   "bar",
 	}
-	return NewAlarmApi(client)
+	return NewAlarmApi(&client)
 }
 
 func buildHttpServer(status int, body string) *httptest.Server {
