@@ -1,4 +1,4 @@
-package devicecontrol
+package device_bootstrap
 
 import (
 	"bytes"
@@ -43,12 +43,6 @@ var newDeviceRequestCollectionContentType = "application/vnd.com.nsn.cumulocity.
 CreateNewDeviceRequest creates a 'newDeviceRequest' with the given id.
 
 Return created 'newDeviceRequest' on success.
-Can return the following errors:
-- generic.BadCredentialsErr (invalid username / password / host combination)
-- generic.AccessDeniedErr (missing user rights)
-- generic.Error (generic cloud error)
-- NewDeviceRequestAlreadyExistsErr ('newDeviceRequest' with given id already exists)
-- error (unexpected)
 
 See: https://cumulocity.com/guides/reference/device-credentials/#post-create-a-new-device-request
 */
