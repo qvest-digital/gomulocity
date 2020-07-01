@@ -3,7 +3,6 @@ package generic
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"reflect"
 )
@@ -25,7 +24,7 @@ func JsonFromObject(a interface{}) (string, error) {
 	for i := 0; i < value.NumField(); i++ {
 		field := valueType.Field(i)
 		fieldName := field.Name
-		fmt.Println(valueType.Field(i).Tag)
+
 		// Ignore myself
 		if fieldName == "JsonObject" {
 			continue
@@ -44,8 +43,13 @@ func JsonFromObject(a interface{}) (string, error) {
 				m[iter.Key().String()] = iter.Value().Interface()
 			}
 		} else {
-			v := value.Field(i).Interface()
-			m[fieldName] = v
+			v, ok := field.Tag.Lookup("json")
+
+			if ok {
+				m[v] = value.Field(i).Interface()
+			} else {
+				m[fieldName] = value.Field(i).Interface()
+			}
 		}
 	}
 
@@ -55,4 +59,8 @@ func JsonFromObject(a interface{}) (string, error) {
 	} else {
 		return string(j), nil
 	}
+}
+
+func ObjectFromJson() {
+
 }
