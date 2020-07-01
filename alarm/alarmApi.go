@@ -65,11 +65,7 @@ func (alarmApi *alarmApi) Create(newAlarm *NewAlarm) (*Alarm, *generic.Error) {
 	if err != nil {
 		return nil, clientError(fmt.Sprintf("Error while marhalling the alarm: %s", err.Error()), "CreateAlarm")
 	}
-	headers := generic.AcceptHeader(ALARM_TYPE)
-	contentType := generic.ContentTypeHeader(ALARM_TYPE)
-	for k, v := range contentType {
-		headers[k] = v
-	}
+	headers := generic.AcceptAndContentTypeHeader(ALARM_TYPE, ALARM_TYPE)
 
 	body, status, err := alarmApi.client.Post(alarmApi.basePath, bytes, headers)
 	if err != nil {
@@ -114,11 +110,7 @@ func (alarmApi *alarmApi) Update(alarmId string, alarm *UpdateAlarm) (*Alarm, *g
 	}
 
 	path := fmt.Sprintf("%s/%s", alarmApi.basePath, url.QueryEscape(alarmId))
-	headers := generic.AcceptHeader(ALARM_TYPE)
-	contentType := generic.ContentTypeHeader(ALARM_TYPE)
-	for k, v := range contentType {
-		headers[k] = v
-	}
+	headers := generic.AcceptAndContentTypeHeader(ALARM_TYPE, ALARM_TYPE)
 
 	body, status, err := alarmApi.client.Put(path, bytes, headers)
 	if err != nil {
