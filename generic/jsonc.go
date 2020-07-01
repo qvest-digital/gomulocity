@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"reflect"
+	"strings"
 )
 
 func JsonFromObject(a interface{}) (string, error) {
@@ -44,9 +45,22 @@ func JsonFromObject(a interface{}) (string, error) {
 			}
 		} else {
 			v, ok := field.Tag.Lookup("json")
+			vs := strings.Split(v, ",")
 
 			if ok {
-				m[v] = value.Field(i).Interface()
+				if v != "-" {
+					if len(vs) > 1 {
+						if vs[1] == "omitempty" {
+							if !isEmptyValue(value.Field(i)) {
+								m[v] = value.Field(i).Interface()
+							}
+						} else {
+							m[vs[0]] = value.Field(i).Interface()
+						}
+					} else {
+						m[v] = value.Field(i).Interface()
+					}
+				}
 			} else {
 				m[fieldName] = value.Field(i).Interface()
 			}
@@ -59,6 +73,24 @@ func JsonFromObject(a interface{}) (string, error) {
 	} else {
 		return string(j), nil
 	}
+}
+
+func isEmptyValue(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Interface, reflect.Ptr:
+		return v.IsNil()
+	}
+	return false
 }
 
 func ObjectFromJson() {
