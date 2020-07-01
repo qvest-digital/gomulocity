@@ -149,6 +149,12 @@ func (alarmApi *alarmApi) BulkStatusUpdate(updateAlarmsFilter *UpdateAlarmsFilte
 	if err != nil {
 		return clientError(fmt.Sprintf("Error while updating alarms: %s", err.Error()), "BulkStatusUpdate")
 	}
+
+	// Since this operations can take a lot of time, request returns after maximum 0.5 sec of processing,
+	// and updating is continued as a background process in the platform.
+	// Therefore following possible response statuses can be interpret as successful:
+	//	200 - if the process has completed, all alarms have been updated
+	//	202 - if process continues in background (maybe )
 	if status != http.StatusOK && status != http.StatusAccepted {
 		return createErrorFromResponse(body)
 	}
