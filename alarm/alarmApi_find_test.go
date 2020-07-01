@@ -13,7 +13,6 @@ import (
 func TestAlarmApi_FindWithFilter(t *testing.T) {
 	var capturedUrl string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
 		capturedUrl = r.URL.String()
 		_, _ = w.Write([]byte(fmt.Sprintf(alarmCollectionTemplate, alarm)))
 	}))

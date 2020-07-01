@@ -12,7 +12,6 @@ import (
 
 func bulkStatusUpdateAlarmsHttpServer(status int) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
 		body, _ := ioutil.ReadAll(r.Body)
 
 		var statusUpdate UpdateAlarm
