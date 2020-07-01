@@ -1,12 +1,9 @@
 package generic
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
 )
-
-var BadCredentialsErr = errors.New("bad credentials")
-var AccessDeniedErr = errors.New("access denied")
 
 /*
 Error represent cumulocity's 'application/vnd.com.nsn.cumulocity.error+json' without 'Error details'.
@@ -23,3 +20,17 @@ func (e Error) Error() string {
 }
 
 var ErrorContentType = "application/vnd.com.nsn.cumulocity.error+json"
+
+func ClientError(message string, info string) *Error {
+	return &Error{
+		ErrorType: "ClientError",
+		Message:   message,
+		Info:      info,
+	}
+}
+
+func CreateErrorFromResponse(responseBody []byte) *Error {
+	var err Error
+	_ = json.Unmarshal(responseBody, &err)
+	return &err
+}
