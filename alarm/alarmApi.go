@@ -20,7 +20,7 @@ type AlarmApi interface {
 	Update(alarmId string, alarm *UpdateAlarm) (*Alarm, *generic.Error)
 
 	// Updates status of many alarms.
-	UpdateMany(query *UpdateAlarmsFilter, newStatus Status) *generic.Error
+	BulkStatusUpdate(query *UpdateAlarmsFilter, newStatus Status) *generic.Error
 
 	// Deletion by alarm id is not supported/allowed by cumulocity.
 	// Deletes alarms by filter. If error is nil, alarms were deleted successfully.
@@ -129,17 +129,17 @@ Updates the status of many alarms at once searching by filter.
 
 See: https://cumulocity.com/guides/reference/alarms/#put-bulk-update-of-alarm-collection
 */
-func (alarmApi *alarmApi) UpdateMany(updateAlarmsFilter *UpdateAlarmsFilter, newStatus Status) *generic.Error {
+func (alarmApi *alarmApi) BulkStatusUpdate(updateAlarmsFilter *UpdateAlarmsFilter, newStatus Status) *generic.Error {
 	alarmStatus := UpdateAlarm {Status: newStatus}
 
 	bytes, err := json.Marshal(alarmStatus)
 	if err != nil {
-		return clientError(fmt.Sprintf("Error while marhalling the update of alarm: %s", err.Error()), "UpdateMany")
+		return clientError(fmt.Sprintf("Error while marhalling the update of alarm: %s", err.Error()), "BulkStatusUpdate")
 	}
 
 	filter, err := updateAlarmsFilter.QueryParams()
 	if err != nil {
-		return clientError(fmt.Sprintf("Error while building query parameters for update of alarms: %s", err.Error()), "UpdateMany")
+		return clientError(fmt.Sprintf("Error while building query parameters for update of alarms: %s", err.Error()), "BulkStatusUpdate")
 	}
 
 	path := fmt.Sprintf("%s?%s", alarmApi.basePath, filter)
@@ -147,7 +147,7 @@ func (alarmApi *alarmApi) UpdateMany(updateAlarmsFilter *UpdateAlarmsFilter, new
 
 	body, status, err := alarmApi.client.Put(path, bytes, headers)
 	if err != nil {
-		return clientError(fmt.Sprintf("Error while updating alarms: %s", err.Error()), "UpdateMany")
+		return clientError(fmt.Sprintf("Error while updating alarms: %s", err.Error()), "BulkStatusUpdate")
 	}
 	if status != http.StatusOK && status != http.StatusAccepted {
 		return createErrorFromResponse(body)
