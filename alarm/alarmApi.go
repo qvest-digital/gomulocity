@@ -22,11 +22,9 @@ type AlarmApi interface {
 	// Updates status of many alarms.
 	UpdateMany(query *UpdateAlarmsFilter, newStatus Status) *generic.Error
 
+	// Deletion by alarm id is not supported/allowed by cumulocity.
 	// Deletes alarms by filter. If error is nil, alarms were deleted successfully.
 	Delete(query *AlarmFilter) *generic.Error
-
-	// deletion by alarm id is not allowed:
-	//DeleteAlarm(alarmId string) *generic.Error
 
 	// Gets a alarm collection by a source (aka managed object id).
 	GetForDevice(sourceId string, pageSize int) (*AlarmCollection, *generic.Error)
