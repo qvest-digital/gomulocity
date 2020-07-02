@@ -23,16 +23,16 @@ func JsonFromObject(a interface{}) (string, error) {
 	valueType := value.Type()
 
 	for i := 0; i < value.NumField(); i++ {
-		field := valueType.Field(i)
-		fieldName := field.Name
+		fieldType := valueType.Field(i)
+		fieldName := fieldType.Name
 
 		// Ignore myself
 		if fieldName == "JsonObject" {
 			continue
 		}
 
-		// Handle special name "AdditionalFields" as map and flat it.
-		if field.Tag == `jsonc:"flat"` {
+		// Handle special name "jsonc:"flat"" as map and flat it.
+		if fieldType.Tag == `jsonc:"flat"` {
 			fieldValue := value.Field(i)
 			if fieldValue.Kind() != reflect.Map {
 				log.Printf("error: %s is not a map. Can not flat it into the json and therefore ignore it.", fieldName)
@@ -44,26 +44,8 @@ func JsonFromObject(a interface{}) (string, error) {
 				m[iter.Key().String()] = iter.Value().Interface()
 			}
 		} else {
-			v, ok := field.Tag.Lookup("json")
-			vs := strings.Split(v, ",")
-
-			if ok {
-				if v != "-" {
-					if len(vs) > 1 {
-						if vs[1] == "omitempty" {
-							if !isEmptyValue(value.Field(i)) {
-								m[v] = value.Field(i).Interface()
-							}
-						} else {
-							m[vs[0]] = value.Field(i).Interface()
-						}
-					} else {
-						m[v] = value.Field(i).Interface()
-					}
-				}
-			} else {
-				m[fieldName] = value.Field(i).Interface()
-			}
+			field := value.Field(i)
+			insertIntoMap(&m, &fieldType, &field)
 		}
 	}
 
@@ -75,7 +57,37 @@ func JsonFromObject(a interface{}) (string, error) {
 	}
 }
 
-func isEmptyValue(v reflect.Value) bool {
+func insertIntoMap(objectMapPtr *map[string]interface{}, fieldType *reflect.StructField, fieldValue *reflect.Value) {
+	tag, ok := fieldType.Tag.Lookup("json")
+	objectMap := *objectMapPtr
+
+	if !ok {
+		objectMap[fieldType.Name] = fieldValue.Interface()
+		return
+	}
+
+	if tag == "-" {
+		return
+	}
+
+	tagValues := strings.Split(tag, ",")
+	if len(tagValues) == 1 {
+		objectMap[tag] = fieldValue.Interface()
+		return
+	}
+
+	if tagValues[1] == "omitempty" {
+		if !isEmptyValue(fieldValue) {
+			objectMap[tag] = fieldValue.Interface()
+		}
+	} else {
+		objectMap[tagValues[0]] = fieldValue.Interface()
+	}
+
+	return
+}
+
+func isEmptyValue(v *reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
 		return v.Len() == 0
