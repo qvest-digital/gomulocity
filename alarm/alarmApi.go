@@ -137,12 +137,13 @@ func (alarmApi *alarmApi) BulkStatusUpdate(updateAlarmsFilter *UpdateAlarmsFilte
 		return clientError(fmt.Sprintf("Error while marhalling the update of alarm: %s", err.Error()), "BulkStatusUpdate")
 	}
 
-	filter, err := updateAlarmsFilter.QueryParams(nil)
+	queryParamsValues := &url.Values{}
+	err = updateAlarmsFilter.QueryParams(queryParamsValues)
 	if err != nil {
 		return clientError(fmt.Sprintf("Error while building query parameters for update of alarms: %s", err.Error()), "BulkStatusUpdate")
 	}
 
-	path := fmt.Sprintf("%s?%s", alarmApi.basePath, filter)
+	path := fmt.Sprintf("%s?%s", alarmApi.basePath, queryParamsValues.Encode())
 	headers := generic.AcceptHeader(ALARM_TYPE)
 
 	body, status, err := alarmApi.client.Put(path, bytes, headers)
@@ -169,12 +170,13 @@ Deletes alarms by filter.
 See: https://cumulocity.com/guides/reference/alarms/#delete-delete-an-alarm-collection
 */
 func (alarmApi *alarmApi) Delete(alarmFilter *AlarmFilter) *generic.Error {
-	filter, err := alarmFilter.QueryParams(nil)
+	queryParamsValues := &url.Values{}
+	err := alarmFilter.QueryParams(queryParamsValues)
 	if err != nil {
 		return clientError(fmt.Sprintf("Error while building query parameters for deletion of alarms: %s", err.Error()), "DeleteAlarms")
 	}
 
-	body, status, err := alarmApi.client.Delete(fmt.Sprintf("%s?%s", alarmApi.basePath, filter), generic.EmptyHeader())
+	body, status, err := alarmApi.client.Delete(fmt.Sprintf("%s?%s", alarmApi.basePath, queryParamsValues.Encode()), generic.EmptyHeader())
 	if err != nil {
 		return clientError(fmt.Sprintf("Error while deleting alarms: %s", err.Error()), "DeleteAlarms")
 	}
@@ -192,12 +194,12 @@ func (alarmApi *alarmApi) GetForDevice(sourceId string, pageSize int) (*AlarmCol
 
 func (alarmApi *alarmApi) Find(alarmFilter *AlarmFilter, pageSize int) (*AlarmCollection, *generic.Error) {
 	queryParamsValues := &url.Values{}
-	_, err := alarmFilter.QueryParams(queryParamsValues)
+	err := alarmFilter.QueryParams(queryParamsValues)
 	if err != nil {
 		return nil, clientError(fmt.Sprintf("Error while building query parameters to search for alarms: %s", err.Error()), "FindAlarms")
 	}
 
-	_, err = generic.PageSizeParameter(pageSize, queryParamsValues)
+	err = generic.PageSizeParameter(pageSize, queryParamsValues)
 	if err != nil {
 		return nil, clientError(fmt.Sprintf("Error while building pageSize parameter to fetch alarms: %s", err.Error()), "FindAlarms")
 	}
