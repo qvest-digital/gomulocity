@@ -73,7 +73,7 @@ func TestClient_GetDeviceInformation(t *testing.T) {
 			u := "<username>"
 			p := "<password>"
 
-			c := Client{
+			c := ManagedObjectApi{
 				Client: &generic.Client{
 					HTTPClient: testserver.Client(),
 					BaseURL:    testserver.URL,

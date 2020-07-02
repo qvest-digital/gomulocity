@@ -93,13 +93,14 @@ func TestClient_CreateManagedObject(t *testing.T) {
 
 			u := "<username>"
 			p := "<password>"
-			c := Client{
-				&generic.Client{
+			c := ManagedObjectApi{
+				Client: &generic.Client{
 					HTTPClient: testServer.Client(),
 					BaseURL:    testServer.URL,
 					Username:   u,
 					Password:   p,
 				},
+				ManagedObjectsPath: managedObjectPath,
 			}
 
 			newManagedObject, err := c.CreateManagedObject(tt.name, tt.state)

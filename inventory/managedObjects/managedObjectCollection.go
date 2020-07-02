@@ -9,18 +9,26 @@ import (
 	"net/url"
 )
 
-const (
-	managedObjectPath = "/inventory/managedObjects"
-)
+type ManagedObjectApi struct {
+	Client             *generic.Client
+	ManagedObjectsPath string
+}
 
-func (c *Client) ManagedObjectCollection(filter map[string][]string) (ManagedObjectCollection, error) {
+func NewManagedObjectApi(client *generic.Client) ManagedObjectApi {
+	return ManagedObjectApi{
+		Client:             client,
+		ManagedObjectsPath: managedObjectPath,
+	}
+}
+
+func (m *ManagedObjectApi) ManagedObjectCollection(filter map[string][]string) (ManagedObjectCollection, error) {
 	var tempCollection ManagedObjectCollection
 
 	url := managedObjectPath
 
 breakOuterLoop:
 	for {
-		result, statusCode, err := c.Client.Get(url, nil, filter)
+		result, statusCode, err := m.Client.Get(url, nil)
 		if err != nil {
 			return ManagedObjectCollection{}, fmt.Errorf("failed to execute rest request: %w", err)
 		}

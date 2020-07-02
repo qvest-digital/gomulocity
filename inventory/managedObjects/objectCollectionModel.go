@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+const (
+	managedObjectPath = "/inventory/managedObjects"
+)
+
 type (
 	ManagedObjectCollection struct {
 		Next           string                   `json:"next"`
@@ -98,5 +102,3 @@ type (
 		Self       string        `json:"self"`
 	}
 )
-
-

@@ -12,7 +12,7 @@ const (
 	AcceptHeader = "application/vnd.com.nsn.cumulocity.managedObject+json"
 )
 
-func (c Client) CreateManagedObject(name, state string) (NewManagedObject, error) {
+func (m ManagedObjectApi) CreateManagedObject(name, state string) (NewManagedObject, error) {
 	data := struct {
 		Name         string `json:"name"`
 		BinarySwitch struct {
@@ -31,7 +31,7 @@ func (c Client) CreateManagedObject(name, state string) (NewManagedObject, error
 	if err != nil {
 		return NewManagedObject{}, fmt.Errorf("failed to marshal request body: %w", err)
 	}
-	result, statusCode, err := c.Client.Post(managedObjectPath, body, generic.AcceptHeader(AcceptHeader), nil)
+	result, statusCode, err := m.Client.Post(managedObjectPath, body, generic.AcceptHeader(AcceptHeader))
 	if err != nil {
 		return NewManagedObject{}, fmt.Errorf("an error occurred while processing request: %w", err)
 	}
