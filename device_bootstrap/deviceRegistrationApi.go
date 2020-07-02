@@ -19,7 +19,7 @@ type DeviceRegistrationApi interface {
 	Get(deviceId string) (*DeviceRegistration, *generic.Error)
 
 	// Updates an exiting deviceRegistration and returns the updated deviceRegistration entity.
-	Update(deviceId string, newStatus string) (*DeviceRegistration, *generic.Error)
+	Update(deviceId string, newStatus Status) (*DeviceRegistration, *generic.Error)
 
 	// Deletes deviceRegistrations by device id. If error is nil, deviceRegistrations were deleted successfully.
 	Delete(deviceId string) *generic.Error
@@ -113,7 +113,7 @@ Updates status of the deviceRegistration with given Id.
 
 See: https://cumulocity.com/guides/reference/device-credentials/#put-updates-a-new-device-request
 */
-func (deviceRegistrationApi *deviceRegistrationApi) Update(deviceId string, newStatus string) (*DeviceRegistration, *generic.Error) {
+func (deviceRegistrationApi *deviceRegistrationApi) Update(deviceId string, newStatus Status) (*DeviceRegistration, *generic.Error) {
 	bytes, err := json.Marshal(DeviceRegistration{Status: newStatus})
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the update deviceRegistration: %s", err.Error()), "UpdateDeviceRegistration")

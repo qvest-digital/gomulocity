@@ -10,13 +10,21 @@ const (
 	DEVICE_REGISTRATION_COLLECTION_TYPE = "application/vnd.com.nsn.cumulocity.newDeviceRequestCollection+json"
 )
 
+type Status string
+
+const (
+	WAITING_FOR_CONNECTION Status = "WAITING_FOR_CONNECTION"
+	PENDING_ACCEPTANCE     Status = "PENDING_ACCEPTANCE"
+	ACCEPTED               Status = "ACCEPTED"
+)
+
 /*
 DeviceRegistration represent cumulocity's 'application/vnd.com.nsn.cumulocity.NewDeviceRequest+json'.
 See: https://cumulocity.com/guides/reference/device-credentials/#newdevicerequest-application-vnd-com-nsn-cumulocity-newdevicerequest-json
 */
 type DeviceRegistration struct {
 	Id     string `json:"id,omitempty"`
-	Status string `json:"status,omitempty"`
+	Status Status `json:"status,omitempty"`
 	Self   string `json:"self,omitempty"`
 }
 

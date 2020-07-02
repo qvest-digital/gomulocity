@@ -2,7 +2,6 @@ package generic
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 	"strconv"
 )
@@ -16,15 +15,6 @@ type PagingStatistics struct {
 	TotalPages   int `json:"totalPages,omitempty"`
 	PageSize     int `json:"pageSize"`
 	CurrentPage  int `json:"currentPage"`
-}
-
-// Page add query param 'currentPage' to request
-func Page(Page int) func(*http.Request) {
-	return func(r *http.Request) {
-		q := r.URL.Query()
-		q.Set("currentPage", strconv.Itoa(Page))
-		r.URL.RawQuery = q.Encode()
-	}
 }
 
 // gets query param 'pageSize' for a request as string and as an added to the provided values parameter

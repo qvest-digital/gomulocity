@@ -2,8 +2,11 @@ package generic
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 )
+
+var BadCredentialsErr = errors.New("bad credentials")
 
 /*
 Error represent cumulocity's 'application/vnd.com.nsn.cumulocity.error+json' without 'Error details'.
