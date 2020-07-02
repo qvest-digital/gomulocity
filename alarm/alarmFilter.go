@@ -40,11 +40,11 @@ type UpdateAlarmsFilter struct {
 	DateTo				*time.Time
 }
 
-// Creates a query parameter string from set filter and appends the parameters to the provided url.values
-// When provided values is nil a new url.values will be created
-func (alarmFilter AlarmFilter) QueryParams(params *url.Values) (string, error) {
+// Appends the filter query parameters to the provided parameter values for a request
+// When provided values is nil an error will be created
+func (alarmFilter AlarmFilter) QueryParams(params *url.Values) (error) {
 	if params == nil {
-		params = &url.Values{}
+		return fmt.Errorf("The provided parameter values must not be nil!")
 	}
 
 	if len(alarmFilter.Status) > 0 {
@@ -61,14 +61,14 @@ func (alarmFilter AlarmFilter) QueryParams(params *url.Values) (string, error) {
 
 	if alarmFilter.WithSourceAssets {
 		if len(alarmFilter.SourceId) == 0 {
-			return "", fmt.Errorf("failed to build filter: when 'WithSourceAssets' parameter is defined also SourceID must be set.")
+			return fmt.Errorf("failed to build filter: when 'WithSourceAssets' parameter is defined also SourceID must be set.")
 		}
 		params.Add("withSourceAssets", "true")
 	}
 
 	if alarmFilter.WithSourceDevices {
 		if len(alarmFilter.SourceId) == 0 {
-			return "", fmt.Errorf("failed to build filter: when 'WithSourceDevices' parameter is defined also SourceID must be set.")
+			return fmt.Errorf("failed to build filter: when 'WithSourceDevices' parameter is defined also SourceID must be set.")
 		}
 		params.Add("withSourceDevices", "true")
 	}
@@ -76,7 +76,7 @@ func (alarmFilter AlarmFilter) QueryParams(params *url.Values) (string, error) {
 	if len(alarmFilter.Resolved) > 0 {
 		resolved, err := strconv.ParseBool(alarmFilter.Resolved)
 		if err != nil {
-			return "", fmt.Errorf("failed to build filter: if 'Resolved' parameter is set, only 'true' and 'false' values are accepted.")
+			return fmt.Errorf("failed to build filter: if 'Resolved' parameter is set, only 'true' and 'false' values are accepted.")
 		}
 		params.Add("resolved", strconv.FormatBool(resolved))
 	}
@@ -97,14 +97,14 @@ func (alarmFilter AlarmFilter) QueryParams(params *url.Values) (string, error) {
 		params.Add("type", alarmFilter.Type)
 	}
 
-	return params.Encode(), nil
+	return nil
 }
 
-// Creates a query parameter string from set filter and appends the parameters to the provided url.values
-// When provided values is nil a new url.values will be created
-func (updateAlarmsFilter UpdateAlarmsFilter) QueryParams(params *url.Values) (string, error) {
+// Appends the filter query parameters to the provided parameter values for a request
+// When provided values is nil an error will be created
+func (updateAlarmsFilter UpdateAlarmsFilter) QueryParams(params *url.Values) (error) {
 	if params == nil {
-		params = &url.Values{}
+		return fmt.Errorf("The provided parameter values must not be nil!")
 	}
 
 	if len(updateAlarmsFilter.Status) > 0 {
@@ -118,7 +118,7 @@ func (updateAlarmsFilter UpdateAlarmsFilter) QueryParams(params *url.Values) (st
 	if len(updateAlarmsFilter.Resolved) > 0 {
 		resolved, err := strconv.ParseBool(updateAlarmsFilter.Resolved)
 		if err != nil {
-			return "", fmt.Errorf("failed to build filter: if 'Resolved' parameter is set, only 'true' and 'false' values are accepted.")
+			return fmt.Errorf("failed to build filter: if 'Resolved' parameter is set, only 'true' and 'false' values are accepted.")
 		}
 		params.Add("resolved", strconv.FormatBool(resolved))
 	}
@@ -135,5 +135,5 @@ func (updateAlarmsFilter UpdateAlarmsFilter) QueryParams(params *url.Values) (st
 		params.Add("dateTo", updateAlarmsFilter.DateTo.Format(time.RFC3339))
 	}
 
-	return params.Encode(), nil
+	return nil
 }
