@@ -28,6 +28,10 @@ func ContentTypeHeader(contentType string) map[string][]string {
 	return map[string][]string{"Content-Type": {contentType}}
 }
 
+func AcceptAndContentTypeHeader(accept string, contentType string) map[string][]string {
+	return map[string][]string{"Accept": {accept}, "Content-Type": {contentType}}
+}
+
 func (client *Client) Delete(path string, header map[string][]string) ([]byte, int, error) {
 	return client.request(http.MethodDelete, path, []byte{}, header)
 }

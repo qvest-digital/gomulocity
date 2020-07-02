@@ -30,7 +30,7 @@ package device_bootstrap
 //			c8yRespBody:            `{"id": "4711", "status": "PENDING_ACCEPTANCE", "self": "https://myFancyCloudInstance.com/devicecontrol/deviceCredentials"}`,
 //			c8yExpectedRequestBody: `{"id": "4711"}`,
 //			expectedNewDeviceRequest: NewDeviceRequest{
-//				ID:     "4711",
+//				Id:     "4711",
 //				Status: "PENDING_ACCEPTANCE",
 //				Self:   "https://myFancyCloudInstance.com/devicecontrol/deviceCredentials",
 //			},
@@ -162,7 +162,7 @@ package device_bootstrap
 //			expectedNewDeviceRequestCollection: NewDeviceRequestCollection{
 //				Self: "selfURL",
 //				NewDeviceRequests: []NewDeviceRequest{
-//					{ID: "rID1", Status: "ACCEPTED", Self: "rSelf1"},
+//					{Id: "rID1", Status: "ACCEPTED", Self: "rSelf1"},
 //				},
 //				Statistics: generic.PagingStatistics{
 //					TotalRecords: 0,
@@ -270,7 +270,7 @@ package device_bootstrap
 //			c8yRespBody:            `{"id": "4711", "status": "ACCEPTED", "self": "https://myFancyCloudInstance.com/devicecontrol/deviceCredentials"}`,
 //			c8yExpectedRequestBody: `{"status": "ACCEPTED"}`,
 //			expectedNewDeviceRequest: NewDeviceRequest{
-//				ID:     "4711",
+//				Id:     "4711",
 //				Status: "ACCEPTED",
 //				Self:   "https://myFancyCloudInstance.com/devicecontrol/deviceCredentials",
 //			},

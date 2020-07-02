@@ -36,11 +36,7 @@ func (deviceCredentialsApi *deviceCredentialsApi) Create(deviceId string) (*Devi
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the device credentials request: %s", err.Error()), "CreateDeviceCredentials")
 	}
-	headers := generic.AcceptHeader(DEVICE_CREDENTIALS_TYPE)
-	contentType := generic.ContentTypeHeader(DEVICE_CREDENTIALS_TYPE)
-	for k, v := range contentType {
-		headers[k] = v
-	}
+	headers := generic.AcceptAndContentTypeHeader(DEVICE_CREDENTIALS_TYPE, DEVICE_CREDENTIALS_TYPE)
 
 	body, status, err := deviceCredentialsApi.client.Post(deviceCredentialsApi.basePath, bytes, headers)
 	if err != nil {
