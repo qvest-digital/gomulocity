@@ -31,7 +31,7 @@ type AlarmApi interface {
 
 	// Returns an alarm collection, found by the given alarm query parameters.
 	// All query parameters are AND concatenated.
-	Find(query *AlarmFilter, pageSize ...int) (*AlarmCollection, *generic.Error)
+	Find(query *AlarmFilter, pageSize int) (*AlarmCollection, *generic.Error)
 
 	// Gets the next page from an existing alarm collection.
 	// If there is no next page, nil is returned.
@@ -137,7 +137,7 @@ func (alarmApi *alarmApi) BulkStatusUpdate(updateAlarmsFilter *UpdateAlarmsFilte
 		return clientError(fmt.Sprintf("Error while marhalling the update of alarm: %s", err.Error()), "BulkStatusUpdate")
 	}
 
-	filter, err := updateAlarmsFilter.QueryParams()
+	filter, err := updateAlarmsFilter.QueryParams(nil)
 	if err != nil {
 		return clientError(fmt.Sprintf("Error while building query parameters for update of alarms: %s", err.Error()), "BulkStatusUpdate")
 	}
@@ -169,7 +169,7 @@ Deletes alarms by filter.
 See: https://cumulocity.com/guides/reference/alarms/#delete-delete-an-alarm-collection
 */
 func (alarmApi *alarmApi) Delete(alarmFilter *AlarmFilter) *generic.Error {
-	filter, err := alarmFilter.QueryParams()
+	filter, err := alarmFilter.QueryParams(nil)
 	if err != nil {
 		return clientError(fmt.Sprintf("Error while building query parameters for deletion of alarms: %s", err.Error()), "DeleteAlarms")
 	}
@@ -190,24 +190,19 @@ func (alarmApi *alarmApi) GetForDevice(sourceId string, pageSize int) (*AlarmCol
 	return alarmApi.Find(&AlarmFilter{SourceId: sourceId}, pageSize)
 }
 
-func (alarmApi *alarmApi) Find(alarmFilter *AlarmFilter, pageSize ...int) (*AlarmCollection, *generic.Error) {
-	queryParams, err := alarmFilter.QueryParams()
+func (alarmApi *alarmApi) Find(alarmFilter *AlarmFilter, pageSize int) (*AlarmCollection, *generic.Error) {
+	queryParamsValues := &url.Values{}
+	_, err := alarmFilter.QueryParams(queryParamsValues)
 	if err != nil {
 		return nil, clientError(fmt.Sprintf("Error while building query parameters to search for alarms: %s", err.Error()), "FindAlarms")
 	}
 
-	var pageSizeParams string
-	if len(pageSize) > 0 {
-		pageSizeParams, err = generic.PageSizeParameter(pageSize[0])
-		if err != nil {
-			return nil, clientError(fmt.Sprintf("Error while building pageSize parameter to fetch alarms: %s", err.Error()), "FindAlarms")
-		}
-		if len(queryParams) > 0 && len(pageSizeParams) > 0 {
-			pageSizeParams = "&"+pageSizeParams
-		}
+	_, err = generic.PageSizeParameter(pageSize, queryParamsValues)
+	if err != nil {
+		return nil, clientError(fmt.Sprintf("Error while building pageSize parameter to fetch alarms: %s", err.Error()), "FindAlarms")
 	}
 
-	return alarmApi.getCommon(fmt.Sprintf("%s?%s%s", alarmApi.basePath, queryParams, pageSizeParams))
+	return alarmApi.getCommon(fmt.Sprintf("%s?%s", alarmApi.basePath, queryParamsValues.Encode()))
 }
 
 func (alarmApi *alarmApi) NextPage(c *AlarmCollection) (*AlarmCollection, *generic.Error) {

@@ -27,14 +27,17 @@ func Page(Page int) func(*http.Request) {
 	}
 }
 
-// gets query param 'pageSize' for a request
-func PageSizeParameter(pageSize int) (string, error) {
+// gets query param 'pageSize' for a request as string and as an added to the provided values parameter
+func PageSizeParameter(pageSize int, params *url.Values) (string, error) {
 	if pageSize < 1 || pageSize > 2000 {
 		return "", fmt.Errorf("The page size must be between 1 and 2000. Was %d", pageSize)
 	}
 
-	params := url.Values{}
+	if params == nil {
+		params = &url.Values{}
+	}
 	params.Add("pageSize", strconv.Itoa(pageSize))
 
 	return params.Encode(), nil
 }
+
