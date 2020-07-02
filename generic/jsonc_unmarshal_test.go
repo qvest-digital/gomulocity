@@ -19,7 +19,22 @@ func TestJsonc_ObjectFromJson_ErrorOnInvalidJson(t *testing.T) {
 	}
 }
 
-func TestJsonc_ObjectFromJson_SuccessOnPlainStruct(t *testing.T) {
+func TestJsonc_ObjectFromJson_ErrorOnPlainStruct(t *testing.T) {
+	type A struct {
+		B string
+		C int
+	}
+
+	a := A{}
+
+	err := ObjectFromJson(`{"B": "Hello", "C": 4711 }`, a)
+
+	if err == nil {
+		t.Errorf("ObjectFromJson - error expected. Instead: %v", a)
+	}
+}
+
+func TestJsonc_ObjectFromJson_SuccessOnPointerStruct(t *testing.T) {
 	type A struct {
 		B string
 		C int
