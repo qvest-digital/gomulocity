@@ -33,7 +33,11 @@ func ClientError(message string, info string) *Error {
 }
 
 func CreateErrorFromResponse(responseBody []byte) *Error {
-	var err Error
-	_ = json.Unmarshal(responseBody, &err)
-	return &err
+	var error Error
+	err := json.Unmarshal(responseBody, &error)
+	if err != nil {
+		error = *ClientError(fmt.Sprintf("Error while parsing response JSON [%s]: %s", responseBody, err.Error()), "CreateErrorFromResponse")
+	}
+
+	return &error
 }

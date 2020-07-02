@@ -99,12 +99,13 @@ Returns created 'DeviceRegistrationCollection' on success.
 See: https://cumulocity.com/guides/reference/device-credentials/#get-returns-all-new-device-requests
 */
 func (deviceRegistrationApi *deviceRegistrationApi) GetAll(pageSize int) (*DeviceRegistrationCollection, *generic.Error) {
-	pageSizeParams, err := generic.PageSizeParameter(pageSize, nil)
+	pageSizeParams := &url.Values{}
+	err := generic.PageSizeParameter(pageSize, pageSizeParams)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch deviceRegistrations: %s", err.Error()), "GetAllDeviceRegistrations")
 	}
 
-	return deviceRegistrationApi.getCommon(fmt.Sprintf("%s?%s", deviceRegistrationApi.basePath, pageSizeParams))
+	return deviceRegistrationApi.getCommon(fmt.Sprintf("%s?%s", deviceRegistrationApi.basePath, pageSizeParams.Encode()))
 }
 
 

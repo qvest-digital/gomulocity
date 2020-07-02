@@ -127,18 +127,18 @@ func TestDeviceCredentialsApi_Create(t *testing.T) {
 			c8yExpectedRequestBody: `{"id": "403"}`,
 		}, {
 			name:        "without deviceId",
-			c8yRespCode: http.StatusNotFound,
+			c8yRespCode: http.StatusUnprocessableEntity,
 			c8yRespBody: `{
-					"error": "devicecontrol/Not Found",
-					"message": "There is no newDeviceRequest for device id .",
+					"error": "undefined/validationError",
+					"message": "Following mandatory fields should be included: id",
 					"info": "https://www.cumulocity.com/guides/reference-guide/#error_reporting"
 				}`,
 			expectedErr: &generic.Error{
-				ErrorType: "devicecontrol/Not Found",
-				Message:   "There is no newDeviceRequest for device id .",
+				ErrorType: "undefined/validationError",
+				Message:   "Following mandatory fields should be included: id",
 				Info:      "https://www.cumulocity.com/guides/reference-guide/#error_reporting",
 			},
-			c8yExpectedRequestBody: `{"id": ""}`,
+			c8yExpectedRequestBody: `{}`,
 		}, {
 			name:        "invalid json response",
 			deviceID:    "4711",

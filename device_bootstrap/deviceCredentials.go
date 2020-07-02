@@ -10,7 +10,7 @@ DeviceCredentials represent cumulocity's 'application/vnd.com.nsn.cumulocity.dev
 See: https://cumulocity.com/guides/reference/device-credentials/#devicecredentials-application-vnd-com-nsn-cumulocity-devicecredentials-json
 */
 type DeviceCredentials struct {
-	ID       string `json:"id"`
+	ID       string `json:"id,omitempty"`
 	TenantID string `json:"tenantId,omitempty"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
