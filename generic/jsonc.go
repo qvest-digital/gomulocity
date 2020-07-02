@@ -105,6 +105,7 @@ func isEmptyValue(v *reflect.Value) bool {
 	return false
 }
 
-func ObjectFromJson() {
-
+func ObjectFromJson(j string, target interface{}) error {
+	err := json.Unmarshal([]byte(j), target)
+	return err
 }
