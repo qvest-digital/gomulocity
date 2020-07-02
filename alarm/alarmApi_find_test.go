@@ -13,7 +13,6 @@ import (
 func TestAlarmApi_FindWithFilter(t *testing.T) {
 	var capturedUrl string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
 		capturedUrl = r.URL.String()
 		_, _ = w.Write([]byte(fmt.Sprintf(alarmCollectionTemplate, alarm)))
 	}))
@@ -30,47 +29,47 @@ func TestAlarmApi_FindWithFilter(t *testing.T) {
 		{
 			"EmptyFilter",
 			AlarmFilter{},
-			"",
+			"pageSize=1",
 		},
 		{
 			"Date",
 			AlarmFilter{DateFrom: &dateFrom, DateTo: &dateTo},
-			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z",
+			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z&pageSize=1",
 		},
 		{
 			"Status",
 			AlarmFilter{Status: []Status{ACTIVE, CLEARED, ACKNOWLEDGED}},
-			"status=ACTIVE%2CCLEARED%2CACKNOWLEDGED",
+			"pageSize=1&status=ACTIVE%2CCLEARED%2CACKNOWLEDGED",
 		},
 		{
 			"Severity",
 			AlarmFilter{Severity: CRITICAL},
-			"severity=CRITICAL",
+			"pageSize=1&severity=CRITICAL",
 		},
 		{
 			"SourceId",
 			AlarmFilter{SourceId: "123"},
-			"source=123",
+			"pageSize=1&source=123",
 		},
 		{
 			"Type",
 			AlarmFilter{Type: "testAlarm"},
-			"type=testAlarm",
+			"pageSize=1&type=testAlarm",
 		},
 		{
 			"Resolved",
 			AlarmFilter{Resolved: "true"},
-			"resolved=true",
+			"pageSize=1&resolved=true",
 		},
 		{
 			"WithSourceAssets",
 			AlarmFilter{WithSourceAssets: true, SourceId: "123"},
-			"source=123&withSourceAssets=true",
+			"pageSize=1&source=123&withSourceAssets=true",
 		},
 		{
 			"WithSourceDevices",
 			AlarmFilter{WithSourceDevices: true, SourceId: "123"},
-			"source=123&withSourceDevices=true",
+			"pageSize=1&source=123&withSourceDevices=true",
 		},
 		{
 			"All",
@@ -85,7 +84,7 @@ func TestAlarmApi_FindWithFilter(t *testing.T) {
 				DateTo:            &dateTo,
 				Type:              "testAlarm",
 			},
-			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z&resolved=false&severity=MAJOR&source=123&status=ACKNOWLEDGED&type=testAlarm&withSourceAssets=true&withSourceDevices=true",
+			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z&pageSize=1&resolved=false&severity=MAJOR&source=123&status=ACKNOWLEDGED&type=testAlarm&withSourceAssets=true&withSourceDevices=true",
 		},
 	}
 
@@ -93,7 +92,7 @@ func TestAlarmApi_FindWithFilter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			api.Find(&tt.query)
+			api.Find(&tt.query, 1)
 			cUrl, err := url.Parse(capturedUrl)
 
 			if err != nil {
@@ -134,7 +133,7 @@ func TestAlarmApi_Find_WithInvalidFilter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := api.Find(&tt.query)
+			_, err := api.Find(&tt.query, 1)
 
 			if strings.Contains(tt.expectedError, err.Message) {
 				t.Errorf("Error in Find(): [%v], expected: [%v]", err.Message, tt.expectedError)
@@ -181,7 +180,7 @@ func TestAlarmApi_Find_HandlesPageSize(t *testing.T) {
 			}
 
 			if !tt.errExpected {
-				contains := strings.Contains(capturedUrl, fmt.Sprintf("source=%s&pageSize=%d", deviceId, tt.pageSize))
+				contains := strings.Contains(capturedUrl, fmt.Sprintf("pageSize=%d&source=%s", tt.pageSize, deviceId))
 
 				if tt.pageSize != 0 && !contains {
 					t.Errorf("Find() expected pageSize '%d' in url. '%s' given", tt.pageSize, capturedUrl)
@@ -203,7 +202,7 @@ func TestAlarmApi_ReturnsCollection(t *testing.T) {
 
 	api := buildAlarmApi(ts.URL)
 
-	collection, err := api.Find(&AlarmFilter{})
+	collection, err := api.Find(&AlarmFilter{}, 1)
 
 	if err != nil {
 		t.Fatalf("Find() - Error given but no expected")
@@ -234,7 +233,7 @@ func TestAlarmApi_FindReturnsError(t *testing.T) {
 
 	api := buildAlarmApi(ts.URL)
 
-	_, err := api.Find(&AlarmFilter{})
+	_, err := api.Find(&AlarmFilter{}, 1)
 
 	if err == nil {
 		t.Fatalf("Find() - Error expected")

@@ -30,6 +30,7 @@ const (
 
 type Source struct {
 	Id   string `json:"id"`
+	Self string `json:"self,omitempty"`
 	Name string `json:"name,omitempty"`
 }
 
@@ -87,9 +88,9 @@ AlarmCollection represent cumulocity's 'application/vnd.com.nsn.cumulocity.alarm
 See: https://cumulocity.com/guides/reference/alarms/#alarm-collection
 */
 type AlarmCollection struct {
-	Self       string                   `json:"self"`
-	Alarms     []Alarm                  `json:"alarms"`
+	Self       string                    `json:"self"`
+	Alarms     []Alarm                   `json:"alarms"`
 	Statistics *generic.PagingStatistics `json:"statistics,omitempty"`
-	Prev       string                   `json:"prev,omitempty"`
-	Next       string                   `json:"next,omitempty"`
+	Prev       string                    `json:"prev,omitempty"`
+	Next       string                    `json:"next,omitempty"`
 }

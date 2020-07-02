@@ -40,8 +40,12 @@ type UpdateAlarmsFilter struct {
 	DateTo				*time.Time
 }
 
-func (alarmFilter AlarmFilter) QueryParams() (string, error) {
-	params := url.Values{}
+// Creates a query parameter string from set filter and appends the parameters to the provided url.values
+// When provided values is nil a new url.values will be created
+func (alarmFilter AlarmFilter) QueryParams(params *url.Values) (string, error) {
+	if params == nil {
+		params = &url.Values{}
+	}
 
 	if len(alarmFilter.Status) > 0 {
 		var statusesAsString []string
@@ -96,8 +100,12 @@ func (alarmFilter AlarmFilter) QueryParams() (string, error) {
 	return params.Encode(), nil
 }
 
-func (updateAlarmsFilter UpdateAlarmsFilter) QueryParams() (string, error) {
-	params := url.Values{}
+// Creates a query parameter string from set filter and appends the parameters to the provided url.values
+// When provided values is nil a new url.values will be created
+func (updateAlarmsFilter UpdateAlarmsFilter) QueryParams(params *url.Values) (string, error) {
+	if params == nil {
+		params = &url.Values{}
+	}
 
 	if len(updateAlarmsFilter.Status) > 0 {
 		params.Add("status", fmt.Sprintf("%s", updateAlarmsFilter.Status))

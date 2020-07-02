@@ -20,20 +20,18 @@ type AlarmApi interface {
 	Update(alarmId string, alarm *UpdateAlarm) (*Alarm, *generic.Error)
 
 	// Updates status of many alarms.
-	UpdateMany(query *UpdateAlarmsFilter, newStatus Status) *generic.Error
+	BulkStatusUpdate(query *UpdateAlarmsFilter, newStatus Status) *generic.Error
 
+	// Deletion by alarm id is not supported/allowed by cumulocity.
 	// Deletes alarms by filter. If error is nil, alarms were deleted successfully.
 	Delete(query *AlarmFilter) *generic.Error
-
-	// deletion by alarm id is not allowed:
-	//DeleteAlarm(alarmId string) *generic.Error
 
 	// Gets a alarm collection by a source (aka managed object id).
 	GetForDevice(sourceId string, pageSize int) (*AlarmCollection, *generic.Error)
 
 	// Returns an alarm collection, found by the given alarm query parameters.
 	// All query parameters are AND concatenated.
-	Find(query *AlarmFilter, pageSize ...int) (*AlarmCollection, *generic.Error)
+	Find(query *AlarmFilter, pageSize int) (*AlarmCollection, *generic.Error)
 
 	// Gets the next page from an existing alarm collection.
 	// If there is no next page, nil is returned.
@@ -67,11 +65,7 @@ func (alarmApi *alarmApi) Create(newAlarm *NewAlarm) (*Alarm, *generic.Error) {
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the alarm: %s", err.Error()), "CreateAlarm")
 	}
-	headers := generic.AcceptHeader(ALARM_TYPE)
-	contentType := generic.ContentTypeHeader(ALARM_TYPE)
-	for k, v := range contentType {
-		headers[k] = v
-	}
+	headers := generic.AcceptAndContentTypeHeader(ALARM_TYPE, ALARM_TYPE)
 
 	body, status, err := alarmApi.client.Post(alarmApi.basePath, bytes, headers)
 	if err != nil {
@@ -116,11 +110,7 @@ func (alarmApi *alarmApi) Update(alarmId string, alarm *UpdateAlarm) (*Alarm, *g
 	}
 
 	path := fmt.Sprintf("%s/%s", alarmApi.basePath, url.QueryEscape(alarmId))
-	headers := generic.AcceptHeader(ALARM_TYPE)
-	contentType := generic.ContentTypeHeader(ALARM_TYPE)
-	for k, v := range contentType {
-		headers[k] = v
-	}
+	headers := generic.AcceptAndContentTypeHeader(ALARM_TYPE, ALARM_TYPE)
 
 	body, status, err := alarmApi.client.Put(path, bytes, headers)
 	if err != nil {
@@ -139,17 +129,17 @@ Updates the status of many alarms at once searching by filter.
 
 See: https://cumulocity.com/guides/reference/alarms/#put-bulk-update-of-alarm-collection
 */
-func (alarmApi *alarmApi) UpdateMany(updateAlarmsFilter *UpdateAlarmsFilter, newStatus Status) *generic.Error {
+func (alarmApi *alarmApi) BulkStatusUpdate(updateAlarmsFilter *UpdateAlarmsFilter, newStatus Status) *generic.Error {
 	alarmStatus := UpdateAlarm {Status: newStatus}
 
 	bytes, err := json.Marshal(alarmStatus)
 	if err != nil {
-		return generic.ClientError(fmt.Sprintf("Error while marshalling the update of alarm: %s", err.Error()), "UpdateMany")
+		return generic.ClientError(fmt.Sprintf("Error while marshalling the update of alarms: %s", err.Error()), "BulkStatusUpdate")
 	}
 
-	filter, err := updateAlarmsFilter.QueryParams()
+	filter, err := updateAlarmsFilter.QueryParams(nil)
 	if err != nil {
-		return generic.ClientError(fmt.Sprintf("Error while building query parameters for update of alarms: %s", err.Error()), "UpdateMany")
+		return generic.ClientError(fmt.Sprintf("Error while building query parameters for update of alarms: %s", err.Error()), "BulkStatusUpdate")
 	}
 
 	path := fmt.Sprintf("%s?%s", alarmApi.basePath, filter)
@@ -157,8 +147,14 @@ func (alarmApi *alarmApi) UpdateMany(updateAlarmsFilter *UpdateAlarmsFilter, new
 
 	body, status, err := alarmApi.client.Put(path, bytes, headers)
 	if err != nil {
-		return generic.ClientError(fmt.Sprintf("Error while updating alarms: %s", err.Error()), "UpdateMany")
+		return generic.ClientError(fmt.Sprintf("Error while updating alarms: %s", err.Error()), "BulkStatusUpdate")
 	}
+
+	// Since this operations can take a lot of time, request returns after maximum 0.5 sec of processing,
+	// and updating is continued as a background process in the platform.
+	// Therefore following possible response statuses can be interpret as successful:
+	//	200 - if the process has completed, all alarms have been updated
+	//	202 - if process continues in background (maybe )
 	if status != http.StatusOK && status != http.StatusAccepted {
 		return generic.CreateErrorFromResponse(body)
 	}
@@ -173,7 +169,7 @@ Deletes alarms by filter.
 See: https://cumulocity.com/guides/reference/alarms/#delete-delete-an-alarm-collection
 */
 func (alarmApi *alarmApi) Delete(alarmFilter *AlarmFilter) *generic.Error {
-	filter, err := alarmFilter.QueryParams()
+	filter, err := alarmFilter.QueryParams(nil)
 	if err != nil {
 		return generic.ClientError(fmt.Sprintf("Error while building query parameters for deletion of alarms: %s", err.Error()), "DeleteAlarms")
 	}
@@ -194,24 +190,19 @@ func (alarmApi *alarmApi) GetForDevice(sourceId string, pageSize int) (*AlarmCol
 	return alarmApi.Find(&AlarmFilter{SourceId: sourceId}, pageSize)
 }
 
-func (alarmApi *alarmApi) Find(alarmFilter *AlarmFilter, pageSize ...int) (*AlarmCollection, *generic.Error) {
-	queryParams, err := alarmFilter.QueryParams()
+func (alarmApi *alarmApi) Find(alarmFilter *AlarmFilter, pageSize int) (*AlarmCollection, *generic.Error) {
+	queryParamsValues := &url.Values{}
+	_, err := alarmFilter.QueryParams(queryParamsValues)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while building query parameters to search for alarms: %s", err.Error()), "FindAlarms")
 	}
 
-	var pageSizeParams string
-	if len(pageSize) > 0 {
-		pageSizeParams, err = generic.PageSizeParameter(pageSize[0])
-		if err != nil {
-			return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch alarms: %s", err.Error()), "FindAlarms")
-		}
-		if len(queryParams) > 0 && len(pageSizeParams) > 0 {
-			pageSizeParams = "&"+pageSizeParams
-		}
+	_, err = generic.PageSizeParameter(pageSize, queryParamsValues)
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch alarms: %s", err.Error()), "FindAlarms")
 	}
 
-	return alarmApi.getCommon(fmt.Sprintf("%s?%s%s", alarmApi.basePath, queryParams, pageSizeParams))
+	return alarmApi.getCommon(fmt.Sprintf("%s?%s", alarmApi.basePath, queryParamsValues.Encode()))
 }
 
 func (alarmApi *alarmApi) NextPage(c *AlarmCollection) (*AlarmCollection, *generic.Error) {

@@ -26,7 +26,6 @@ func TestAlarmApi_Delete_Alarm_Success(t *testing.T) {
 	var capturedUrl string
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
 		capturedUrl = r.URL.String()
 		w.WriteHeader(http.StatusNoContent)
 	}))
