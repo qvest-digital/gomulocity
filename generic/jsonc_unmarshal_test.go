@@ -53,3 +53,29 @@ func TestJsonc_ObjectFromJson_SuccessOnPointerStruct(t *testing.T) {
 		t.Errorf("ObjectFromJson - object = %v, want %v", a, want)
 	}
 }
+
+func TestJsonc_ObjectFromJson_SupportsStandardJsonTags(t *testing.T) {
+	type A struct {
+		B string `json:"myB"`
+		C int    `json:"myC"`
+		D string `json:"-"`
+		E string `json:"myE,omitempty"`
+		F bool   `json:"myF,omitempty"`
+		G int    `json:",omitempty"`
+		H *A     `json:"myH,omitempty"`
+		I string `json:"myI,otherstuff"`
+	}
+
+	a := &A{}
+	j := `{"myB":"Foo", "myC":4711, "D":"Bar", "myE": null, "myF": false, "G": 0, "myH": null, "myI": "Hello"}`
+	err := ObjectFromJson(j, a)
+
+	if err != nil {
+		t.Errorf("JsonFromObject - unexpected error %v", err)
+	}
+
+	want := &A{B: "Foo", C: 4711, E: "", F: false, G: 0, H: nil, I: "Hello"}
+	if !reflect.DeepEqual(a, want) {
+		t.Errorf("ObjectFromJson - object = %v, want %v", a, want)
+	}
+}
