@@ -118,7 +118,68 @@ func isEmptyValue(v *reflect.Value) bool {
 }
 
 func ObjectFromJson(j string, target interface{}) error {
-	err := json.Unmarshal([]byte(j), target)
+	value := reflect.ValueOf(target)
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
+		if value.Kind() != reflect.Struct {
+			return errors.New("input is not a pointer of struct")
+		}
+	} else {
+		return errors.New("input is not a pointer of struct")
+	}
+
+	var tmpMap map[string]interface{}
+	err := json.Unmarshal([]byte(j), &tmpMap)
+	if err != nil {
+		log.Printf("Error while unmarshaling json: %v", err)
+		return err
+	}
+
+	err = json.Unmarshal([]byte(j), &target)
+	if err != nil {
+		log.Printf("Error while unmarshaling json: %v", err)
+		return err
+	}
+
+	// 1st: origin fields of the type
+	valueType := value.Type()
+	var typeFields = make([]string, valueType.NumField())
+	for i := 0; i < valueType.NumField(); i++ {
+		typeFields[i] = valueType.Field(i).Name
+	}
+
+	// 2snd: All tag renaming
+	var typeTags = make(map[string]*Tag)
+	for i := 0; i < valueType.NumField(); i++ {
+		field := valueType.Field(i)
+		tag := getJsonTag(&field)
+		if tag != nil {
+			typeTags[field.Name] = tag
+		}
+	}
+
+	// 3rd find flat field:
+	var collectFieldName string
+	for i := 0; i < valueType.NumField(); i++ {
+		field := valueType.Field(i)
+		_, ok := field.Tag.Lookup("jsonc")
+		if ok {
+			collectFieldName = field.Name
+		}
+	}
+
+	// Find all fields, that are not part of the original type
+	for _, foo := range typeFields {
+		delete(tmpMap, foo)
+	}
+	for _, foo := range typeTags {
+		delete(tmpMap, foo.Name)
+	}
+
+	if collectFieldName != "" {
+		value.FieldByName(collectFieldName).Set(reflect.ValueOf(tmpMap))
+	}
+
 	return err
 }
 
