@@ -11,7 +11,7 @@ func TestJsonc_ObjectFromJson_ErrorOnInvalidJson(t *testing.T) {
 	a := &A{}
 
 	// when: We unmarshal with an invalid string
-	err := ObjectFromJson("Hallo Welt", a)
+	err := ObjectFromJson([]byte("Hallo Welt"), a)
 
 	// then:
 	if err == nil {
@@ -27,7 +27,7 @@ func TestJsonc_ObjectFromJson_ErrorOnPlainStruct(t *testing.T) {
 
 	a := A{}
 
-	err := ObjectFromJson(`{"B": "Hello", "C": 4711 }`, a)
+	err := ObjectFromJson([]byte(`{"B": "Hello", "C": 4711 }`), a)
 
 	if err == nil {
 		t.Errorf("ObjectFromJson - error expected. Instead: %v", a)
@@ -42,7 +42,7 @@ func TestJsonc_ObjectFromJson_SuccessOnPointerStruct(t *testing.T) {
 
 	a := &A{}
 
-	err := ObjectFromJson(`{"B": "Hello", "C": 4711 }`, a)
+	err := ObjectFromJson([]byte(`{"B": "Hello", "C": 4711 }`), a)
 
 	if err != nil {
 		t.Errorf("ObjectFromJson - unexpected error %v", err)
@@ -68,7 +68,7 @@ func TestJsonc_ObjectFromJson_SupportsStandardJsonTags(t *testing.T) {
 
 	a := &A{}
 	j := `{"myB":"Foo", "myC":4711, "D":"Bar", "myE": null, "myF": false, "G": 0, "myH": null, "myI": "Hello"}`
-	err := ObjectFromJson(j, a)
+	err := ObjectFromJson([]byte(j), a)
 
 	if err != nil {
 		t.Errorf("JsonFromObject - unexpected error %v", err)
@@ -93,7 +93,7 @@ func TestJsonc_ObjectFromJson_CollectOtherFieldsInD(t *testing.T) {
 	j := `{"myB":"Foo", "myC":4711, "myE": null, "myF": false, "G": 0, "myH": 0.567, "myI": [ "Hello", "Welt" ]}`
 
 	// when: We unmarshal the json
-	err := ObjectFromJson(j, a)
+	err := ObjectFromJson([]byte(j), a)
 
 	// then: We do no expect an error
 	if err != nil {

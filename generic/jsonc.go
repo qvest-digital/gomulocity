@@ -117,7 +117,7 @@ func isEmptyValue(v *reflect.Value) bool {
 	return false
 }
 
-func ObjectFromJson(j string, target interface{}) error {
+func ObjectFromJson(j []byte, target interface{}) error {
 	value := reflect.ValueOf(target)
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
@@ -129,7 +129,7 @@ func ObjectFromJson(j string, target interface{}) error {
 	}
 
 	var tmpMap map[string]interface{}
-	err := json.Unmarshal([]byte(j), &tmpMap)
+	err := json.Unmarshal(j, &tmpMap)
 	if err != nil {
 		log.Printf("Error while unmarshaling json: %v", err)
 		return err
