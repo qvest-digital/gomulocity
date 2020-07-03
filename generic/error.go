@@ -19,7 +19,7 @@ type Error struct {
 }
 
 func (e Error) Error() string {
-	return fmt.Sprintf("request failed: %q %s See: %s", e.ErrorType, e.Message, e.Info)
+	return fmt.Sprintf("request failed: %q %s. See: %s", e.ErrorType, e.Message, e.Info)
 }
 
 var ErrorContentType = "application/vnd.com.nsn.cumulocity.error+json"
@@ -32,12 +32,14 @@ func ClientError(message string, info string) *Error {
 	}
 }
 
-func CreateErrorFromResponse(responseBody []byte) *Error {
+func CreateErrorFromResponse(responseBody []byte, status int) *Error {
 	var error Error
 	err := json.Unmarshal(responseBody, &error)
 	if err != nil {
 		error = *ClientError(fmt.Sprintf("Error while parsing response JSON [%s]: %s", responseBody, err.Error()), "CreateErrorFromResponse")
 	}
+
+	error.ErrorType = fmt.Sprintf("%d: %s", status, error.ErrorType)
 
 	return &error
 }

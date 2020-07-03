@@ -59,14 +59,14 @@ func (deviceRegistrationApi *deviceRegistrationApi) Create(deviceId string) (*De
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the deviceRegistration: %s", err.Error()), "CreateDeviceRegistration")
 	}
-	headers := generic.AcceptAndContentTypeHeader(DEVICE_CREDENTIALS_TYPE, DEVICE_CREDENTIALS_TYPE)
+	headers := generic.AcceptAndContentTypeHeader(DEVICE_REGISTRATION_TYPE, DEVICE_REGISTRATION_TYPE)
 
 	body, status, err := deviceRegistrationApi.client.Post(deviceRegistrationApi.basePath, bytes, headers)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while posting a new deviceRegistration: %s", err.Error()), "CreateDeviceRegistration")
 	}
 	if status != http.StatusCreated {
-		return nil, generic.CreateErrorFromResponse(body)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	return parseDeviceRegistrationResponse(body)
@@ -80,13 +80,21 @@ Returns 'DeviceRegistration' on success or nil if the id does not exist.
 See: https://cumulocity.com/guides/reference/device-credentials/#get-returns-a-new-device-request
 */
 func (deviceRegistrationApi *deviceRegistrationApi) Get(deviceId string) (*DeviceRegistration, *generic.Error) {
-	body, status, err := deviceRegistrationApi.client.Get(fmt.Sprintf("%s/%s", deviceRegistrationApi.basePath, url.QueryEscape(deviceId)), generic.AcceptHeader(DEVICE_REGISTRATION_TYPE))
+	if len(deviceId) == 0 {
+		return nil, generic.ClientError("Getting deviceRegistration without an id is not allowed", "GetDeviceRegistration")
+	}
+
+	path := fmt.Sprintf("%s/%s", deviceRegistrationApi.basePath, url.QueryEscape(deviceId))
+	body, status, err := deviceRegistrationApi.client.Get(path, generic.AcceptHeader(DEVICE_REGISTRATION_TYPE))
 
 	if err != nil {
-		return nil, generic.ClientError(fmt.Sprintf("Error while getting an deviceRegistration: %s", err.Error()), "Get")
+		return nil, generic.ClientError(fmt.Sprintf("Error while getting a deviceRegistration: %s", err.Error()), "GetDeviceRegistration")
+	}
+	if status == http.StatusNotFound {
+		return nil, nil
 	}
 	if status != http.StatusOK {
-		return nil, nil
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	return parseDeviceRegistrationResponse(body)
@@ -115,6 +123,10 @@ Updates status of the deviceRegistration with given Id.
 See: https://cumulocity.com/guides/reference/device-credentials/#put-updates-a-new-device-request
 */
 func (deviceRegistrationApi *deviceRegistrationApi) Update(deviceId string, newStatus Status) (*DeviceRegistration, *generic.Error) {
+	if len(deviceId) == 0 {
+		return nil, generic.ClientError("Updating a deviceRegistration without an id is not allowed", "UpdateDeviceRegistration")
+	}
+
 	bytes, err := json.Marshal(DeviceRegistration{Status: newStatus})
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the update deviceRegistration: %s", err.Error()), "UpdateDeviceRegistration")
@@ -125,10 +137,10 @@ func (deviceRegistrationApi *deviceRegistrationApi) Update(deviceId string, newS
 
 	body, status, err := deviceRegistrationApi.client.Put(path, bytes, headers)
 	if err != nil {
-		return nil, generic.ClientError(fmt.Sprintf("Error while updating an deviceRegistration: %s", err.Error()), "UpdateDeviceRegistration")
+		return nil, generic.ClientError(fmt.Sprintf("Error while updating a deviceRegistration: %s", err.Error()), "UpdateDeviceRegistration")
 	}
 	if status != http.StatusOK {
-		return nil, generic.CreateErrorFromResponse(body)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	return parseDeviceRegistrationResponse(body)
@@ -140,14 +152,18 @@ Deletes deviceRegistration with given Id.
 See: https://cumulocity.com/guides/reference/device-credentials/#delete-deletes-a-new-device-request
 */
 func (deviceRegistrationApi *deviceRegistrationApi) Delete(deviceId string) *generic.Error {
+	if len(deviceId) == 0 {
+		return generic.ClientError("Deleting deviceRegistrations without an id is not allowed", "DeleteDeviceRegistration")
+	}
+
 	path := fmt.Sprintf("%s/%s", deviceRegistrationApi.basePath, url.QueryEscape(deviceId))
 	body, status, err := deviceRegistrationApi.client.Delete(path, generic.EmptyHeader())
 	if err != nil {
-		return generic.ClientError(fmt.Sprintf("Error while deleting deviceRegistrations: %s", err.Error()), "DeleteDeviceRegistrations")
+		return generic.ClientError(fmt.Sprintf("Error while deleting a deviceRegistration with id %s: %s", deviceId, err.Error()), "DeleteDeviceRegistration")
 	}
 
 	if status != http.StatusNoContent {
-		return generic.CreateErrorFromResponse(body)
+		return generic.CreateErrorFromResponse(body, status)
 	}
 
 	return nil
@@ -203,19 +219,22 @@ func (deviceRegistrationApi *deviceRegistrationApi) getPage(reference string) (*
 
 func (deviceRegistrationApi *deviceRegistrationApi) getCommon(path string) (*DeviceRegistrationCollection, *generic.Error) {
 	body, status, err := deviceRegistrationApi.client.Get(path, generic.AcceptHeader(DEVICE_REGISTRATION_COLLECTION_TYPE))
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while getting deviceRegistrations: %s", err.Error()), "GetDeviceRegistrationCollection")
+	}
 
 	if status != http.StatusOK {
-		return nil, generic.CreateErrorFromResponse(body)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	var result DeviceRegistrationCollection
 	if len(body) > 0 {
 		err = json.Unmarshal(body, &result)
 		if err != nil {
-			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "GetCollection")
+			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "GetDeviceRegistrationCollection")
 		}
 	} else {
-		return nil, generic.ClientError("Response body was empty", "GetCollection")
+		return nil, generic.ClientError("Response body was empty", "GetDeviceRegistrationCollection")
 	}
 
 	return &result, nil

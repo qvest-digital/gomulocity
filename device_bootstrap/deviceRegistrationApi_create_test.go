@@ -4,8 +4,6 @@ import (
 	"fmt"
 	jsoncompare "github.com/orasik/gocomparejson"
 	"github.com/tarent/gomulocity/generic"
-	"strings"
-
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -13,13 +11,12 @@ import (
 	"testing"
 )
 
-func TestDeviceCredentialsApi_CommonPropertiesOnCreate(t *testing.T) {
-	var expectedContentType = "application/vnd.com.nsn.cumulocity.deviceCredentials+json"
+func TestDeviceRegistrationApi_CommonPropertiesOnCreate(t *testing.T) {
+	var expectedContentType = "application/vnd.com.nsn.cumulocity.NewDeviceRequest+json"
 	var reqBasicAuthUsername, reqBasicAuthPassword, reqURL, reqAccept, reqContentType string
 
 	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		reqURL = req.URL.String()
-		res.Header().Set("Content-Type", expectedContentType)
 		_, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			t.Fatalf("failed to read c8y request body: %s", err)
@@ -37,17 +34,8 @@ func TestDeviceCredentialsApi_CommonPropertiesOnCreate(t *testing.T) {
 	}))
 	defer testServer.Close()
 
-	u := "<username>"
-	p := "<password>"
-	c := &generic.Client{
-		HTTPClient: testServer.Client(),
-		BaseURL:    testServer.URL,
-		Username:   u,
-		Password:   p,
-	}
-
-	deviceCredentialsApi := NewDeviceCredentialsApi(c)
-	deviceCredentialsApi.Create("4711")
+	deviceRegistrationApi := buildDeviceRegistrationApi(testServer)
+	deviceRegistrationApi.Create("4711")
 
 	if reqAccept != expectedContentType {
 		t.Errorf("unexpected request accept header. Expected %q. Given: %q", expectedContentType, reqAccept)
@@ -56,49 +44,60 @@ func TestDeviceCredentialsApi_CommonPropertiesOnCreate(t *testing.T) {
 		t.Errorf("unexpected request content-type header. Expected %q. Given: %q", expectedContentType, reqContentType)
 	}
 
-	if reqBasicAuthUsername != u {
-		t.Errorf("unexpected c8y request basic-auth username. Expected %q. Given: %q", u, reqBasicAuthUsername)
+	if reqBasicAuthUsername != USER {
+		t.Errorf("unexpected c8y request basic-auth username. Expected %q. Given: %q", USER, reqBasicAuthUsername)
 	}
-	if reqBasicAuthPassword != p {
-		t.Errorf("unexpected c8y request basic-auth password. Expected %q. Given: %q", p, reqBasicAuthPassword)
+	if reqBasicAuthPassword != PASSWORD {
+		t.Errorf("unexpected c8y request basic-auth password. Expected %q. Given: %q", PASSWORD, reqBasicAuthPassword)
 	}
 
-	var expectedC8YRequestURL = "/devicecontrol/deviceCredentials"
+	var expectedC8YRequestURL = "/devicecontrol/newDeviceRequests"
 	if reqURL != expectedC8YRequestURL {
 		t.Errorf("unexpected c8y request url. Expected %q. Given: %q", expectedC8YRequestURL, reqURL)
 	}
 }
 
-func TestDeviceCredentialsApi_Create(t *testing.T) {
+func TestDeviceRegistrationApi_Create(t *testing.T) {
 	tests := []struct {
-		name                      string
-		deviceID                  string
-		c8yRespCode               int
-		c8yRespContentType        string
-		c8yRespBody               string
-		c8yExpectedRequestBody    string
-		expectedDeviceCredentials *DeviceCredentials
-		expectedErr               *generic.Error
+		name                       string
+		deviceId                   string
+		c8yRespCode                int
+		c8yRespContentType         string
+		c8yRespBody                string
+		c8yExpectedRequestBody     string
+		expectedDeviceRegistration *DeviceRegistration
+		expectedErr                *generic.Error
 	}{
 		{
-			name:                   "happy case",
-			deviceID:               "4711",
-			c8yRespCode:            http.StatusCreated,
-			c8yRespBody:            `{"id": "4711", "tenantId" : "test", "username" : "device_4711", "password" : "3rasfst4swfa", "self": "https://myFancyCloudInstance.com/devicecontrol/deviceCredentials"}`,
+			name:        "happy case",
+			deviceId:    "4711",
+			c8yRespCode: http.StatusCreated,
+			c8yRespBody: `{
+				"id": "4711", 
+				"status": "PENDING_ACCEPTANCE", 
+				"self": "https://myFancyCloudInstance.com/devicecontrol/deviceCredentials/4711",
+				"owner": "me@company.com",
+				"customProperties": {},
+				"creationTime": "2020-07-03T10:16:35.870+02:00",
+				"tenantId": "myCloud"
+			}`,
 			c8yExpectedRequestBody: `{"id": "4711"}`,
-			expectedDeviceCredentials: &DeviceCredentials{
-				ID:       "4711",
-				TenantID: "test",
-				Username: "device_4711",
-				Password: "3rasfst4swfa",
-				Self:     "https://myFancyCloudInstance.com/devicecontrol/deviceCredentials",
+			expectedDeviceRegistration: &DeviceRegistration{
+				Id:               "4711",
+				Status:           PENDING_ACCEPTANCE,
+				Self:             "https://myFancyCloudInstance.com/devicecontrol/deviceCredentials/4711",
+				Owner:            "me@company.com",
+				CustomProperties: map[string]interface {}{},
+				CreationTime:     &deviceRegistrationTime,
+				TenantId:         "myCloud",
 			},
 			expectedErr: nil,
 		}, {
-			name:               "bad credentials",
-			deviceID:           "401",
-			c8yRespCode:        http.StatusUnauthorized,
-			c8yRespContentType: "application/vnd.com.nsn.cumulocity.error+json",
+			name:                   "bad credentials",
+			deviceId:               "401",
+			c8yRespCode:            http.StatusUnauthorized,
+			c8yRespContentType:     "application/vnd.com.nsn.cumulocity.error+json",
+			c8yExpectedRequestBody: `{"id": "401"}`,
 			c8yRespBody: `{
 				"error": "security/Unauthorized",
 				"message": "Invalid credentials! : Bad credentials",
@@ -109,22 +108,17 @@ func TestDeviceCredentialsApi_Create(t *testing.T) {
 				Message:   "Invalid credentials! : Bad credentials",
 				Info:      "https://www.cumulocity.com/guides/reference-guide/#error_reporting",
 			},
-			c8yExpectedRequestBody: `{"id": "401"}`,
 		}, {
-			name:        "access denied",
-			deviceID:    "403",
-			c8yRespCode: http.StatusForbidden,
-			c8yRespBody: `{    
-					"error": "security/Forbidden",
-					"message": "Access is denied",
-					"info": "https://www.cumulocity.com/guides/reference-guide/#error_reporting"
-				}`,
+			name:        "invalid json error response",
+			deviceId:    "4711",
+			c8yRespCode: http.StatusInternalServerError,
+			c8yRespBody: `#`,
 			expectedErr: &generic.Error{
-				ErrorType: "403: security/Forbidden",
-				Message:   "Access is denied",
-				Info:      "https://www.cumulocity.com/guides/reference-guide/#error_reporting",
+				ErrorType: "500: ClientError",
+				Message:   "Error while parsing response JSON [#]: invalid character '#' looking for beginning of value",
+				Info:      "CreateErrorFromResponse",
 			},
-			c8yExpectedRequestBody: `{"id": "403"}`,
+			c8yExpectedRequestBody: `{"id": "4711"}`,
 		}, {
 			name:        "without deviceId",
 			c8yRespCode: http.StatusUnprocessableEntity,
@@ -141,7 +135,7 @@ func TestDeviceCredentialsApi_Create(t *testing.T) {
 			c8yExpectedRequestBody: `{}`,
 		}, {
 			name:        "invalid json response",
-			deviceID:    "4711",
+			deviceId:    "4711",
 			c8yRespCode: http.StatusCreated,
 			c8yRespBody: `#`,
 			expectedErr: &generic.Error{
@@ -152,21 +146,21 @@ func TestDeviceCredentialsApi_Create(t *testing.T) {
 			c8yExpectedRequestBody: `{"id": "4711"}`,
 		}, {
 			name:        "empty json response",
-			deviceID:    "4711",
+			deviceId:    "4711",
 			c8yRespCode: http.StatusCreated,
 			expectedErr: &generic.Error{
 				ErrorType: "ClientError",
 				Message:   "Response body was empty",
-				Info:      "GetDeviceCredentials",
+				Info:      "GetDeviceRegistration",
 			},
 			c8yExpectedRequestBody: `{"id": "4711"}`,
 		}, {
 			name:     "post error",
-			deviceID: "4711",
+			deviceId: "4711",
 			expectedErr: &generic.Error{
 				ErrorType: "ClientError",
-				Message:   "Error while posting new device credentials: Post <dynamic-URL>/devicecontrol/deviceCredentials: EOF",
-				Info:      "CreateDeviceCredentials",
+				Message:   "Error while posting a new deviceRegistration: Post <dynamic-URL>/devicecontrol/newDeviceRequests: EOF",
+				Info:      "CreateDeviceRegistration",
 			},
 			c8yExpectedRequestBody: `{"id": "4711"}`,
 		},
@@ -193,18 +187,8 @@ func TestDeviceCredentialsApi_Create(t *testing.T) {
 			}))
 			defer testServer.Close()
 
-			u := "<username>"
-			p := "<password>"
-			c := &generic.Client{
-				HTTPClient: testServer.Client(),
-				BaseURL:    testServer.URL,
-				Username:   u,
-				Password:   p,
-			}
-
-			deviceCredentialsApi := NewDeviceCredentialsApi(c)
-
-			deviceCredentials, err := deviceCredentialsApi.Create(tt.deviceID)
+			deviceRegistrationApi := buildDeviceRegistrationApi(testServer)
+			deviceRegistration, err := deviceRegistrationApi.Create(tt.deviceId)
 
 			if equal, _ := jsoncompare.CompareJSON(reqBody, tt.c8yExpectedRequestBody); !equal {
 				t.Errorf("unexpected c8y request body. Expected %q. Given: %q", tt.c8yExpectedRequestBody, reqBody)
@@ -215,15 +199,10 @@ func TestDeviceCredentialsApi_Create(t *testing.T) {
 				t.Fatalf("respond with unexpected error. \nExpected: %s\nGiven:    %s", tt.expectedErr, err)
 			}
 
-			if !reflect.DeepEqual(deviceCredentials, tt.expectedDeviceCredentials) {
-				t.Errorf("respond with unexpected deviceCredentials. \nExpected: %#v. \nGiven: %#v", tt.expectedDeviceCredentials, deviceCredentials)
+			if !reflect.DeepEqual(deviceRegistration, tt.expectedDeviceRegistration) {
+				t.Errorf("respond with unexpected deviceRegistration. \nExpected: %#v. \nGiven: %#v", tt.expectedDeviceRegistration, deviceRegistration)
 			}
 		})
 	}
 }
 
-func setDynamicUrl(err *generic.Error, url string) {
-	if err != nil {
-		err.Message = strings.ReplaceAll(err.Message, "<dynamic-URL>", url)
-	}
-}

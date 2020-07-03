@@ -72,7 +72,7 @@ func (alarmApi *alarmApi) Create(newAlarm *NewAlarm) (*Alarm, *generic.Error) {
 		return nil, generic.ClientError(fmt.Sprintf("Error while posting a new alarm: %s", err.Error()), "CreateAlarm")
 	}
 	if status != http.StatusCreated {
-		return nil, generic.CreateErrorFromResponse(body)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	return parseAlarmResponse(body)
@@ -91,8 +91,11 @@ func (alarmApi *alarmApi) Get(alarmId string) (*Alarm, *generic.Error) {
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while getting an alarm: %s", err.Error()), "Get")
 	}
-	if status != http.StatusOK {
+	if status == http.StatusNotFound {
 		return nil, nil
+	}
+	if status != http.StatusOK {
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	return parseAlarmResponse(body)
@@ -117,7 +120,7 @@ func (alarmApi *alarmApi) Update(alarmId string, alarm *UpdateAlarm) (*Alarm, *g
 		return nil, generic.ClientError(fmt.Sprintf("Error while updating an alarm: %s", err.Error()), "UpdateAlarm")
 	}
 	if status != http.StatusOK {
-		return nil, generic.CreateErrorFromResponse(body)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	return parseAlarmResponse(body)
@@ -157,7 +160,7 @@ func (alarmApi *alarmApi) BulkStatusUpdate(updateAlarmsFilter *UpdateAlarmsFilte
 	//	200 - if the process has completed, all alarms have been updated
 	//	202 - if process continues in background (maybe )
 	if status != http.StatusOK && status != http.StatusAccepted {
-		return generic.CreateErrorFromResponse(body)
+		return generic.CreateErrorFromResponse(body, status)
 	}
 
 	return nil
@@ -182,7 +185,7 @@ func (alarmApi *alarmApi) Delete(alarmFilter *AlarmFilter) *generic.Error {
 	}
 
 	if status != http.StatusNoContent {
-		return generic.CreateErrorFromResponse(body)
+		return generic.CreateErrorFromResponse(body, status)
 	}
 
 	return nil
@@ -260,7 +263,7 @@ func (alarmApi *alarmApi) getCommon(path string) (*AlarmCollection, *generic.Err
 	body, status, err := alarmApi.client.Get(path, generic.AcceptHeader(ALARM_COLLECTION_TYPE))
 
 	if status != http.StatusOK {
-		return nil, generic.CreateErrorFromResponse(body)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	var result AlarmCollection

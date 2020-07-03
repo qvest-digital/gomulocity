@@ -43,7 +43,7 @@ func (deviceCredentialsApi *deviceCredentialsApi) Create(deviceId string) (*Devi
 		return nil, generic.ClientError(fmt.Sprintf("Error while posting new device credentials: %s", err.Error()), "CreateDeviceCredentials")
 	}
 	if status != http.StatusCreated {
-		return nil, generic.CreateErrorFromResponse(body)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	return parseDeviceCredentialsResponse(body)

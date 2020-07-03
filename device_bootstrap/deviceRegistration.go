@@ -2,6 +2,7 @@ package device_bootstrap
 
 import (
 	"github.com/tarent/gomulocity/generic"
+	"time"
 )
 
 const (
@@ -23,9 +24,13 @@ DeviceRegistration represent cumulocity's 'application/vnd.com.nsn.cumulocity.Ne
 See: https://cumulocity.com/guides/reference/device-credentials/#newdevicerequest-application-vnd-com-nsn-cumulocity-newdevicerequest-json
 */
 type DeviceRegistration struct {
-	Id     string `json:"id,omitempty"`
-	Status Status `json:"status,omitempty"`
-	Self   string `json:"self,omitempty"`
+	Id               string      `json:"id,omitempty"`
+	Status           Status      `json:"status,omitempty"`
+	Self             string      `json:"self,omitempty"`
+	Owner            string      `json:"owner,omitempty"`
+	CustomProperties interface{} `json:"customProperties,omitempty"`
+	CreationTime     *time.Time   `json:"creationTime,omitempty"`
+	TenantId         string      `json:"tenantId,omitempty"`
 }
 
 /*
