@@ -1,33 +1,10 @@
 package events
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
 )
-
-func createEventHttpServer(status int) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		body, _ := ioutil.ReadAll(r.Body)
-
-		var event CreateEvent
-		_ = json.Unmarshal(body, &event)
-		createEventCapture = &event
-		requestCapture = r
-
-		w.WriteHeader(status)
-		response, _ := json.Marshal(responseEvent)
-		_, _ = w.Write(response)
-	}))
-}
-
-var requestCapture *http.Request
-var createEventCapture *CreateEvent
 
 var eventTime, _ = time.Parse(time.RFC3339, "2020-06-26T10:43:25.130Z")
 var responseEvent = &Event{

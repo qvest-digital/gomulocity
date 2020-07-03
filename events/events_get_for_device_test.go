@@ -2,55 +2,11 @@ package events
 
 import (
 	"fmt"
-	"github.com/tarent/gomulocity/generic"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 )
-
-func buildEventsApi(url string) Events {
-	httpClient := http.DefaultClient
-	client := generic.Client{
-		HTTPClient: httpClient,
-		BaseURL:    url,
-		Username:   "foo",
-		Password:   "bar",
-	}
-	return NewEventsApi(client)
-}
-
-func buildHttpServer(status int, body string) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(status)
-		_, _ = w.Write([]byte(body))
-	}))
-}
-
-var deviceId = "1111111"
-var eventId = "2222222"
-var event = `{
-	"creationTime": "2020-01-01T01:00:10.000Z",
-	"source": {
-		"name": "test-device",
-		"self": "https://t0818.cumulocity.com/inventory/managedObjects/1111111",
-		"id": "1111111"
-	},
-	"type": "threshold",
-	"self": "https://t0818.cumulocity.com/event/events/2222222",
-	"time": "2020-01-01T01:00:00.000Z",
-	"text": "over 21°C",
-	"id": "2222222"
-}`
-var eventCollectionTemplate = `{
-    "next": "https://t0818.cumulocity.com/event/events?source=1111111&pageSize=5&currentPage=2",
-    "self": "https://t0815.cumulocity.com/event/events?source=1111111&pageSize=5&currentPage=1",
-    "events": [%s],
-    "statistics": {
-        "currentPage": 1,
-        "pageSize": 5
-    }
-}`
 
 func TestEvents_GetForDevice_ExistingId(t *testing.T) {
 	// given: A test server
