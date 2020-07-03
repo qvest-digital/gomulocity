@@ -58,33 +58,45 @@ func JsonFromObject(a interface{}) (string, error) {
 }
 
 func insertIntoMap(objectMapPtr *map[string]interface{}, fieldType *reflect.StructField, fieldValue *reflect.Value) {
-	tag, ok := fieldType.Tag.Lookup("json")
+	tag := getJsonTag(fieldType)
 	objectMap := *objectMapPtr
 
-	if !ok {
+	if tag == nil {
 		objectMap[fieldType.Name] = fieldValue.Interface()
 		return
 	}
 
-	if tag == "-" {
+	if tag.Name == "-" {
 		return
 	}
 
-	tagValues := strings.Split(tag, ",")
-	if len(tagValues) == 1 {
-		objectMap[tag] = fieldValue.Interface()
-		return
-	}
-
-	if tagValues[1] == "omitempty" {
+	if tag.OmitEmpty {
 		if !isEmptyValue(fieldValue) {
-			objectMap[tag] = fieldValue.Interface()
+			objectMap[tag.Name] = fieldValue.Interface()
 		}
 	} else {
-		objectMap[tagValues[0]] = fieldValue.Interface()
+		objectMap[tag.Name] = fieldValue.Interface()
 	}
+}
 
-	return
+type Tag struct {
+	Name      string
+	OmitEmpty bool
+}
+
+func getJsonTag(fieldType *reflect.StructField) *Tag {
+	tag, ok := fieldType.Tag.Lookup("json")
+	if ok {
+		tagValues := strings.Split(tag, ",")
+		if len(tagValues) == 1 {
+			return &Tag{tag, false}
+		}
+
+		if tagValues[1] == "omitempty" {
+			return &Tag{tagValues[0], true}
+		}
+	}
+	return nil
 }
 
 func isEmptyValue(v *reflect.Value) bool {
@@ -108,4 +120,8 @@ func isEmptyValue(v *reflect.Value) bool {
 func ObjectFromJson(j string, target interface{}) error {
 	err := json.Unmarshal([]byte(j), target)
 	return err
+}
+
+func getElements(value *reflect.Value) {
+
 }
