@@ -186,7 +186,7 @@ func (e *events) PreviousPage(c *EventCollection) (*EventCollection, *generic.Er
 func parseEventResponse(body []byte) (*Event, *generic.Error) {
 	var result Event
 	if len(body) > 0 {
-		err := json.Unmarshal(body, &result)
+		err := generic.ObjectFromJson(body, &result)
 		if err != nil {
 			return nil, clientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 		}

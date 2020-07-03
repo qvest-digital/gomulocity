@@ -25,13 +25,14 @@ type UpdateEvent struct {
 // ---- Event
 // application/vnd.com.nsn.cumulocity.event+json
 type Event struct {
-	Id           string    `json:"id"`
-	Type         string    `json:"type"`
-	Time         time.Time `json:"time"`
-	CreationTime time.Time `json:"creationTime"`
-	Text         string    `json:"text"`
-	Source       Source    `json:"source"`
-	Self         string    `json:"self"`
+	Id               string                 `json:"id"`
+	Type             string                 `json:"type"`
+	Time             time.Time              `json:"time"`
+	CreationTime     time.Time              `json:"creationTime"`
+	Text             string                 `json:"text"`
+	Source           Source                 `json:"source"`
+	Self             string                 `json:"self"`
+	AdditionalFields map[string]interface{} `jsonc:"flat"`
 }
 
 // application/vnd.com.nsn.cumulocity.eventCollection+json
