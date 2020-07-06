@@ -16,7 +16,7 @@ type Client struct {
 	AlarmApi           alarm.AlarmApi
 }
 
-func NewClient(baseURL, username, password string) Client {
+func NewClient(baseURL, username, password string, bootstrapUsername, bootstrapPassword string) Client {
 	hc := http.Client{
 		Timeout: 2 * time.Second,
 	}
@@ -31,8 +31,8 @@ func NewClient(baseURL, username, password string) Client {
 	bootstrapClient := &generic.Client{
 		HTTPClient: &hc,
 		BaseURL:    baseURL,
-		Username:   "devicebootstrap",
-		Password:   "Fhdt1bb1f",
+		Username:   bootstrapUsername,
+		Password:   bootstrapPassword,
 	}
 
 	return Client{
