@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"time"
+
+	"github.com/tarent/gomulocity/models"
 
 	"github.com/tarent/gomulocity/generic"
 )
@@ -22,9 +26,9 @@ type MeasurementsApiClient struct {
 	Client generic.Client
 }
 
-func NewMeasurementsApiClient (httpclient generic.Client) MeasurementsApiClient{
+func NewMeasurementsApiClient(httpclient generic.Client) MeasurementsApiClient {
 	return MeasurementsApiClient{
-		Client : httpclient
+		Client: httpclient,
 	}
 }
 func (c Client) getMeasurement(id string) (Measurement, error) {
@@ -181,4 +185,40 @@ func (c Client) deleteMeasurement(id string) (Measurement, error) {
 	}
 
 	return measurementFromAPI, nil
+}
+
+type MeasurementQuery struct {
+	DateFrom            *time.Time
+	DateTo              *time.Time
+	Type                string
+	ValueFragmentType   string
+	ValueFragmentSeries string
+	source              *models.ManagedObject
+}
+
+func (q MeasurementQuery) QueryParams() string {
+	params := url.Values{}
+	if q.DateFrom != nil {
+		params.Add("dateFrom", q.DateFrom.Format(time.RFC3339))
+	}
+
+	if q.DateTo != nil {
+		params.Add("dateTo", q.DateTo.Format(time.RFC3339))
+	}
+
+	if len(q.Type) > 0 {
+		params.Add("type", q.Type)
+	}
+
+	if len(q.ValueFragmentType) > 0 {
+		params.Add("valueFragmentType", q.ValueFragmentType)
+	}
+
+	if len(q.ValueFragmentSeries) > 0 {
+		params.Add("valueFragmentSeries", q.ValueFragmentSeries)
+	}
+
+	if len(source.ID) > 0 {
+		params.Add("source", q.source.ID)
+	}
 }
