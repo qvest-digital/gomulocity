@@ -8,15 +8,15 @@ import (
 	"strings"
 )
 
-func JsonFromObject(a interface{}) (string, error) {
-	value := reflect.ValueOf(a)
+type Tag struct {
+	Name      string
+	OmitEmpty bool
+}
 
-	if value.Kind() == reflect.Ptr {
-		value = value.Elem()
-	}
-
-	if value.Kind() != reflect.Struct {
-		return "", errors.New("input is not a struct or pointer of struct")
+func JsonFromObject(o interface{}) (string, error) {
+	value, ok := pointerOfStruct(&o)
+	if ok == false {
+		return "", errors.New("input is not a pointer of struct")
 	}
 
 	m := make(map[string]interface{})
@@ -45,7 +45,7 @@ func JsonFromObject(a interface{}) (string, error) {
 			}
 		} else {
 			field := value.Field(i)
-			insertIntoMap(&m, &fieldType, &field)
+			insertFieldIntoMap(&m, &fieldType, &field)
 		}
 	}
 
@@ -57,76 +57,9 @@ func JsonFromObject(a interface{}) (string, error) {
 	}
 }
 
-func insertIntoMap(objectMapPtr *map[string]interface{}, fieldType *reflect.StructField, fieldValue *reflect.Value) {
-	tag := getJsonTag(fieldType)
-	objectMap := *objectMapPtr
-
-	if tag == nil {
-		objectMap[fieldType.Name] = fieldValue.Interface()
-		return
-	}
-
-	if tag.Name == "-" {
-		return
-	}
-
-	if tag.OmitEmpty {
-		if !isEmptyValue(fieldValue) {
-			objectMap[tag.Name] = fieldValue.Interface()
-		}
-	} else {
-		objectMap[tag.Name] = fieldValue.Interface()
-	}
-}
-
-type Tag struct {
-	Name      string
-	OmitEmpty bool
-}
-
-func getJsonTag(fieldType *reflect.StructField) *Tag {
-	tag, ok := fieldType.Tag.Lookup("json")
-	if ok {
-		tagValues := strings.Split(tag, ",")
-		if len(tagValues) == 1 {
-			return &Tag{tag, false}
-		}
-
-		if tagValues[1] == "omitempty" {
-			return &Tag{tagValues[0], true}
-		} else {
-			return &Tag{tagValues[0], false}
-		}
-	}
-	return nil
-}
-
-func isEmptyValue(v *reflect.Value) bool {
-	switch v.Kind() {
-	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
-		return v.Len() == 0
-	case reflect.Bool:
-		return !v.Bool()
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return v.Int() == 0
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return v.Uint() == 0
-	case reflect.Float32, reflect.Float64:
-		return v.Float() == 0
-	case reflect.Interface, reflect.Ptr:
-		return v.IsNil()
-	}
-	return false
-}
-
 func ObjectFromJson(j []byte, target interface{}) error {
-	value := reflect.ValueOf(target)
-	if value.Kind() == reflect.Ptr {
-		value = value.Elem()
-		if value.Kind() != reflect.Struct {
-			return errors.New("input is not a pointer of struct")
-		}
-	} else {
+	value, ok := pointerOfStruct(&target)
+	if ok == false {
 		return errors.New("input is not a pointer of struct")
 	}
 
@@ -183,4 +116,80 @@ func ObjectFromJson(j []byte, target interface{}) error {
 	}
 
 	return err
+}
+
+/**
+Takes a possible pointer on struct `value *reflect.Value`
+Returns true/false, whether it is a pointer on struct or not.
+Returns the *reflect.Value representing the struct.
+*/
+func pointerOfStruct(o *interface{}) (*reflect.Value, bool) {
+	value := reflect.ValueOf(*o)
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
+		if value.Kind() == reflect.Struct {
+			return &value, true
+		} else {
+			return nil, false
+		}
+	} else {
+		return nil, false
+	}
+}
+
+func insertFieldIntoMap(objectMapPtr *map[string]interface{}, fieldType *reflect.StructField, fieldValue *reflect.Value) {
+	tag := getJsonTag(fieldType)
+	objectMap := *objectMapPtr
+
+	if tag == nil {
+		objectMap[fieldType.Name] = fieldValue.Interface()
+		return
+	}
+
+	if tag.Name == "-" {
+		return
+	}
+
+	if tag.OmitEmpty {
+		if !isEmptyValue(fieldValue) {
+			objectMap[tag.Name] = fieldValue.Interface()
+		}
+	} else {
+		objectMap[tag.Name] = fieldValue.Interface()
+	}
+}
+
+func getJsonTag(fieldType *reflect.StructField) *Tag {
+	tag, ok := fieldType.Tag.Lookup("json")
+	if ok {
+		tagValues := strings.Split(tag, ",")
+		if len(tagValues) == 1 {
+			return &Tag{tag, false}
+		}
+
+		if tagValues[1] == "omitempty" {
+			return &Tag{tagValues[0], true}
+		} else {
+			return &Tag{tagValues[0], false}
+		}
+	}
+	return nil
+}
+
+func isEmptyValue(v *reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Interface, reflect.Ptr:
+		return v.IsNil()
+	}
+	return false
 }

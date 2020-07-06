@@ -12,7 +12,7 @@ func TestJsonc_ErrorOnNoStruct(t *testing.T) {
 	}
 }
 
-func TestJsonc_SuccessOnPlainStruct(t *testing.T) {
+func TestJsonc_ErrorOnPlainStruct(t *testing.T) {
 	type A struct {
 		B string
 		C int
@@ -22,13 +22,8 @@ func TestJsonc_SuccessOnPlainStruct(t *testing.T) {
 
 	j, err := JsonFromObject(a)
 
-	if err != nil {
-		t.Errorf("JsonFromObject - unexpected error %v", err)
-	}
-
-	want := `{"B":"Foo","C":4711}`
-	if j != want {
-		t.Errorf("JsonFromObject - json = %v, want %v", j, want)
+	if err == nil {
+		t.Errorf("JsonFromObject - error expected. Instead: %v", j)
 	}
 }
 
