@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const flatTag = `jsonc:"flat"`
+
 type Tag struct {
 	Name      string
 	OmitEmpty bool
@@ -26,26 +28,22 @@ func JsonFromObject(o interface{}) (string, error) {
 		fieldType := valueType.Field(i)
 		fieldName := fieldType.Name
 
-		// Ignore myself
-		if fieldName == "JsonObject" {
-			continue
-		}
-
 		// Handle special name "jsonc:"flat"" as map and flat it.
-		if fieldType.Tag == `jsonc:"flat"` {
+		if fieldType.Tag == flatTag {
 			fieldValue := value.Field(i)
 			if fieldValue.Kind() != reflect.Map {
 				log.Printf("error: %s is not a map. Can not flat it into the json and therefore ignore it.", fieldName)
 				continue
 			}
 
+			// flat process
 			iter := fieldValue.MapRange()
 			for iter.Next() {
 				m[iter.Key().String()] = iter.Value().Interface()
 			}
 		} else {
 			field := value.Field(i)
-			insertFieldIntoMap(&m, &fieldType, &field)
+			insertTaggedFieldIntoMap(&m, &fieldType, &field)
 		}
 	}
 
@@ -57,62 +55,55 @@ func JsonFromObject(o interface{}) (string, error) {
 	}
 }
 
-func ObjectFromJson(j []byte, target interface{}) error {
-	value, ok := pointerOfStruct(&target)
+func ObjectFromJson(j []byte, targetStruct interface{}) error {
+	value, ok := pointerOfStruct(&targetStruct)
 	if ok == false {
 		return errors.New("input is not a pointer of struct")
 	}
 
-	var tmpMap map[string]interface{}
-	err := json.Unmarshal(j, &tmpMap)
-	if err != nil {
-		log.Printf("Error while unmarshaling json: %v", err)
-		return err
-	}
-
-	err = json.Unmarshal([]byte(j), &target)
-	if err != nil {
-		log.Printf("Error while unmarshaling json: %v", err)
-		return err
-	}
-
-	// 1st: origin fields of the type
 	valueType := value.Type()
-	var typeFields = make([]string, valueType.NumField())
-	for i := 0; i < valueType.NumField(); i++ {
-		typeFields[i] = valueType.Field(i).Name
+
+	// Unmarshal json to the target struct
+	err := json.Unmarshal(j, &targetStruct)
+	if err != nil {
+		log.Printf("Error while unmarshaling json: %v", err)
+		return err
 	}
 
-	// 2snd: All tag renaming
-	var typeTags = make(map[string]*Tag)
+	// Unmarshal json to a generic map: string -> interface
+	var additionalFieldsMap map[string]interface{}
+	err = json.Unmarshal(j, &additionalFieldsMap)
+	if err != nil {
+		log.Printf("Error while unmarshaling json: %v", err)
+		return err
+	}
+
+	// Found field for "additional value" inside the struct
+	var collectFieldName string
+
+	// Iterate over all fields of the struct
 	for i := 0; i < valueType.NumField(); i++ {
+		// Delete the struct fields from the additional fields
+		delete(additionalFieldsMap, valueType.Field(i).Name)
+
+		// Get json tag from the struct field and delete it from
+		// the additionalFieldsMap
 		field := valueType.Field(i)
 		tag := getJsonTag(&field)
 		if tag != nil {
-			typeTags[field.Name] = tag
+			delete(additionalFieldsMap, tag.Name)
 		}
-	}
 
-	// 3rd find flat field:
-	var collectFieldName string
-	for i := 0; i < valueType.NumField(); i++ {
-		field := valueType.Field(i)
+		// Find the jsonc field as collectFieldName
 		_, ok := field.Tag.Lookup("jsonc")
 		if ok {
 			collectFieldName = field.Name
 		}
 	}
 
-	// Find all fields, that are not part of the original type
-	for _, foo := range typeFields {
-		delete(tmpMap, foo)
-	}
-	for _, foo := range typeTags {
-		delete(tmpMap, foo.Name)
-	}
-
+	// The the additionalFieldsMap as attribute of the struct
 	if collectFieldName != "" {
-		value.FieldByName(collectFieldName).Set(reflect.ValueOf(tmpMap))
+		value.FieldByName(collectFieldName).Set(reflect.ValueOf(additionalFieldsMap))
 	}
 
 	return err
@@ -137,23 +128,24 @@ func pointerOfStruct(o *interface{}) (*reflect.Value, bool) {
 	}
 }
 
-func insertFieldIntoMap(objectMapPtr *map[string]interface{}, fieldType *reflect.StructField, fieldValue *reflect.Value) {
+func insertTaggedFieldIntoMap(objectMapPtr *map[string]interface{}, fieldType *reflect.StructField, fieldValue *reflect.Value) {
 	tag := getJsonTag(fieldType)
 	objectMap := *objectMapPtr
 
+	// no tag -> original name
 	if tag == nil {
 		objectMap[fieldType.Name] = fieldValue.Interface()
 		return
 	}
 
+	// - -> omit value
 	if tag.Name == "-" {
 		return
 	}
 
-	if tag.OmitEmpty {
-		if !isEmptyValue(fieldValue) {
-			objectMap[tag.Name] = fieldValue.Interface()
-		}
+	// OmitEmpty and is empty -> omit value
+	if tag.OmitEmpty && isEmptyValue(fieldValue) {
+		return
 	} else {
 		objectMap[tag.Name] = fieldValue.Interface()
 	}
@@ -161,19 +153,16 @@ func insertFieldIntoMap(objectMapPtr *map[string]interface{}, fieldType *reflect
 
 func getJsonTag(fieldType *reflect.StructField) *Tag {
 	tag, ok := fieldType.Tag.Lookup("json")
-	if ok {
-		tagValues := strings.Split(tag, ",")
-		if len(tagValues) == 1 {
-			return &Tag{tag, false}
-		}
-
-		if tagValues[1] == "omitempty" {
-			return &Tag{tagValues[0], true}
-		} else {
-			return &Tag{tagValues[0], false}
-		}
+	if !ok {
+		return nil
 	}
-	return nil
+
+	tagValues := strings.Split(tag, ",")
+	if len(tagValues) == 2 && tagValues[1] == "omitempty" {
+		return &Tag{tagValues[0], true}
+	} else {
+		return &Tag{tagValues[0], false}
+	}
 }
 
 func isEmptyValue(v *reflect.Value) bool {
