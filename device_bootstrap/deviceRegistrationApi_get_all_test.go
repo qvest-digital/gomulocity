@@ -187,51 +187,6 @@ func TestDeviceRegistrationApi_GetAll(t *testing.T) {
 	}
 }
 
-//func TestAlarmApi_GetForDevice_HandlesPageSize(t *testing.T) {
-//	tests := []struct {
-//		name        string
-//		pageSize    int
-//		errExpected bool
-//	}{
-//		{"Negative", -1, true},
-//		{"Zero", 0, true},
-//		{"Min", 1, false},
-//		{"Max", 2000, false},
-//		{"too large", 2001, true},
-//		{"in range", 10, false},
-//	}
-//
-//	// given: A test server
-//	var capturedUrl string
-//	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		capturedUrl = r.URL.String()
-//		_, _ = w.Write(nil)
-//	}))
-//	defer ts.Close()
-//
-//	// and: the api as system under test
-//	api := buildAlarmApi(ts.URL)
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			_, err := api.GetForDevice(deviceId, tt.pageSize)
-//
-//			if tt.errExpected {
-//				if err == nil {
-//					t.Error("GetForDevice() error expected but was nil")
-//				}
-//			}
-//
-//			if !tt.errExpected {
-//				contains := strings.Contains(capturedUrl, fmt.Sprintf("pageSize=%d", tt.pageSize))
-//
-//				if !contains {
-//					t.Errorf("GetForDevice() expected pageSize '%d' in url. '%s' given", tt.pageSize, capturedUrl)
-//				}
-//			}
-//		})
-//	}
-//}
-
 func TestDeviceRegistrationApi_GetAll_PageSize(t *testing.T) {
 	tests := []struct {
 		name                        string
