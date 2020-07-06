@@ -94,6 +94,8 @@ func getJsonTag(fieldType *reflect.StructField) *Tag {
 
 		if tagValues[1] == "omitempty" {
 			return &Tag{tagValues[0], true}
+		} else {
+			return &Tag{tagValues[0], false}
 		}
 	}
 	return nil
@@ -181,8 +183,4 @@ func ObjectFromJson(j []byte, target interface{}) error {
 	}
 
 	return err
-}
-
-func getElements(value *reflect.Value) {
-
 }

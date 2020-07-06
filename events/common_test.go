@@ -6,7 +6,20 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"time"
 )
+
+var eventTime, _ = time.Parse(time.RFC3339, "2020-06-26T10:43:25.130Z")
+var responseEvent = &Event{
+	Id:               "",
+	Type:             "TestEvent",
+	Time:             eventTime,
+	CreationTime:     eventTime,
+	Text:             "This is my test event",
+	Source:           Source{Id: "4711"},
+	Self:             "https://t0815.cumulocity.com/event/events/1337",
+	AdditionalFields: map[string]interface{}{},
+}
 
 func buildEventsApi(url string) Events {
 	httpClient := http.DefaultClient
