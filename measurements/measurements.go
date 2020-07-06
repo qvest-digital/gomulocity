@@ -112,16 +112,16 @@ func (c Client) createMeasurement(measurement Measurement) (Measurement, error) 
 	return measurementFromAPI, nil
 }
 
-func (c Client) GetMeasurements(resultSize int) (Measurement, error) {
+func (c Client) GetMeasurements(resultSize int, query MeasurementQuery) (Measurement, error) {
 	req, err := http.NewRequest(
 		http.MethodGet,
-		fmt.Sprintf("%v%v", c.BaseURL, MEASUREMENTS_API),
+		fmt.Sprintf("%v%v%v", c.BaseURL, MEASUREMENTS_API, query.QueryParams()),
 		nil,
 	)
 	if err != nil {
 		return Measurement{}, fmt.Errorf("failed to initialize rest request: %w", err)
 	}
-	req.Header.Add("Accept", ACCEPT_MEASUREMENT)
+	req.Header.Add("Accept", ACCEPT_MEASUREMENT_COLLECTION)
 	req.SetBasicAuth(c.Username, c.Password)
 
 	resp, err := c.HTTPClient.Do(req)
@@ -221,4 +221,5 @@ func (q MeasurementQuery) QueryParams() string {
 	if len(source.ID) > 0 {
 		params.Add("source", q.source.ID)
 	}
+	return params.Encode()
 }
