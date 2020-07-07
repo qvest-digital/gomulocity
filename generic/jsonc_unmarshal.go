@@ -8,14 +8,6 @@ import (
 )
 
 func ObjectFromJson(j []byte, targetStruct interface{}) error {
-	// is it a pointer of struct?
-	structValue, ok := pointerOfStruct(&targetStruct)
-	if ok == false {
-		return errors.New("input is not a pointer of struct")
-	}
-
-	structType := structValue.Type()
-
 	// Unmarshal json to the target struct
 	err := json.Unmarshal(j, &targetStruct)
 	if err != nil {
@@ -31,6 +23,18 @@ func ObjectFromJson(j []byte, targetStruct interface{}) error {
 		return err
 	}
 
+	return objectFromJson(targetStruct, additionalFieldsMap)
+}
+
+func objectFromJson(targetStruct interface{}, additionalFieldsMap map[string]interface{}) error {
+	// is it a pointer of struct?
+	structValue, ok := pointerOfStruct(&targetStruct)
+	if ok == false {
+		return errors.New("input is not a pointer of struct")
+	}
+
+	structType := structValue.Type()
+
 	// Found field for "additional value" inside the struct
 	var additionalFieldsName string
 
@@ -41,28 +45,30 @@ func ObjectFromJson(j []byte, targetStruct interface{}) error {
 
 		// Get json fieldTag from the struct field and delete it from
 		// the additionalFieldsMap
-		field := structType.Field(i)
-		fieldTag := getJsonTag(&field, "json")
+		fieldType := structType.Field(i)
+		fieldValue := structValue.Field(i)
+		fieldTag := getJsonTag(&fieldType, "json")
 		if fieldTag != nil {
 			delete(additionalFieldsMap, fieldTag.Name)
 		}
 
 		// Find the jsonc field as additionalFieldsName
-		fieldTag = getJsonTag(&field, "jsonc")
+		fieldTag = getJsonTag(&fieldType, "jsonc")
 		if fieldTag != nil {
 			switch fieldTag.Name {
 			case "flat":
-				additionalFieldsName = field.Name
+				additionalFieldsName = fieldType.Name
 				break
 			case "collection":
-				println(field.Name)
+				if fieldValue.Kind() != reflect.Slice {
+					log.Printf("warn: Field %s ist not a slice!", fieldType.Name)
+					break
+				}
+
+				println(fieldValue.Kind().String())
 				break
 			}
 		}
-	}
-
-	for i := 0; i < structType.NumField(); i++ {
-
 	}
 
 	// Add the additionalFieldsMap as attribute of the struct
@@ -75,5 +81,5 @@ func ObjectFromJson(j []byte, targetStruct interface{}) error {
 		}
 	}
 
-	return err
+	return nil
 }
