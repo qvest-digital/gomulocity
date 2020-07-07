@@ -6,19 +6,66 @@ import (
 )
 
 const (
+	MANAGED_OBJECT_ACCEPT       = "application/vnd.com.nsn.cumulocity.managedObject+json"
+	MANAGED_OBJECT_CONTENT_TYPE = "application/vnd.com.nsn.cumulocity.managedObject+json"
+
 	managedObjectPath = "/inventory/managedObjects"
 )
+
+type Update struct {
+	Type string `json:"type"`
+	Name string `json:"name"`
+}
+
+type UpdateResponse struct {
+	ID               string       `json:"id"`
+	Name             string       `json:"name"`
+	Self             string       `json:"self"`
+	Type             string       `json:"type"`
+	LastUpdated      time.Time    `json:"lastUpdated"`
+	StrongTypedClass struct{}     `json:"com_othercompany_StrongTypedClass"`
+	ChildDevices     ChildDevices `json:"childDevices"`
+}
+
+type Reference struct {
+	ManagedObject ManagedObject `json:"managedObject"`
+	Self          string        `json:"self"`
+}
+
+type ReferenceCollection struct {
+	Next       string      `json:"next"`
+	Self       string      `json:"self"`
+	References []Reference `json:"references"`
+}
+
+type NewManagedObject struct {
+	ID           string    `json:"id"`
+	Self         string    `json:"self"`
+	Type         string    `json:"type"`
+	Name         string    `json:"name"`
+	CreationDate time.Time `json:"creationDate"`
+	LastUpdated  time.Time `json:"lastUpdated"`
+	BinarySwitch struct {
+		State string `json:"state"`
+	} `json:"com_cumulocity_model_BinarySwitch"`
+}
+
+type CreateManagedObject struct {
+	Type         string    `json:"type"`
+	Name         string    `json:"name"`
+	CreationDate time.Time `json:"creationDate"`
+}
 
 type (
 	ManagedObjectCollection struct {
 		Next           string                   `json:"next"`
 		Self           string                   `json:"self"`
-		ManagedObjects []ManagedObjects         `json:"managedObjects"`
+		ManagedObjects []ManagedObject          `json:"managedObjects"`
 		Prev           string                   `json:"prev"`
 		Statistics     generic.PagingStatistics `json:"statistics"`
 	}
 
-	ManagedObjects struct {
+	ManagedObject struct {
 		AdditionParents         AdditionParents         `json:"additionParents"`
 		AssetParents            AdditionParents         `json:"assetParents"`
 		C8YActiveAlarmsStatus   C8YActiveAlarmsStatus   `json:"c8y_ActiveAlarmsStatus"`
@@ -34,7 +81,6 @@ type (
 		ChildAdditions          ChildAdditions          `json:"childAdditions"`
 		ChildAssets             ChildAssets             `json:"childAssets"`
 		ChildDevices            ChildDevices            `json:"childDevices"`
-		ComCumulocityModelAgent ComCumulocityModelAgent `json:"com_cumulocity_model_Agent"`
 		ID                      string                  `json:"id"`
 		LastUpdated             time.Time               `json:"lastUpdated"`
 		Name                    string                  `json:"name"`
@@ -43,6 +89,7 @@ type (
 		Type                    string                  `json:"type"`
 		CreationTime            time.Time               `json:"creationTime"`
 		DeviceParents           DeviceParents           `json:"deviceParents"`
+		C8YStatus               C8YStatus               `json:"c8y_Status"`
 	}
 
 	AssetParents struct {
@@ -95,10 +142,40 @@ type (
 		References []interface{} `json:"references"`
 		Self       string        `json:"self"`
 	}
-	ComCumulocityModelAgent struct {
-	}
 	DeviceParents struct {
 		References []interface{} `json:"references"`
 		Self       string        `json:"self"`
+	}
+
+	C8YStatus struct {
+		Details struct {
+			Active              int `json:"active"`
+			AggregatedResources struct {
+				CPU    string `json:"cpu"`
+				Memory string `json:"memory"`
+			} `json:"aggregatedResources"`
+			Desired  int `json:"desired"`
+			Restarts int `json:"restarts"`
+		} `json:"details"`
+		Instances struct {
+			DeviceSimulatorScopeManagementDeployment77678578B4Vkn66 struct {
+				CPUInMillis int `json:"cpuInMillis"`
+				LastUpdated struct {
+					Date struct {
+						Date time.Time `json:"$date"`
+					} `json:"date"`
+					Offset int `json:"offset"`
+				} `json:"lastUpdated"`
+				MemoryInBytes int `json:"memoryInBytes"`
+				Restarts      int `json:"restarts"`
+			} `json:"device-simulator-scope-management-deployment-77678578b4-vkn66"`
+		} `json:"instances"`
+		LastUpdated struct {
+			Date struct {
+				Date time.Time `json:"$date"`
+			} `json:"date"`
+			Offset int `json:"offset"`
+		} `json:"lastUpdated"`
+		Status string `json:"status"`
 	}
 )
