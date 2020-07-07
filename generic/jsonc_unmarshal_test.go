@@ -127,3 +127,29 @@ func TestJsonc_ObjectFromJson_CollectOtherFieldsInD(t *testing.T) {
 		t.Errorf("ObjectFromJson - D.myI = [ %v, %v ], want [ %v, %v ]", hello, world, "Hello", "World")
 	}
 }
+
+func TestJsonc_ObjectFromJson_WrongTags(t *testing.T) {
+	// given: A struct with field B and C as well defined types and a field D as generic bucket.
+	type A struct {
+		B string `json:"myB"`
+		C int    `json:"myC"`
+		D string `jsonc:"flat"`
+	}
+
+	// and: A test json, with the fields B, C and other fields vom E to I.
+	a := &A{}
+	j := `{"myB":"Foo", "myC":4711, "myE": null, "myF": false, "G": 0, "myH": 0.567, "myI": [ "Hello", "Welt" ]}`
+
+	// when: We unmarshal the json
+	err := ObjectFromJson([]byte(j), a)
+
+	// then: We do no expect an error
+	if err != nil {
+		t.Errorf("JsonFromObject - unexpected error %v", err)
+	}
+
+	// and: B and C hat correct data
+	if a.B != "Foo" || a.C != 4711 || a.D != "" {
+		t.Errorf("ObjectFromJson - basic elements = {B: %s, C: %d, D: %v}, want = {B: %s, C: %d, D: nil}", a.B, a.C, a.D, "Foo", 4711)
+	}
+}
