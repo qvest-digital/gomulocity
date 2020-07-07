@@ -1,35 +1,43 @@
 package measurements
 
 import (
+	"fmt"
+	"github.com/tarent/gomulocity/generic"
 	"net/url"
 	"time"
-
-	"github.com/tarent/gomulocity/models"
 )
 
 type MeasurementCollection struct {
-	measurements []Measurement `json:"measurements"`
+	Measurements []Measurement             `json:"measurements"`
+	Self         string                    `json:"self,omitempty"`
+	Statistics   *generic.PagingStatistics `json:"statistics,omitempty"`
+	Prev         string                    `json:"prev,omitempty"`
+	Next         string                    `json:"next,omitempty"`
+}
+
+type Source struct {
+	Id   string `json:"id"`
+	Self string `json:"self,omitempty"`
 }
 
 type Measurement struct {
-	id              string               `json:"id"`
-	time            time.Time            `json:"time"`
-	measurementType string               `json:"type"`
-	source          models.ManagedObject `json:"managedObject"`
+	Id              string    `json:"id,omitempty"`
+	Self            string    `json:"self,omitempty"`
+	Time            time.Time `json:"time"`
+	MeasurementType string    `json:"type"`
+	Source          Source    `json:"source"`
+	Temperature     Temperature
 }
 
-func (m Measurement) getID() string {
-	return m.id
+type Temperature struct {
+	Cellar      ValueFragment
+	GroundFloor ValueFragment
 }
 
-func (m Measurement) getTime() time.Time {
-	return m.time
+type ValueFragment struct {
+	Value float64 `json:"value"`
+	Unit  string  `json:"unit,omitempty"`
 }
-
-func (m Measurement) getType() string {
-	return m.measurementType
-}
-
 
 type MeasurementQuery struct {
 	DateFrom            *time.Time
@@ -37,11 +45,14 @@ type MeasurementQuery struct {
 	Type                string
 	ValueFragmentType   string
 	ValueFragmentSeries string
-	source              *models.ManagedObject
+	sourceId            string
 }
 
-func (q MeasurementQuery) QueryParams() string {
-	params := url.Values{}
+func (q MeasurementQuery) QueryParams(params *url.Values) error {
+	if params == nil {
+		return fmt.Errorf("The provided parameter values must not be nil!")
+	}
+
 	if q.DateFrom != nil {
 		params.Add("dateFrom", q.DateFrom.Format(time.RFC3339))
 	}
@@ -62,8 +73,8 @@ func (q MeasurementQuery) QueryParams() string {
 		params.Add("valueFragmentSeries", q.ValueFragmentSeries)
 	}
 
-	if len(q.source.ID) > 0 {
-		params.Add("source", q.source.ID)
+	if len(q.sourceId) > 0 {
+		params.Add("source", q.sourceId)
 	}
-	return params.Encode()
+	return nil
 }

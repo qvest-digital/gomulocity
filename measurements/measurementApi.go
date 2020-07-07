@@ -1,16 +1,12 @@
 package measurements
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/tarent/gomulocity/generic"
+	"log"
 	"net/http"
 	"net/url"
-	"time"
-
-	"github.com/tarent/gomulocity/models"
-
-	"github.com/tarent/gomulocity/generic"
 )
 
 const (
@@ -63,6 +59,11 @@ func NewMeasurementApi(client *generic.Client) MeasurementApi {
 	return &measurementApi{client, MEASUREMENTS_API}
 }
 
+/*
+Creates a measurement for an existing device.
+
+Returns created 'Measurement' on success, otherwise an error.
+*/
 func (measurementApi *measurementApi) Create(measurement *Measurement) (*Measurement, *generic.Error) {
 	bytes, err := json.Marshal(measurement)
 	if err != nil {
@@ -81,6 +82,11 @@ func (measurementApi *measurementApi) Create(measurement *Measurement) (*Measure
 	return parseMeasurementResponse(body)
 }
 
+/*
+Creates many measurements at once for an existing device.
+
+Returns a 'Measurement' collection on success, otherwise an error.
+*/
 func (measurementApi *measurementApi) CreateMany(measurement *MeasurementCollection) (*MeasurementCollection, *generic.Error) {
 	bytes, err := json.Marshal(measurement)
 	if err != nil {
@@ -99,162 +105,139 @@ func (measurementApi *measurementApi) CreateMany(measurement *MeasurementCollect
 	return parseMeasurementCollectionResponse(body)
 }
 
+/*
+Gets a measurement for a given Id.
 
+Returns 'Measurement' on success or nil if the id does not exist.
+*/
+func (measurementApi *measurementApi) Get(measurementId string) (*Measurement, *generic.Error) {
+	if len(measurementId) == 0 {
+		return nil, generic.ClientError("Getting measurement without an id is not allowed", "GetMeasurement")
+	}
 
-func (c Client) createMeasurement(measurement Measurement) (Measurement, error) {
-	body, err := json.Marshal(measurement)
+	path := fmt.Sprintf("%s/%s", measurementApi.basePath, url.QueryEscape(measurementId))
+	body, status, err := measurementApi.client.Get(path, generic.AcceptHeader(MEASUREMENT_TYPE))
+
 	if err != nil {
-		return Measurement{}, fmt.Errorf("failed to marshal request body: %w", err)
+		return nil, generic.ClientError(fmt.Sprintf("Error while getting a measurement: %s", err.Error()), "GetMeasurement")
 	}
-	req, err := http.NewRequest(
-		http.MethodPost,
-		fmt.Sprintf("%v%v", c.BaseURL, MEASUREMENTS_API),
-		bytes.NewReader(body),
-	)
-	if err != nil {
-		return Measurement{}, fmt.Errorf("failed to initialize rest request: %w", err)
-	}
-	req.Header.Add("Accept", MEASUREMENT_TYPE)
-	req.Header.Add("Content-Type", CONTENT_TYPE_MEASUREMENT)
-	req.SetBasicAuth(c.Username, c.Password)
-
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return Measurement{}, fmt.Errorf("failed to execute rest request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		switch resp.StatusCode {
-		case http.StatusUnauthorized:
-			return Measurement{}, generic.BadCredentialsErr
-		case http.StatusForbidden:
-			return Measurement{}, generic.AccessDeniedErr
-		default:
-			return Measurement{}, fmt.Errorf("received an unexpected status code: %v", resp.StatusCode)
-		}
+	if status != http.StatusOK {
+		return nil, nil
 	}
 
-	measurementFromAPI := Measurement{}
-
-	if err = json.NewDecoder(resp.Body).Decode(&measurementFromAPI); err != nil {
-		return Measurement{}, fmt.Errorf("failed to unmarshal response body: %w", err)
-	}
-
-	return measurementFromAPI, nil
+	return parseMeasurementResponse(body)
 }
 
-func (c Client) getMeasurement(id string) (Measurement, error) {
-	req, err := http.NewRequest(
-		http.MethodGet,
-		fmt.Sprintf("%v%v", c.BaseURL, MEASUREMENTS_API),
-		nil,
-	)
+/*
+Deletes measurement by id.
+*/
+func (measurementApi *measurementApi) Delete(measurementId string) *generic.Error {
+	if len(measurementId) == 0 {
+		return generic.ClientError("Deleting measurement without an id will lead into deletion of all measurements " +
+			"which is not allowed by this function. Therefore use `DeleteMany()` instead.", "DeleteMeasurement")
+	}
+
+	body, status, err := measurementApi.client.Delete(fmt.Sprintf("%s?%s", measurementApi.basePath, url.QueryEscape(measurementId)), generic.EmptyHeader())
 	if err != nil {
-		return Measurement{}, fmt.Errorf("failed to initialize rest request: %w", err)
-	}
-	req.Header.Add("Accept", MEASUREMENT_TYPE)
-	req.SetBasicAuth(c.Username, c.Password)
-
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return Measurement{}, fmt.Errorf("failed to execute rest request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		switch resp.StatusCode {
-		case http.StatusUnauthorized:
-			return Measurement{}, generic.BadCredentialsErr
-		case http.StatusForbidden:
-			return Measurement{}, generic.AccessDeniedErr
-		default:
-			return Measurement{}, fmt.Errorf("received an unexpected status code: %v", resp.StatusCode)
-		}
+		return generic.ClientError(fmt.Sprintf("Error while deleting measurement with id [%s]: %s", measurementId, err.Error()), "DeleteMeasurement")
 	}
 
-	measurementFromAPI := Measurement{}
-
-	if err = json.NewDecoder(resp.Body).Decode(&measurementFromAPI); err != nil {
-		return Measurement{}, fmt.Errorf("failed to unmarshal response body: %w", err)
+	if status != http.StatusNoContent {
+		return generic.CreateErrorFromResponse(body, status)
 	}
 
-	return measurementFromAPI, nil
+	return nil
 }
 
-func (c Client) GetMeasurements(resultSize int, query MeasurementQuery) (Measurement, error) {
-	req, err := http.NewRequest(
-		http.MethodGet,
-		fmt.Sprintf("%v%v%v", c.BaseURL, MEASUREMENTS_API, query.QueryParams()),
-		nil,
-	)
+/*
+Deletes measurements by filter.
+*/
+func (measurementApi *measurementApi) DeleteMany(measurementQuery *MeasurementQuery) *generic.Error {
+	queryParamsValues := &url.Values{}
+	err := measurementQuery.QueryParams(queryParamsValues)
 	if err != nil {
-		return Measurement{}, fmt.Errorf("failed to initialize rest request: %w", err)
+		return generic.ClientError(fmt.Sprintf("Error while building query parameters for deletion of measurements: %s", err.Error()), "DeleteManyMeasurements")
 	}
-	req.Header.Add("Accept", MEASUREMENT_COLLECTION_TYPE)
-	req.SetBasicAuth(c.Username, c.Password)
 
-	resp, err := c.HTTPClient.Do(req)
+	body, status, err := measurementApi.client.Delete(fmt.Sprintf("%s?%s", measurementApi.basePath, queryParamsValues.Encode()), generic.EmptyHeader())
 	if err != nil {
-		return Measurement{}, fmt.Errorf("failed to execute rest request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		switch resp.StatusCode {
-		case http.StatusUnauthorized:
-			return Measurement{}, generic.BadCredentialsErr
-		case http.StatusForbidden:
-			return Measurement{}, generic.AccessDeniedErr
-		default:
-			return Measurement{}, fmt.Errorf("received an unexpected status code: %v", resp.StatusCode)
-		}
+		return generic.ClientError(fmt.Sprintf("Error while deleting measurements: %s", err.Error()), "DeleteManyMeasurements")
 	}
 
-	measurementFromAPI := Measurement{}
-
-	if err = json.NewDecoder(resp.Body).Decode(&measurementFromAPI); err != nil {
-		return Measurement{}, fmt.Errorf("failed to unmarshal response body: %w", err)
+	if status != http.StatusNoContent {
+		return generic.CreateErrorFromResponse(body, status)
 	}
 
-	return measurementFromAPI, nil
+	return nil
 }
-func (c Client) deleteMeasurement(id string) (Measurement, error) {
-	req, err := http.NewRequest(
-		http.MethodDelete,
-		fmt.Sprintf("%v%v", c.BaseURL, MEASUREMENTS_API),
-		nil,
-	)
+
+
+func (measurementApi *measurementApi) GetForDevice(sourceId string, pageSize int) (*MeasurementCollection, *generic.Error) {
+	return measurementApi.Find(&MeasurementQuery{sourceId: sourceId}, pageSize)
+}
+
+func (measurementApi *measurementApi) Find(measurementQuery *MeasurementQuery, pageSize int) (*MeasurementCollection, *generic.Error) {
+	queryParamsValues := &url.Values{}
+	err := measurementQuery.QueryParams(queryParamsValues)
 	if err != nil {
-		return Measurement{}, fmt.Errorf("failed to initialize rest request: %w", err)
+		return nil, generic.ClientError(fmt.Sprintf("Error while building query parameters to search for measurements: %s", err.Error()), "FindMeasurements")
 	}
-	req.Header.Add("Accept", MEASUREMENT_TYPE)
-	req.SetBasicAuth(c.Username, c.Password)
 
-	resp, err := c.HTTPClient.Do(req)
+	err = generic.PageSizeParameter(pageSize, queryParamsValues)
 	if err != nil {
-		return Measurement{}, fmt.Errorf("failed to execute rest request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		switch resp.StatusCode {
-		case http.StatusUnauthorized:
-			return Measurement{}, generic.BadCredentialsErr
-		case http.StatusForbidden:
-			return Measurement{}, generic.AccessDeniedErr
-		default:
-			return Measurement{}, fmt.Errorf("received an unexpected status code: %v", resp.StatusCode)
-		}
+		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch measurements: %s", err.Error()), "FindMeasurements")
 	}
 
-	measurementFromAPI := Measurement{}
+	return measurementApi.getCommon(fmt.Sprintf("%s?%s", measurementApi.basePath, queryParamsValues.Encode()))
+}
 
-	if err = json.NewDecoder(resp.Body).Decode(&measurementFromAPI); err != nil {
-		return Measurement{}, fmt.Errorf("failed to unmarshal response body: %w", err)
+func (measurementApi *measurementApi) NextPage(c *MeasurementCollection) (*MeasurementCollection, *generic.Error) {
+	return measurementApi.getPage(c.Next)
+}
+
+func (measurementApi *measurementApi) PreviousPage(c *MeasurementCollection) (*MeasurementCollection, *generic.Error) {
+	return measurementApi.getPage(c.Prev)
+}
+
+
+
+// -- internal
+
+func (measurementApi *measurementApi) getPage(reference string) (*MeasurementCollection, *generic.Error) {
+	if reference == "" {
+		log.Print("No page reference given. Returning nil.")
+		return nil, nil
 	}
 
-	return measurementFromAPI, nil
+	nextUrl, err := url.Parse(reference)
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Unparsable URL given for page reference: '%s'", reference), "GetPage")
+	}
+
+	collection, err2 := measurementApi.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+	if err2 != nil {
+		return nil, err2
+	}
+
+	if len(collection.Measurements) == 0 {
+		log.Print("Returned collection is empty. Returning nil.")
+		return nil, nil
+	}
+
+	return collection, nil
+}
+
+func (measurementApi *measurementApi) getCommon(path string) (*MeasurementCollection, *generic.Error) {
+	body, status, err := measurementApi.client.Get(path, generic.AcceptHeader(MEASUREMENT_COLLECTION_TYPE))
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while getting measurements: %s", err.Error()), "GetMeasurementCollection")
+	}
+
+	if status != http.StatusOK {
+		return nil, generic.CreateErrorFromResponse(body, status)
+	}
+
+	return parseMeasurementCollectionResponse(body)
 }
 
 func parseMeasurementResponse(body []byte) (*Measurement, *generic.Error) {
