@@ -31,6 +31,9 @@ type MeasurementApi interface {
 	// Deletes measurements by filter. If error is nil, measurements were deleted successfully.
 	DeleteMany(measurementQuery *MeasurementQuery) *generic.Error
 
+	// Deletes measurements by filter. If error is nil, measurements were deleted successfully.
+	DeleteAll() *generic.Error
+
 	// Gets a measurement collection by a source (aka managed object id).
 	GetForDevice(sourceId string, pageSize int) (*MeasurementCollection, *generic.Error)
 
@@ -158,8 +161,27 @@ func (measurementApi *measurementApi) DeleteMany(measurementQuery *MeasurementQu
 	if err != nil {
 		return generic.ClientError(fmt.Sprintf("Error while building query parameters for deletion of measurements: %s", err.Error()), "DeleteManyMeasurements")
 	}
+	if len(*queryParamsValues) == 0 {
+		return generic.ClientError("No filter set. At least one filter has to be set to avoid accident deletion of all measurements", "DeleteManyMeasurements")
+	}
 
 	body, status, err := measurementApi.client.Delete(fmt.Sprintf("%s?%s", measurementApi.basePath, queryParamsValues.Encode()), generic.EmptyHeader())
+	if err != nil {
+		return generic.ClientError(fmt.Sprintf("Error while deleting measurements: %s", err.Error()), "DeleteManyMeasurements")
+	}
+
+	if status != http.StatusNoContent {
+		return generic.CreateErrorFromResponse(body, status)
+	}
+
+	return nil
+}
+
+/*
+ATTENTION: This function deletes all measurements
+*/
+func (measurementApi *measurementApi) DeleteAll() *generic.Error {
+	body, status, err := measurementApi.client.Delete(fmt.Sprintf("%s", measurementApi.basePath), generic.EmptyHeader())
 	if err != nil {
 		return generic.ClientError(fmt.Sprintf("Error while deleting measurements: %s", err.Error()), "DeleteManyMeasurements")
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/tarent/gomulocity/generic"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -21,11 +22,11 @@ type Source struct {
 }
 
 type Measurement struct {
-	Id              string    `json:"id,omitempty"`
-	Self            string    `json:"self,omitempty"`
+	Id              string     `json:"id,omitempty"`
+	Self            string     `json:"self,omitempty"`
 	Time            *time.Time `json:"time"`
-	MeasurementType string    `json:"type"`
-	Source          Source    `json:"source"`
+	MeasurementType string     `json:"type"`
+	Source          Source     `json:"source"`
 	Temperature     Temperature
 }
 
@@ -46,6 +47,9 @@ type MeasurementQuery struct {
 	ValueFragmentType   string
 	ValueFragmentSeries string
 	SourceId            string
+	Revert              bool 	// It's not a filter. It's the sort order. As per default the measurements will be delivered in ascending sort order.
+	// That means, the oldest measurements are returned first. Setting to true is only valid with DateFrom and DateTo filters. In that case
+	// the latest measurement of the given time period will be at the first place.
 }
 
 func (q MeasurementQuery) QueryParams(params *url.Values) error {
@@ -59,6 +63,14 @@ func (q MeasurementQuery) QueryParams(params *url.Values) error {
 
 	if q.DateTo != nil {
 		params.Add("dateTo", q.DateTo.Format(time.RFC3339))
+	}
+
+	if q.Revert {
+		if q.DateFrom != nil && q.DateTo != nil {
+			params.Add("revert", strconv.FormatBool(q.Revert))
+		} else {
+			return fmt.Errorf("failed to build filter: if 'Revert' parameter is set to true, 'DateFrom' and 'DateTo' should be set as well.")
+		}
 	}
 
 	if len(q.Type) > 0 {
