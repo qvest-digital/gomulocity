@@ -7,14 +7,16 @@ import (
 )
 
 type B struct {
-	Foo string                 `json:"foo"`
-	Bar int                    `json:"bar"`
-	Baz map[string]interface{} `jsonc:"flat"`
+	Foo    string                 `json:"foo"`
+	Bar    int                    `json:"bar"`
+	Baz    map[string]interface{} `jsonc:"flat"`
+	FooBar string                 `jsonc:"flat"` // -> expect normal handling
 }
 
 type A struct {
-	Bs []B `json:"bList" jsonc:"collection"`
-	C  int `json:"c"`
+	Bs []B    `json:"bList" jsonc:"collection"`
+	C  int    `json:"c"`
+	D  string `json:"d" jsonc:"collection"` // expect only `json:"d"` handling
 }
 
 const testJson = `{
@@ -22,6 +24,7 @@ const testJson = `{
 			{
 				"foo":"Hallo",
 				"bar":1,
+				"FooBar": "myFooBar",
 				"custom1":"#Custom1",
 				"custom2":4711,
 				"custom3": [
@@ -32,6 +35,7 @@ const testJson = `{
 			{
 				"foo":"Hallo2",
 				"bar":2,
+				"FooBar": "myFooBar",
 				"custom1":"#Custom1",
 				"custom2":4711,
 				"custom3": [
@@ -40,7 +44,8 @@ const testJson = `{
 				]
 			}
 		],
-		"c":4711
+		"c":4711,
+		"d": "myDValue"
 	}`
 
 var additionalData = map[string]interface{}{
@@ -49,9 +54,9 @@ var additionalData = map[string]interface{}{
 	"custom3": []string{"Hallo", "Welt"},
 }
 
-var testObject = &A{C: 4711, Bs: []B{
-	{Foo: "Hallo", Bar: 1, Baz: additionalData},
-	{Foo: "Hallo2", Bar: 2, Baz: additionalData},
+var testObject = &A{C: 4711, D: "myDValue", Bs: []B{
+	{Foo: "Hallo", Bar: 1, Baz: additionalData, FooBar: "myFooBar"},
+	{Foo: "Hallo2", Bar: 2, Baz: additionalData, FooBar: "myFooBar"},
 }}
 
 func TestJsonc_Marshal_Lists(t *testing.T) {
@@ -66,7 +71,7 @@ func TestJsonc_Marshal_Lists(t *testing.T) {
 	_ = json.Unmarshal([]byte(testJson), &m)
 	_ = json.Unmarshal([]byte(j), &n)
 
-	if !reflect.DeepEqual(m, n) {
+	if !reflect.DeepEqual(n, m) {
 		t.Errorf("JsonFromObject - json = %v, want %v", m, n)
 	}
 }

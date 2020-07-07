@@ -54,16 +54,16 @@ func mapFromStruct(structValue *reflect.Value) (*map[string]interface{}, error) 
 			case "flat":
 				err := insertReflectMapIntoMap(&targetMap, &fieldValue)
 				if err != nil {
-					log.Printf(fmt.Sprintf("error on flatten %s: %s", fieldType.Name, err.Error()))
-					continue
+					log.Printf(fmt.Sprintf("warn: on flatten %s: %s", fieldType.Name, err.Error()))
+					insertTaggedFieldIntoMap(&targetMap, &fieldType, &fieldValue)
 				}
 				break
 			// `jsonc:"collection"` -> Must be a slice. Handle each element recursive with `mapFromStruct`
 			case "collection":
 				err := handleCollection(&targetMap, &fieldType, &fieldValue)
 				if err != nil {
-					log.Printf(fmt.Sprintf("error on collection %s: %s", fieldType.Name, err.Error()))
-					continue
+					log.Printf(fmt.Sprintf("warn: on collection %s: %s", fieldType.Name, err.Error()))
+					insertTaggedFieldIntoMap(&targetMap, &fieldType, &fieldValue)
 				}
 				break
 			}
