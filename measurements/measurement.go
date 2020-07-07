@@ -23,7 +23,7 @@ type Source struct {
 type Measurement struct {
 	Id              string    `json:"id,omitempty"`
 	Self            string    `json:"self,omitempty"`
-	Time            time.Time `json:"time"`
+	Time            *time.Time `json:"time"`
 	MeasurementType string    `json:"type"`
 	Source          Source    `json:"source"`
 	Temperature     Temperature
