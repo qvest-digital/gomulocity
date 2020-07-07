@@ -48,8 +48,8 @@ type MeasurementQuery struct {
 	ValueFragmentSeries string
 	SourceId            string
 	Revert              bool 	// It's not a filter. It's the sort order. As per default the measurements will be delivered in ascending sort order.
-	// That means, the oldest measurements are returned first. Setting to true is only valid with DateFrom and DateTo filters. In that case
-	// the latest measurement of the given time period will be at the first place.
+								// That means, the oldest measurements are returned first. Setting to true is only valid with DateFrom and DateTo filters. In that case
+								// the latest measurement of the given time period will be at the first place.
 }
 
 func (q MeasurementQuery) QueryParams(params *url.Values) error {
