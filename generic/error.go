@@ -1,6 +1,7 @@
 package generic
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 )
@@ -23,3 +24,24 @@ func (e Error) Error() string {
 }
 
 var ErrorContentType = "application/vnd.com.nsn.cumulocity.error+json"
+
+
+func ClientError(message string, info string) *Error {
+	return &Error{
+		ErrorType: "ClientError",
+		Message:   message,
+		Info:      info,
+	}
+}
+
+func CreateErrorFromResponse(responseBody []byte, status int) *Error {
+	var error Error
+	err := json.Unmarshal(responseBody, &error)
+	if err != nil {
+		error = *ClientError(fmt.Sprintf("Error while parsing response JSON [%s]: %s", responseBody, err.Error()), "CreateErrorFromResponse")
+	}
+
+	error.ErrorType = fmt.Sprintf("%d: %s", status, error.ErrorType)
+
+	return &error
+}
