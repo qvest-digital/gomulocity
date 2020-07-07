@@ -218,7 +218,7 @@ func (q MeasurementQuery) QueryParams() string {
 		params.Add("valueFragmentSeries", q.ValueFragmentSeries)
 	}
 
-	if len(source.ID) > 0 {
+	if len(q.source.ID) > 0 {
 		params.Add("source", q.source.ID)
 	}
 	return params.Encode()
