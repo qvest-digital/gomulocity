@@ -1,6 +1,7 @@
 package generic
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 )
@@ -12,7 +13,7 @@ type B struct {
 }
 
 type A struct {
-	Bs []B `json:"bList"`
+	Bs []B `json:"bList" jsonc:"collection"`
 	C  int `json:"c"`
 }
 
@@ -60,8 +61,13 @@ func TestJsonc_Marshal_Lists(t *testing.T) {
 		t.Errorf("JsonFromObject - unexpected error %v", err)
 	}
 
-	if j != testJson {
-		t.Errorf("JsonFromObject - json = %v, want %v", j, testJson)
+	m := make(map[string]interface{})
+	n := make(map[string]interface{})
+	_ = json.Unmarshal([]byte(testJson), &m)
+	_ = json.Unmarshal([]byte(j), &n)
+
+	if !reflect.DeepEqual(m, n) {
+		t.Errorf("JsonFromObject - json = %v, want %v", m, n)
 	}
 }
 

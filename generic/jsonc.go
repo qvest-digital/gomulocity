@@ -21,6 +21,20 @@ func JsonFromObject(o interface{}) (string, error) {
 		return "", errors.New("input is not a pointer of struct")
 	}
 
+	m, err := jsonFromObject(value)
+	if err != nil {
+		return "", err
+	}
+
+	j, err := json.Marshal(m)
+	if err != nil {
+		return "", err
+	} else {
+		return string(j), nil
+	}
+}
+
+func jsonFromObject(value *reflect.Value) (*map[string]interface{}, error) {
 	m := make(map[string]interface{})
 	valueType := value.Type()
 
@@ -29,7 +43,9 @@ func JsonFromObject(o interface{}) (string, error) {
 		fieldName := fieldType.Name
 
 		// Handle special name "jsonc:"flat"" as map and flat it.
-		if fieldType.Tag == flatTag {
+		tag := getJsonTag(&fieldType, "jsonc")
+
+		if tag != nil && tag.Name == "flat" {
 			fieldValue := value.Field(i)
 			if fieldValue.Kind() != reflect.Map {
 				log.Printf("error: %s is not a map. Can not flat it into the json and therefore ignore it.", fieldName)
@@ -47,12 +63,34 @@ func JsonFromObject(o interface{}) (string, error) {
 		}
 	}
 
-	j, err := json.Marshal(m)
-	if err != nil {
-		return "", err
-	} else {
-		return string(j), nil
+	for i := 0; i < valueType.NumField(); i++ {
+		fieldType := valueType.Field(i)
+		fieldValue := value.Field(i)
+
+		tag := getJsonTag(&fieldType, "jsonc")
+		if tag != nil && tag.Name == "collection" {
+			if fieldValue.Kind() != reflect.Slice {
+				log.Printf("error: %s is not a slice. Can not flat it and therefore ignore it.", fieldType.Name)
+				continue
+			} else {
+				slice := make([]map[string]interface{}, fieldValue.Len())
+				for i := 0; i < fieldValue.Len(); i++ {
+					item := fieldValue.Index(i)
+					j, err := jsonFromObject(&item)
+					if err != nil {
+						log.Printf("Ou oh!!! %v", err)
+						continue
+					} else {
+						slice[i] = *j
+					}
+				}
+				v := reflect.ValueOf(slice)
+				insertTaggedFieldIntoMap(&m, &fieldType, &v)
+			}
+		}
 	}
+
+	return &m, nil
 }
 
 func ObjectFromJson(j []byte, targetStruct interface{}) error {
@@ -89,15 +127,17 @@ func ObjectFromJson(j []byte, targetStruct interface{}) error {
 		// Get json tag from the struct field and delete it from
 		// the additionalFieldsMap
 		field := valueType.Field(i)
-		tag := getJsonTag(&field)
+		tag := getJsonTag(&field, "json")
 		if tag != nil {
 			delete(additionalFieldsMap, tag.Name)
 		}
 
 		// Find the jsonc field as collectFieldName
-		_, ok := field.Tag.Lookup("jsonc")
-		if ok {
-			collectFieldName = field.Name
+		tag = getJsonTag(&field, "jsonc")
+		if tag != nil {
+			if tag.Name == "flat" {
+				collectFieldName = field.Name
+			}
 		}
 	}
 
@@ -129,7 +169,7 @@ func pointerOfStruct(o *interface{}) (*reflect.Value, bool) {
 }
 
 func insertTaggedFieldIntoMap(objectMapPtr *map[string]interface{}, fieldType *reflect.StructField, fieldValue *reflect.Value) {
-	tag := getJsonTag(fieldType)
+	tag := getJsonTag(fieldType, "json")
 	objectMap := *objectMapPtr
 
 	// no tag -> original name
@@ -151,8 +191,8 @@ func insertTaggedFieldIntoMap(objectMapPtr *map[string]interface{}, fieldType *r
 	}
 }
 
-func getJsonTag(fieldType *reflect.StructField) *Tag {
-	tag, ok := fieldType.Tag.Lookup("json")
+func getJsonTag(fieldType *reflect.StructField, tagName string) *Tag {
+	tag, ok := fieldType.Tag.Lookup(tagName)
 	if !ok {
 		return nil
 	}
