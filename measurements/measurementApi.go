@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	MEASUREMENTS_API = "measurement/measurements/"
+	MEASUREMENTS_API = "/measurement/measurements"
 
 	MEASUREMENT_TYPE            = "application/vnd.com.nsn.cumulocity.measurement+json;charset=UTF-8;ver=0.9"
 	MEASUREMENT_COLLECTION_TYPE = "application/vnd.com.nsn.cumulocity.measurementCollection+json;charset=UTF-8;ver=0.9"
@@ -173,7 +173,7 @@ func (measurementApi *measurementApi) DeleteMany(measurementQuery *MeasurementQu
 
 
 func (measurementApi *measurementApi) GetForDevice(sourceId string, pageSize int) (*MeasurementCollection, *generic.Error) {
-	return measurementApi.Find(&MeasurementQuery{sourceId: sourceId}, pageSize)
+	return measurementApi.Find(&MeasurementQuery{SourceId: sourceId}, pageSize)
 }
 
 func (measurementApi *measurementApi) Find(measurementQuery *MeasurementQuery, pageSize int) (*MeasurementCollection, *generic.Error) {

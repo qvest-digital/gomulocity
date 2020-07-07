@@ -45,7 +45,7 @@ type MeasurementQuery struct {
 	Type                string
 	ValueFragmentType   string
 	ValueFragmentSeries string
-	sourceId            string
+	SourceId            string
 }
 
 func (q MeasurementQuery) QueryParams(params *url.Values) error {
@@ -73,8 +73,8 @@ func (q MeasurementQuery) QueryParams(params *url.Values) error {
 		params.Add("valueFragmentSeries", q.ValueFragmentSeries)
 	}
 
-	if len(q.sourceId) > 0 {
-		params.Add("source", q.sourceId)
+	if len(q.SourceId) > 0 {
+		params.Add("source", q.SourceId)
 	}
 	return nil
 }
