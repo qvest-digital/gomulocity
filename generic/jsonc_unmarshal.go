@@ -7,6 +7,11 @@ import (
 	"reflect"
 )
 
+/*
+	Takes a json as []byte and a pointer of the target struct
+	Returns an error, otherwise fills the `targetStruct` reference
+	with values.
+*/
 func ObjectFromJson(j []byte, targetStruct interface{}) error {
 	// is it a pointer of struct?
 	structValue, ok := pointerOfStruct(&targetStruct)
@@ -14,92 +19,111 @@ func ObjectFromJson(j []byte, targetStruct interface{}) error {
 		return errors.New("input is not a pointer of struct")
 	}
 
-	// Unmarshal json to the target struct
+	// First - let json unmarshal to the target struct as far as it gets
 	err := json.Unmarshal(j, targetStruct)
 	if err != nil {
 		log.Printf("Error while unmarshaling json: %v", err)
 		return err
 	}
 
-	// Unmarshal json to a generic map: string -> interface
-	var additionalFieldsMap map[string]interface{}
-	err = json.Unmarshal(j, &additionalFieldsMap)
+	// Second - Unmarshal json to a generic map: string -> interface
+	// to have all data as raw fields as working structure.
+	var fieldsMap map[string]interface{}
+	err = json.Unmarshal(j, &fieldsMap)
 	if err != nil {
 		log.Printf("Error while unmarshaling json: %v", err)
 		return err
 	}
 
-	return objectFromJson(structValue, &additionalFieldsMap)
+	return mergeMapWithStruct(&fieldsMap, structValue)
 }
 
-func objectFromJson(structValue *reflect.Value, additionalFieldsMapPtr *map[string]interface{}) error {
-	additionalFieldsMap := *additionalFieldsMapPtr
+/*
+	Merges the given object map into the struct.
+	`structMapPtr` is a pointer of the object map
+	`structValue` is the reflection Value of the struct object
+
+	Returns an error, otherwise fills the `structValue` reference
+	with values
+*/
+func mergeMapWithStruct(structMapPtr *map[string]interface{}, structValue *reflect.Value) error {
+	structMap := *structMapPtr
 	structType := structValue.Type()
 
-	// Found field for "additional value" inside the struct
-	var additionalFieldsName string
+	// Found field for "jsonc:"flat"" inside the struct
+	var flatFieldName string
 
 	// Iterate over all fields of the struct
 	for i := 0; i < structType.NumField(); i++ {
+		// Represents a single fields type and value
 		fieldType := structType.Field(i)
 		fieldValue := structValue.Field(i)
 
-		// Find the jsonc field as additionalFieldsName
+		// Get tag values of the field
 		jsonCTag := getJsonTag(&fieldType, "jsonc")
 		jsonTag := getJsonTag(&fieldType, "json")
 
 		if jsonCTag != nil {
 			switch jsonCTag.Name {
+			// The field is tagged with `jsonc:"flat"` -> set `flatFieldName`
 			case "flat":
 				if fieldValue.Kind() != reflect.Map {
 					log.Printf("warn: Field %s is not a map!.", fieldType.Name)
 					break
 				}
 
-				additionalFieldsName = fieldType.Name
+				flatFieldName = fieldType.Name
 				break
 			case "collection":
+				// The field is tagged with `jsonc:"collection"`. Handle all elements as an flatted struct
 				if fieldValue.Kind() != reflect.Slice {
 					log.Printf("warn: Field %s ist not a slice!", fieldType.Name)
 					break
 				}
 
-				var sliceFieldName string
+				// What is the json name in the `structMap`?
+				var jsonFieldName string
 				if jsonTag != nil {
-					sliceFieldName = jsonTag.Name
+					jsonFieldName = jsonTag.Name
 				} else {
-					sliceFieldName = fieldType.Name
+					jsonFieldName = fieldType.Name
 				}
-				bar := additionalFieldsMap[sliceFieldName].([]interface{})
 
+				// Get the collection from the `structMap`
+				collection := structMap[jsonFieldName].([]interface{})
+
+				// Iterate over each collection element
 				for i := 0; i < fieldValue.Len(); i++ {
-					o := fieldValue.Index(i)
-					w := bar[i].(map[string]interface{})
-					println(w)
-					err := objectFromJson(&o, &w)
+					// The collection element from the struct value and the struct mal collection
+					structElement := fieldValue.Index(i)
+					mapElement, ok := collection[i].(map[string]interface{})
+					if !ok {
+						log.Printf("Element of collection field %s is not a map. Ignoring it!", fieldType.Name)
+						break
+					}
+
+					// Call this function recursively with the collection element.
+					err := mergeMapWithStruct(&structElement, &mapElement)
 					if err != nil {
-						log.Fatal(err.Error())
+						log.Printf("error while unmarshaling colletion field %s", fieldType.Name)
 					}
 				}
 				break
 			}
 		}
 
+		// At the end, `structMap` must contain only the "non struct" field.
+		// Therefore, delete all "known" fields from the `structMap`
 		if jsonTag != nil {
-			delete(additionalFieldsMap, jsonTag.Name)
+			delete(structMap, jsonTag.Name)
 		}
-
-		// Delete the struct fields from the additional fields
-		delete(additionalFieldsMap, structType.Field(i).Name)
-
-		// Get json fieldTag from the struct field and delete it from
-		// the additionalFieldsMap
+		delete(structMap, structType.Field(i).Name)
 	}
 
-	// Add the additionalFieldsMap as attribute of the struct
-	if additionalFieldsName != "" {
-		field := structValue.FieldByName(additionalFieldsName)
-		field.Set(reflect.ValueOf(additionalFieldsMap))
+	// Add the structMap as value of the struct field `flatFieldName`
+	if flatFieldName != "" {
+		field := structValue.FieldByName(flatFieldName)
+		field.Set(reflect.ValueOf(structMap))
 	}
 
 	return nil
