@@ -1,4 +1,4 @@
-package measurements
+package measurement
 
 import (
 	"encoding/json"
@@ -18,9 +18,9 @@ const (
 
 type MeasurementApi interface {
 	// Create a new measurement and returns the created entity with id and creation time
-	Create(measurement *Measurement) (*Measurement, *generic.Error)
+	Create(measurement *NewMeasurement) (*Measurement, *generic.Error)
 
-	CreateMany(measurement *MeasurementCollection) (*MeasurementCollection, *generic.Error)
+	CreateMany(measurement *NewMeasurements) (*MeasurementCollection, *generic.Error)
 
 	// Gets an exiting measurement by its id. If the id does not exists, nil is returned.
 	Get(measurementId string) (*Measurement, *generic.Error)
@@ -67,7 +67,7 @@ Creates a measurement for an existing device.
 
 Returns created 'Measurement' on success, otherwise an error.
 */
-func (measurementApi *measurementApi) Create(measurement *Measurement) (*Measurement, *generic.Error) {
+func (measurementApi *measurementApi) Create(measurement *NewMeasurement) (*Measurement, *generic.Error) {
 	bytes, err := json.Marshal(measurement)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marhalling the measurement: %s", err.Error()), "CreateMeasurement")
@@ -90,8 +90,8 @@ Creates many measurements at once for an existing device.
 
 Returns a 'Measurement' collection on success, otherwise an error.
 */
-func (measurementApi *measurementApi) CreateMany(measurement *MeasurementCollection) (*MeasurementCollection, *generic.Error) {
-	bytes, err := json.Marshal(measurement)
+func (measurementApi *measurementApi) CreateMany(measurements *NewMeasurements) (*MeasurementCollection, *generic.Error) {
+	bytes, err := json.Marshal(measurements)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marhalling the measurements: %s", err.Error()), "CreateManyMeasurement")
 	}
@@ -124,8 +124,11 @@ func (measurementApi *measurementApi) Get(measurementId string) (*Measurement, *
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while getting a measurement: %s", err.Error()), "GetMeasurement")
 	}
-	if status != http.StatusOK {
+	if status == http.StatusNotFound {
 		return nil, nil
+	}
+	if status != http.StatusOK {
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	return parseMeasurementResponse(body)
@@ -137,10 +140,10 @@ Deletes measurement by id.
 func (measurementApi *measurementApi) Delete(measurementId string) *generic.Error {
 	if len(measurementId) == 0 {
 		return generic.ClientError("Deleting measurement without an id will lead into deletion of all measurements " +
-			"which is not allowed by this function. Therefore use `DeleteMany()` instead.", "DeleteMeasurement")
+			"which is not allowed by this function. Therefore use `DeleteAll()` instead.", "DeleteMeasurement")
 	}
 
-	body, status, err := measurementApi.client.Delete(fmt.Sprintf("%s?%s", measurementApi.basePath, url.QueryEscape(measurementId)), generic.EmptyHeader())
+	body, status, err := measurementApi.client.Delete(fmt.Sprintf("%s/%s", measurementApi.basePath, url.QueryEscape(measurementId)), generic.EmptyHeader())
 	if err != nil {
 		return generic.ClientError(fmt.Sprintf("Error while deleting measurement with id [%s]: %s", measurementId, err.Error()), "DeleteMeasurement")
 	}
@@ -156,13 +159,16 @@ func (measurementApi *measurementApi) Delete(measurementId string) *generic.Erro
 Deletes measurements by filter.
 */
 func (measurementApi *measurementApi) DeleteMany(measurementQuery *MeasurementQuery) *generic.Error {
+	if measurementQuery == nil {
+		return generic.ClientError("No filter set. At least one filter has to be set to avoid accident deletion of all measurements. Use `DeleteAll()` if you really want to remove them all", "DeleteManyMeasurements")
+	}
 	queryParamsValues := &url.Values{}
 	err := measurementQuery.QueryParams(queryParamsValues)
 	if err != nil {
 		return generic.ClientError(fmt.Sprintf("Error while building query parameters for deletion of measurements: %s", err.Error()), "DeleteManyMeasurements")
 	}
 	if len(*queryParamsValues) == 0 {
-		return generic.ClientError("No filter set. At least one filter has to be set to avoid accident deletion of all measurements", "DeleteManyMeasurements")
+		return generic.ClientError("No filter set. At least one filter has to be set to avoid accident deletion of all measurements. Use `DeleteAll()` if you really want to remove them all", "DeleteManyMeasurements")
 	}
 
 	body, status, err := measurementApi.client.Delete(fmt.Sprintf("%s?%s", measurementApi.basePath, queryParamsValues.Encode()), generic.EmptyHeader())

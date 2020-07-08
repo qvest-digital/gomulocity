@@ -1,4 +1,4 @@
-package measurements
+package measurement
 
 import (
 	"fmt"
@@ -16,23 +16,34 @@ type MeasurementCollection struct {
 	Next         string                    `json:"next,omitempty"`
 }
 
+type NewMeasurements struct {
+	Measurements []NewMeasurement `json:"measurements"`
+}
+
 type Source struct {
 	Id   string `json:"id"`
 	Self string `json:"self,omitempty"`
 }
 
+type NewMeasurement struct {
+	Time            *time.Time  `json:"time"`
+	MeasurementType string      `json:"type"`
+	Source          Source      `json:"source"`
+	Temperature     Temperature `json:"Temperature,omitempty"`
+}
+
 type Measurement struct {
-	Id              string     `json:"id,omitempty"`
-	Self            string     `json:"self,omitempty"`
-	Time            *time.Time `json:"time"`
-	MeasurementType string     `json:"type"`
-	Source          Source     `json:"source"`
-	Temperature     Temperature
+	Id              string      `json:"id"`
+	Self            string      `json:"self"`
+	Time            *time.Time  `json:"time"`
+	MeasurementType string      `json:"type"`
+	Source          Source      `json:"source"`
+	Temperature     Temperature `json:"Temperature,omitempty"`
 }
 
 type Temperature struct {
-	Cellar      ValueFragment
-	GroundFloor ValueFragment
+	Cellar      ValueFragment `json:"Cellar,omitempty"`
+	GroundFloor ValueFragment `json:"GroundFloor,omitempty"`
 }
 
 type ValueFragment struct {
@@ -47,9 +58,9 @@ type MeasurementQuery struct {
 	ValueFragmentType   string
 	ValueFragmentSeries string
 	SourceId            string
-	Revert              bool 	// It's not a filter. It's the sort order. As per default the measurements will be delivered in ascending sort order.
-								// That means, the oldest measurements are returned first. Setting to true is only valid with DateFrom and DateTo filters. In that case
-								// the latest measurement of the given time period will be at the first place.
+	Revert              bool // It's not a filter. It's the sort order. As per default the measurements will be delivered in ascending sort order.
+	// That means, the oldest measurements are returned first. Setting to true is only valid with DateFrom and DateTo filters. In that case
+	// the latest measurement of the given time period will be at the first place.
 }
 
 func (q MeasurementQuery) QueryParams(params *url.Values) error {

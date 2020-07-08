@@ -1,4 +1,4 @@
-package measurements
+package measurement
 
 import (
 	"github.com/tarent/gomulocity/generic"
@@ -25,6 +25,9 @@ func buildHttpServer(status int, body string) *httptest.Server {
 	}))
 }
 
+var requestCapture *http.Request
+var measurementTime, _ = time.Parse(time.RFC3339, "2020-06-26T10:43:25.130Z")
+
 var dateFrom, _ = time.Parse(time.RFC3339, "2020-06-29T10:11:12.000Z")
 var dateTo, _ = time.Parse(time.RFC3339, "2020-06-30T13:14:15.000Z")
 
@@ -36,8 +39,8 @@ var measurement = `{
             "type": "test-gomulocity-Measurement",
             "time": "2020-06-30T08:32:04.261Z",
             "source": {
-                "id": "1111111",
-            },
+                "id": "1111111"
+            }
         }`
 
 var measurementCollectionTemplate = `{

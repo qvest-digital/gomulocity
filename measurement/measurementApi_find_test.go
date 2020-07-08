@@ -1,4 +1,4 @@
-package alarm
+package measurement
 
 import (
 	"fmt"
@@ -10,11 +10,11 @@ import (
 	"time"
 )
 
-func TestAlarmApi_FindWithFilter(t *testing.T) {
+func TestMeasurementApi_FindWithFilter(t *testing.T) {
 	var capturedUrl string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedUrl = r.URL.String()
-		_, _ = w.Write([]byte(fmt.Sprintf(alarmCollectionTemplate, alarm)))
+		_, _ = w.Write([]byte(fmt.Sprintf(measurementCollectionTemplate, measurement)))
 	}))
 	defer ts.Close()
 
@@ -23,72 +23,55 @@ func TestAlarmApi_FindWithFilter(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		query         AlarmFilter
+		query         MeasurementQuery
 		expectedQuery string
 	}{
 		{
 			"EmptyFilter",
-			AlarmFilter{},
+			MeasurementQuery{},
 			"pageSize=1",
 		},
 		{
-			"Date",
-			AlarmFilter{DateFrom: &dateFrom, DateTo: &dateTo},
-			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z&pageSize=1",
-		},
-		{
-			"Status",
-			AlarmFilter{Status: []Status{ACTIVE, CLEARED, ACKNOWLEDGED}},
-			"pageSize=1&status=ACTIVE%2CCLEARED%2CACKNOWLEDGED",
-		},
-		{
-			"Severity",
-			AlarmFilter{Severity: CRITICAL},
-			"pageSize=1&severity=CRITICAL",
+			"DateAndRevertFlag",
+			MeasurementQuery{DateFrom: &dateFrom, DateTo: &dateTo, Revert: true},
+			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z&pageSize=1&revert=true",
 		},
 		{
 			"SourceId",
-			AlarmFilter{SourceId: "123"},
+			MeasurementQuery{SourceId: "123"},
 			"pageSize=1&source=123",
 		},
 		{
 			"Type",
-			AlarmFilter{Type: "testAlarm"},
-			"pageSize=1&type=testAlarm",
+			MeasurementQuery{Type: "testMeasurement"},
+			"pageSize=1&type=testMeasurement",
 		},
 		{
-			"Resolved",
-			AlarmFilter{Resolved: "true"},
-			"pageSize=1&resolved=true",
+			"ValueFragmentType",
+			MeasurementQuery{ValueFragmentType: "fragmentName"},
+			"pageSize=1&valueFragmentType=fragmentName",
 		},
 		{
-			"WithSourceAssets",
-			AlarmFilter{WithSourceAssets: true, SourceId: "123"},
-			"pageSize=1&source=123&withSourceAssets=true",
-		},
-		{
-			"WithSourceDevices",
-			AlarmFilter{WithSourceDevices: true, SourceId: "123"},
-			"pageSize=1&source=123&withSourceDevices=true",
+			"ValueFragmentSeries",
+			MeasurementQuery{ValueFragmentSeries: "serieName"},
+			"pageSize=1&valueFragmentSeries=serieName",
 		},
 		{
 			"All",
-			AlarmFilter{
-				Status:            []Status{ACKNOWLEDGED},
-				SourceId:          "123",
-				WithSourceAssets:  true,
-				WithSourceDevices: true,
-				Resolved:          "false",
-				Severity:          MAJOR,
-				DateFrom:          &dateFrom,
-				DateTo:            &dateTo,
-				Type:              "testAlarm",
+			MeasurementQuery{
+				DateFrom:            &dateFrom,
+				DateTo:              &dateTo,
+				Type:                "testMeasurement",
+				ValueFragmentType:   "fragmentName",
+				ValueFragmentSeries: "seriesName",
+				SourceId:            "123",
+				Revert:              true,
 			},
-			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z&pageSize=1&resolved=false&severity=MAJOR&source=123&status=ACKNOWLEDGED&type=testAlarm&withSourceAssets=true&withSourceDevices=true",
+			"dateFrom=2020-06-01T01%3A00%3A00Z&dateTo=2020-06-30T01%3A00%3A00Z&pageSize=1&revert=true&source=123&type=testMeasurement&valueFragmentSeries=seriesName&valueFragmentType=fragmentName",
 		},
 	}
 
-	api := buildAlarmApi(ts.URL)
+	api := buildMeasurementApi(ts.URL)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -106,30 +89,20 @@ func TestAlarmApi_FindWithFilter(t *testing.T) {
 	}
 }
 
-func TestAlarmApi_Find_WithInvalidFilter(t *testing.T) {
+func TestMeasurementApi_Find_WithInvalidFilter(t *testing.T) {
 	tests := []struct {
 		name          string
-		query         AlarmFilter
+		query         MeasurementQuery
 		expectedError string
 	}{
 		{
-			"Resolved",
-			AlarmFilter{Resolved: "CLEARED"},
-			"if 'Resolved' parameter is set, only 'true' and 'false' values are accepted",
-		},
-		{
-			"WithSourceAssets",
-			AlarmFilter{WithSourceAssets: true},
-			"when 'WithSourceAssets' parameter is defined also SourceID must be set",
-		},
-		{
-			"WithSourceDevices",
-			AlarmFilter{WithSourceDevices: true},
-			"when 'WithSourceDevices' parameter is defined also SourceID must be set",
+			"Revert",
+			MeasurementQuery{Revert: true},
+			"if 'Revert' parameter is set to true, 'DateFrom' and 'DateTo' should be set as well",
 		},
 	}
 
-	api := buildAlarmApi("test.url")
+	api := buildMeasurementApi("test.url")
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -142,7 +115,7 @@ func TestAlarmApi_Find_WithInvalidFilter(t *testing.T) {
 	}
 }
 
-func TestAlarmApi_Find_HandlesPageSize(t *testing.T) {
+func TestMeasurementApi_Find_HandlesPageSize(t *testing.T) {
 	tests := []struct {
 		name        string
 		pageSize    int
@@ -160,15 +133,15 @@ func TestAlarmApi_Find_HandlesPageSize(t *testing.T) {
 	var capturedUrl string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedUrl = r.URL.String()
-		_, _ = w.Write([]byte(fmt.Sprintf(alarmCollectionTemplate, alarm)))
+		_, _ = w.Write([]byte(fmt.Sprintf(measurementCollectionTemplate, measurement)))
 	}))
 	defer ts.Close()
 
 	// and: the api as system under test
-	api := buildAlarmApi(ts.URL)
+	api := buildMeasurementApi(ts.URL)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			query := AlarmFilter{
+			query := MeasurementQuery{
 				SourceId:   deviceId,
 			}
 			_, err := api.Find(&query, tt.pageSize)
@@ -194,31 +167,31 @@ func TestAlarmApi_Find_HandlesPageSize(t *testing.T) {
 	}
 }
 
-func TestAlarmApi_ReturnsCollection(t *testing.T) {
+func TestMeasurementApi_ReturnsCollection(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte(fmt.Sprintf(alarmCollectionTemplate, alarm)))
+		_, _ = w.Write([]byte(fmt.Sprintf(measurementCollectionTemplate, measurement)))
 	}))
 	defer ts.Close()
 
-	api := buildAlarmApi(ts.URL)
+	api := buildMeasurementApi(ts.URL)
 
-	collection, err := api.Find(&AlarmFilter{}, 1)
+	collection, err := api.Find(&MeasurementQuery{}, 1)
 
 	if err != nil {
 		t.Fatalf("Find() - Error given but no expected")
 	}
 
-	if len(collection.Alarms) != 1 {
-		t.Fatalf("Find() = Collection size = %v, want %v", len(collection.Alarms), 1)
+	if len(collection.Measurements) != 1 {
+		t.Fatalf("Find() = Collection size = %v, want %v", len(collection.Measurements), 1)
 	}
 
-	alarm := collection.Alarms[0]
-	if alarm.Id != alarmId {
-		t.Fatalf("Find() = Collection alarm id = %v, want %v", alarm.Id, alarmId)
+	measurement := collection.Measurements[0]
+	if measurement.Id != measurementId {
+		t.Fatalf("Find() = Collection measurement id = %v, want %v", measurement.Id, measurementId)
 	}
 }
 
-func TestAlarmApi_FindReturnsError(t *testing.T) {
+func TestMeasurementApi_FindReturnsError(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		error := `{
 			"error": "undefined/validationError",
@@ -231,15 +204,15 @@ func TestAlarmApi_FindReturnsError(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	api := buildAlarmApi(ts.URL)
+	api := buildMeasurementApi(ts.URL)
 
-	_, err := api.Find(&AlarmFilter{}, 1)
+	_, err := api.Find(&MeasurementQuery{}, 1)
 
 	if err == nil {
 		t.Fatalf("Find() - Error expected")
 	}
 
-	if err.ErrorType != "undefined/validationError" {
+	if err.ErrorType != "400: undefined/validationError" {
 		t.Errorf("Find() = '%v', want '%v'", err.ErrorType, "undefined/validationError")
 	}
 
