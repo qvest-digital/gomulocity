@@ -6,6 +6,8 @@ import (
 )
 
 type Tag struct {
+	Type      string
+	Field     string
 	Name      string
 	OmitEmpty bool
 }
@@ -19,6 +21,7 @@ func pointerOfStruct(o *interface{}) (*reflect.Value, bool) {
 	value := reflect.ValueOf(*o)
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
+		println(value.Kind().String())
 		if value.Kind() == reflect.Struct {
 			return &value, true
 		} else {
@@ -37,8 +40,8 @@ func getJsonTag(fieldType *reflect.StructField, tagName string) *Tag {
 
 	tagValues := strings.Split(tag, ",")
 	if len(tagValues) == 2 && tagValues[1] == "omitempty" {
-		return &Tag{tagValues[0], true}
+		return &Tag{tagName, fieldType.Name, tagValues[0], true}
 	} else {
-		return &Tag{tagValues[0], false}
+		return &Tag{tagName, fieldType.Name, tagValues[0], false}
 	}
 }

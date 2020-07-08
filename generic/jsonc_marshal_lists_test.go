@@ -84,7 +84,41 @@ func TestJsonc_Unmarshal_Lists(t *testing.T) {
 		t.Errorf("ObjectFromJson - unexpected error %v", err)
 	}
 
-	if !reflect.DeepEqual(a, testObject) {
-		t.Errorf("ObjectFromJson - json = %v \n want %v", a, testObject)
+	if a.C != 4711 || a.D != "myDValue" {
+		t.Errorf("ObjectFromJson - basic elements = {C: %d, D: %s}, want = {B: 4711, C: myDValue}", a.C, a.D)
+	}
+
+	if len(a.Bs) != 2 {
+		t.Errorf("ObjectFromJson - collection size = %d, want = 2", len(a.Bs))
+	}
+
+	assertB(a.Bs[0], t)
+	assertB(a.Bs[0], t)
+}
+
+func assertB(b B, t *testing.T) {
+	if b.Bar != 1 || b.Foo != "Hallo" || b.FooBar != "myFooBar" {
+		t.Errorf(
+			"ObjectFromJson - basic elements = {Bar: %d, Foo: %s, FooBar: %s}, want = {Bar: 1, Foo: Hallo, FooBar: myFooBar}",
+			b.Bar, b.Foo, b.FooBar,
+		)
+	}
+
+	custom1, _ := b.Baz["custom1"].(string)
+	custom2, _ := b.Baz["custom2"].(float64)
+
+	if custom1 != "#Custom1" || custom2 != 4711 {
+		t.Errorf(
+			"ObjectFromJson - Sub B = {custom1: %s, custom2: %.0f}, want = {custom1: %s, custom2: %f}",
+			custom1, custom2, additionalData["custom1"], additionalData["custom2"],
+		)
+	}
+
+	custom3, _ := b.Baz["custom3"].([]interface{})
+	if len(custom3) != 2 {
+		t.Errorf("ObjectFromJson - Sub B -> custom3 size = %d, want = 2", len(custom3))
+	}
+	if custom3[0] != "Hallo" || custom3[1] != "Welt" {
+		t.Errorf("ObjectFromJson - Sub B -> custom3 = [%v, %v], want = [Hallo Welt]", custom3[0], custom3[1])
 	}
 }

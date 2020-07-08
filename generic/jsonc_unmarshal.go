@@ -8,8 +8,14 @@ import (
 )
 
 func ObjectFromJson(j []byte, targetStruct interface{}) error {
+	// is it a pointer of struct?
+	structValue, ok := pointerOfStruct(&targetStruct)
+	if ok == false {
+		return errors.New("input is not a pointer of struct")
+	}
+
 	// Unmarshal json to the target struct
-	err := json.Unmarshal(j, &targetStruct)
+	err := json.Unmarshal(j, targetStruct)
 	if err != nil {
 		log.Printf("Error while unmarshaling json: %v", err)
 		return err
@@ -23,16 +29,11 @@ func ObjectFromJson(j []byte, targetStruct interface{}) error {
 		return err
 	}
 
-	return objectFromJson(targetStruct, additionalFieldsMap)
+	return objectFromJson(structValue, &additionalFieldsMap)
 }
 
-func objectFromJson(targetStruct interface{}, additionalFieldsMap map[string]interface{}) error {
-	// is it a pointer of struct?
-	structValue, ok := pointerOfStruct(&targetStruct)
-	if ok == false {
-		return errors.New("input is not a pointer of struct")
-	}
-
+func objectFromJson(structValue *reflect.Value, additionalFieldsMapPtr *map[string]interface{}) error {
+	additionalFieldsMap := *additionalFieldsMapPtr
 	structType := structValue.Type()
 
 	// Found field for "additional value" inside the struct
@@ -40,23 +41,21 @@ func objectFromJson(targetStruct interface{}, additionalFieldsMap map[string]int
 
 	// Iterate over all fields of the struct
 	for i := 0; i < structType.NumField(); i++ {
-		// Delete the struct fields from the additional fields
-		delete(additionalFieldsMap, structType.Field(i).Name)
-
-		// Get json fieldTag from the struct field and delete it from
-		// the additionalFieldsMap
 		fieldType := structType.Field(i)
 		fieldValue := structValue.Field(i)
-		fieldTag := getJsonTag(&fieldType, "json")
-		if fieldTag != nil {
-			delete(additionalFieldsMap, fieldTag.Name)
-		}
 
 		// Find the jsonc field as additionalFieldsName
-		fieldTag = getJsonTag(&fieldType, "jsonc")
-		if fieldTag != nil {
-			switch fieldTag.Name {
+		jsonCTag := getJsonTag(&fieldType, "jsonc")
+		jsonTag := getJsonTag(&fieldType, "json")
+
+		if jsonCTag != nil {
+			switch jsonCTag.Name {
 			case "flat":
+				if fieldValue.Kind() != reflect.Map {
+					log.Printf("warn: Field %s is not a map!.", fieldType.Name)
+					break
+				}
+
 				additionalFieldsName = fieldType.Name
 				break
 			case "collection":
@@ -65,20 +64,42 @@ func objectFromJson(targetStruct interface{}, additionalFieldsMap map[string]int
 					break
 				}
 
-				println(fieldValue.Kind().String())
+				var sliceFieldName string
+				if jsonTag != nil {
+					sliceFieldName = jsonTag.Name
+				} else {
+					sliceFieldName = fieldType.Name
+				}
+				bar := additionalFieldsMap[sliceFieldName].([]interface{})
+
+				for i := 0; i < fieldValue.Len(); i++ {
+					o := fieldValue.Index(i)
+					w := bar[i].(map[string]interface{})
+					println(w)
+					err := objectFromJson(&o, &w)
+					if err != nil {
+						log.Fatal(err.Error())
+					}
+				}
 				break
 			}
 		}
+
+		if jsonTag != nil {
+			delete(additionalFieldsMap, jsonTag.Name)
+		}
+
+		// Delete the struct fields from the additional fields
+		delete(additionalFieldsMap, structType.Field(i).Name)
+
+		// Get json fieldTag from the struct field and delete it from
+		// the additionalFieldsMap
 	}
 
 	// Add the additionalFieldsMap as attribute of the struct
 	if additionalFieldsName != "" {
 		field := structValue.FieldByName(additionalFieldsName)
-		if field.Kind() == reflect.Map {
-			field.Set(reflect.ValueOf(additionalFieldsMap))
-		} else {
-			log.Printf("Error: Field %s is not a map! Cannot deflat it.", additionalFieldsName)
-		}
+		field.Set(reflect.ValueOf(additionalFieldsMap))
 	}
 
 	return nil
