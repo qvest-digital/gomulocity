@@ -81,7 +81,7 @@ func mergeMapWithStruct(structMapPtr *map[string]interface{}, structValue *refle
 					break
 				}
 
-				// What is the json name in the `structMap`?
+				// What is the json name of the collection in the `structMap`?
 				var jsonFieldName string
 				if jsonTag != nil {
 					jsonFieldName = jsonTag.Name
@@ -94,7 +94,7 @@ func mergeMapWithStruct(structMapPtr *map[string]interface{}, structValue *refle
 
 				// Iterate over each collection element
 				for i := 0; i < fieldValue.Len(); i++ {
-					// The collection element from the struct value and the struct mal collection
+					// The collection element from the struct value and the struct map collection
 					structElement := fieldValue.Index(i)
 					mapElement, ok := collection[i].(map[string]interface{})
 					if !ok {
@@ -112,15 +112,15 @@ func mergeMapWithStruct(structMapPtr *map[string]interface{}, structValue *refle
 			}
 		}
 
-		// At the end, `structMap` must contain only the "non struct" field.
-		// Therefore, delete all "known" fields from the `structMap`
+		// At the end, `structMap` must contain only the "non struct" fields.
+		// Therefore, delete all "known" struct fields from the `structMap`
 		if jsonTag != nil {
 			delete(structMap, jsonTag.Name)
 		}
 		delete(structMap, structType.Field(i).Name)
 	}
 
-	// Add the structMap as value of the struct field `flatFieldName`
+	// Add the structMap as value of the struct field `flatFieldName` or `jsonc:"flat"`
 	if flatFieldName != "" {
 		field := structValue.FieldByName(flatFieldName)
 		field.Set(reflect.ValueOf(structMap))
