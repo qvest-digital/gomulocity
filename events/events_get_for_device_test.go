@@ -36,6 +36,48 @@ func TestEvents_GetForDevice_ExistingId(t *testing.T) {
 	}
 }
 
+func TestEvents_GetForDevice_CustomElements(t *testing.T) {
+	// given: A test server
+	ts := buildHttpServer(200, fmt.Sprintf(eventCollectionTemplate, event))
+	defer ts.Close()
+
+	// and: the api as system under test
+	api := buildEventsApi(ts.URL)
+
+	collection, err := api.GetForDevice(deviceId, 5)
+
+	if err != nil {
+		t.Fatalf("GetForDevice() got an unexpected error: %s", err.Error())
+	}
+
+	if collection == nil {
+		t.Fatalf("GetForDevice() got no explict error but the collection was nil.")
+	}
+
+	if len(collection.Events) != 1 {
+		t.Fatalf("GetForDevice() events count = %v, want %v", len(collection.Events), 1)
+	}
+
+	event := collection.Events[0]
+	if event.Id != eventId {
+		t.Errorf("GetForDevice() event id = %v, want %v", event.Id, eventId)
+	}
+
+	if len(event.AdditionalFields) != 2 {
+		t.Fatalf("GetForDevice() AdditionalFields length = %d, want %d", len(event.AdditionalFields), 2)
+	}
+
+	custom1, ok1 := event.AdditionalFields["custom1"].(string)
+	custom2, ok2 := event.AdditionalFields["custom2"].([]interface{})
+
+	if !(ok1 && custom1 == "Hello") {
+		t.Errorf("GetForDevice() custom1 = %v, want %v", custom1, "Hello")
+	}
+	if !(ok2 && custom2[0] == "Foo" && custom2[1] == "Bar") {
+		t.Errorf("GetForDevice() custom2 = [%v, %v], want [%v, %v]", custom2[0], custom2[1], "Foo", "Bar")
+	}
+}
+
 func TestEvents_GetForDevice_HandlesPageSize(t *testing.T) {
 	tests := []struct {
 		name        string

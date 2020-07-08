@@ -41,8 +41,8 @@ type EventCollection struct {
 	Next       string                    `json:"next"`
 	Self       string                    `json:"self"`
 	Prev       string                    `json:"prev"`
-	Events     []Event                   `json:"events"`
-	Statistics *generic.PagingStatistics `json:"statistics"` // ToDo: Check for dependencies vs. module singularity!
+	Events     []Event                   `json:"events" jsonc:"collection"`
+	Statistics *generic.PagingStatistics `json:"statistics"`
 }
 
 func (c *EventCollection) CurrentPage() int {

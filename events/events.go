@@ -230,7 +230,7 @@ func (e *events) getCommon(path string) (*EventCollection, *generic.Error) {
 
 	var result EventCollection
 	if len(body) > 0 {
-		err = json.Unmarshal(body, &result)
+		err = generic.ObjectFromJson(body, &result)
 		if err != nil {
 			return nil, clientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "GetCollection")
 		}
