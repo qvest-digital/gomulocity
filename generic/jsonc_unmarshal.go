@@ -103,7 +103,7 @@ func mergeMapWithStruct(structMapPtr *map[string]interface{}, structValue *refle
 					}
 
 					// Call this function recursively with the collection element.
-					err := mergeMapWithStruct(&structElement, &mapElement)
+					err := mergeMapWithStruct(&mapElement, &structElement)
 					if err != nil {
 						log.Printf("error while unmarshaling colletion field %s", fieldType.Name)
 					}
