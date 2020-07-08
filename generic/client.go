@@ -24,6 +24,14 @@ func AcceptHeader(accept string) map[string][]string {
 	return map[string][]string{"Accept": {accept}}
 }
 
+func ContentTypeHeader(contentType string) map[string][]string {
+	return map[string][]string{"Content-Type": {contentType}}
+}
+
+func AcceptAndContentTypeHeader(accept string, contentType string) map[string][]string {
+	return map[string][]string{"Accept": {accept}, "Content-Type": {contentType}}
+}
+
 func (client *Client) Delete(path string, header map[string][]string) ([]byte, int, error) {
 	return client.request(http.MethodDelete, path, []byte{}, header)
 }
@@ -46,7 +54,7 @@ func (client *Client) request(method, path string, body []byte, header map[strin
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	if err != nil {
-		log.Printf("Error: While creating a request: %s", err.Error())
+		log.Printf("Error while creating a request: %s", err.Error())
 		return nil, 0, err
 	}
 
