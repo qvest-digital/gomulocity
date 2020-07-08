@@ -21,7 +21,6 @@ func pointerOfStruct(o *interface{}) (*reflect.Value, bool) {
 	value := reflect.ValueOf(*o)
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
-		println(value.Kind().String())
 		if value.Kind() == reflect.Struct {
 			return &value, true
 		} else {
