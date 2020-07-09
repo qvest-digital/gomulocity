@@ -100,7 +100,7 @@ func TestJsonc_ObjectFromJson_CollectOtherFieldsInD(t *testing.T) {
 		t.Errorf("JsonFromObject - unexpected error %v", err)
 	}
 
-	// and: B and C hat correct data
+	// and: B and C has correct data
 	if a.B != "Foo" || a.C != 4711 {
 		t.Errorf("ObjectFromJson - basic elements = {B: %s, C: %d}, want = {B: %s, C: %d}", a.B, a.C, "Foo", 4711)
 	}
