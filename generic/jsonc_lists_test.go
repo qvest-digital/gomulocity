@@ -7,16 +7,14 @@ import (
 )
 
 type B struct {
-	Foo    string                 `json:"foo"`
-	Bar    int                    `json:"bar"`
-	Baz    map[string]interface{} `jsonc:"flat"`
-	FooBar string                 `jsonc:"flat"` // -> expect normal handling
+	Foo string                 `json:"foo"`
+	Bar int                    `json:"bar"`
+	Baz map[string]interface{} `jsonc:"flat"`
 }
 
 type A struct {
-	Bs []B    `json:"bList" jsonc:"collection"`
-	C  int    `json:"c"`
-	D  string `json:"d" jsonc:"collection"` // expect only `json:"d"` handling
+	Bs []B `json:"bList" jsonc:"collection"`
+	C  int `json:"c"`
 }
 
 const testJson = `{
@@ -24,7 +22,6 @@ const testJson = `{
 			{
 				"foo":"Hello",
 				"bar":1,
-				"FooBar": "myFooBar",
 				"custom1":"#Custom1",
 				"custom2":4711,
 				"custom3": [
@@ -35,7 +32,6 @@ const testJson = `{
 			{
 				"foo":"Hello2",
 				"bar":2,
-				"FooBar": "myFooBar",
 				"custom1":"#Custom1",
 				"custom2":4711,
 				"custom3": [
@@ -44,8 +40,7 @@ const testJson = `{
 				]
 			}
 		],
-		"c":4711,
-		"d": "myDValue"
+		"c":4711
 	}`
 
 var additionalData = map[string]interface{}{
@@ -54,9 +49,9 @@ var additionalData = map[string]interface{}{
 	"custom3": []string{"Hallo", "Welt"},
 }
 
-var testObject = &A{C: 4711, D: "myDValue", Bs: []B{
-	{Foo: "Hello", Bar: 1, Baz: additionalData, FooBar: "myFooBar"},
-	{Foo: "Hello2", Bar: 2, Baz: additionalData, FooBar: "myFooBar"},
+var testObject = &A{C: 4711, Bs: []B{
+	{Foo: "Hello", Bar: 1, Baz: additionalData},
+	{Foo: "Hello2", Bar: 2, Baz: additionalData},
 }}
 
 func TestJsonc_Marshal_Lists(t *testing.T) {
@@ -76,6 +71,25 @@ func TestJsonc_Marshal_Lists(t *testing.T) {
 	}
 }
 
+func TestJsonc_Marshal_Lists_WrongTags(t *testing.T) {
+	type WrongFlat struct {
+		A string `jsonc:"flat"`
+	}
+	type WrongCollection struct {
+		A string `jsonc:"collection"`
+	}
+
+	_, err := JsonFromObject(&WrongFlat{A: "Hello"})
+	if err == nil {
+		t.Errorf("JsonFromObject - no error, want error for wrong use of jsonc:flat.")
+	}
+
+	_, err = JsonFromObject(&WrongCollection{A: "Hello"})
+	if err == nil {
+		t.Errorf("JsonFromObject - no error, want error for wrong use of jsonc:collection.")
+	}
+}
+
 func TestJsonc_Unmarshal_Lists(t *testing.T) {
 	a := &A{}
 	err := ObjectFromJson([]byte(testJson), a)
@@ -84,8 +98,8 @@ func TestJsonc_Unmarshal_Lists(t *testing.T) {
 		t.Errorf("ObjectFromJson - unexpected error %v", err)
 	}
 
-	if a.C != 4711 || a.D != "myDValue" {
-		t.Errorf("ObjectFromJson - basic elements = {C: %d, D: %s}, want = {B: 4711, C: myDValue}", a.C, a.D)
+	if a.C != 4711 {
+		t.Errorf("ObjectFromJson - basic elements = {C: %d}, want = {C: 4711}", a.C)
 	}
 
 	if len(a.Bs) != 2 {
@@ -97,10 +111,10 @@ func TestJsonc_Unmarshal_Lists(t *testing.T) {
 }
 
 func assertB(b B, foo string, bar int, t *testing.T) {
-	if b.Bar != bar || b.Foo != foo || b.FooBar != "myFooBar" {
+	if b.Bar != bar || b.Foo != foo {
 		t.Errorf(
-			"ObjectFromJson - basic elements = {Bar: %d, Foo: %s, FooBar: %s}, want = {Bar: %d, Foo: %s, FooBar: myFooBar}",
-			b.Bar, b.Foo, b.FooBar, bar, foo,
+			"ObjectFromJson - basic elements = {Bar: %d, Foo: %s}, want = {Bar: %d, Foo: %s, FooBar: myFooBar}",
+			b.Bar, b.Foo, bar, foo,
 		)
 	}
 

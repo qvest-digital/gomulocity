@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
 )
 
@@ -25,9 +24,9 @@ func JsonFromObject(o interface{}) (string, error) {
 	j, err := json.Marshal(mapValue)
 	if err != nil {
 		return "", err
-	} else {
-		return string(j), nil
 	}
+
+	return string(j), nil
 }
 
 /*
@@ -54,16 +53,14 @@ func mapFromStruct(structValue *reflect.Value) (*map[string]interface{}, error) 
 			case "flat":
 				err := insertReflectMapIntoMap(&targetMap, &fieldValue)
 				if err != nil {
-					log.Printf(fmt.Sprintf("warn: on flatten %s: %s", fieldType.Name, err.Error()))
-					insertTaggedFieldIntoMap(&targetMap, &fieldType, &fieldValue)
+					return nil, errors.New(fmt.Sprintf("error: on collection %s: %s", fieldType.Name, err.Error()))
 				}
 				break
 			// `jsonc:"collection"` -> Must be a slice. Handle each element recursive with `mapFromStruct`
 			case "collection":
 				err := handleCollection(&targetMap, &fieldType, &fieldValue)
 				if err != nil {
-					log.Printf(fmt.Sprintf("warn: on collection %s: %s", fieldType.Name, err.Error()))
-					insertTaggedFieldIntoMap(&targetMap, &fieldType, &fieldValue)
+					return nil, errors.New(fmt.Sprintf("error: on collection %s: %s", fieldType.Name, err.Error()))
 				}
 				break
 			}
@@ -88,12 +85,12 @@ func handleCollection(targetMapPtr *map[string]interface{}, fieldType *reflect.S
 		structItem := fieldValue.Index(i)
 		mapItem, err := mapFromStruct(&structItem)
 		if err != nil {
-			log.Printf("error: Can not convert item %d into a map. Ignoring it.", i)
-			continue
-		} else {
-			slice[i] = *mapItem
+			return errors.New(fmt.Sprintf("error: Can not convert item %d: %s", i, err.Error()))
 		}
+
+		slice[i] = *mapItem
 	}
+
 	v := reflect.ValueOf(slice)
 	insertTaggedFieldIntoMap(targetMapPtr, fieldType, &v)
 
