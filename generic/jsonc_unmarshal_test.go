@@ -95,7 +95,7 @@ func TestJsonc_ObjectFromJson_CollectOtherFieldsInD(t *testing.T) {
 	// when: We unmarshal the json
 	err := ObjectFromJson([]byte(j), a)
 
-	// then: We do no expect an error
+	// then: We do not expect an error
 	if err != nil {
 		t.Errorf("JsonFromObject - unexpected error %v", err)
 	}
@@ -148,7 +148,7 @@ func TestJsonc_ObjectFromJson_WrongTags(t *testing.T) {
 		t.Errorf("JsonFromObject - unexpected error %v", err)
 	}
 
-	// and: B and C hat correct data
+	// and: B and C has correct data
 	if a.B != "Foo" || a.C != 4711 || a.D != "" {
 		t.Errorf("ObjectFromJson - basic elements = {B: %s, C: %d, D: %v}, want = {B: %s, C: %d, D: nil}", a.B, a.C, a.D, "Foo", 4711)
 	}

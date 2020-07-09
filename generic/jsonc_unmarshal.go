@@ -68,7 +68,7 @@ func mergeMapWithStruct(structMapPtr *map[string]interface{}, structValue *refle
 			// The field is tagged with `jsonc:"flat"` -> set `flatFieldName`
 			case "flat":
 				if fieldValue.Kind() != reflect.Map {
-					log.Printf("warn: Field %s is not a map!.", fieldType.Name)
+					log.Printf("warn: Field %s is not a map!", fieldType.Name)
 					break
 				}
 
