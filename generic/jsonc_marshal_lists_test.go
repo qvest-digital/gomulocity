@@ -22,7 +22,7 @@ type A struct {
 const testJson = `{
 		"bList":[
 			{
-				"foo":"Hallo",
+				"foo":"Hello",
 				"bar":1,
 				"FooBar": "myFooBar",
 				"custom1":"#Custom1",
@@ -33,7 +33,7 @@ const testJson = `{
 				]
 			},
 			{
-				"foo":"Hallo2",
+				"foo":"Hello2",
 				"bar":2,
 				"FooBar": "myFooBar",
 				"custom1":"#Custom1",
@@ -55,8 +55,8 @@ var additionalData = map[string]interface{}{
 }
 
 var testObject = &A{C: 4711, D: "myDValue", Bs: []B{
-	{Foo: "Hallo", Bar: 1, Baz: additionalData, FooBar: "myFooBar"},
-	{Foo: "Hallo2", Bar: 2, Baz: additionalData, FooBar: "myFooBar"},
+	{Foo: "Hello", Bar: 1, Baz: additionalData, FooBar: "myFooBar"},
+	{Foo: "Hello2", Bar: 2, Baz: additionalData, FooBar: "myFooBar"},
 }}
 
 func TestJsonc_Marshal_Lists(t *testing.T) {
@@ -92,15 +92,15 @@ func TestJsonc_Unmarshal_Lists(t *testing.T) {
 		t.Errorf("ObjectFromJson - collection size = %d, want = 2", len(a.Bs))
 	}
 
-	assertB(a.Bs[0], t)
-	assertB(a.Bs[0], t)
+	assertB(a.Bs[0], "Hello", 1, t)
+	assertB(a.Bs[1], "Hello2", 2, t)
 }
 
-func assertB(b B, t *testing.T) {
-	if b.Bar != 1 || b.Foo != "Hallo" || b.FooBar != "myFooBar" {
+func assertB(b B, foo string, bar int, t *testing.T) {
+	if b.Bar != bar || b.Foo != foo || b.FooBar != "myFooBar" {
 		t.Errorf(
-			"ObjectFromJson - basic elements = {Bar: %d, Foo: %s, FooBar: %s}, want = {Bar: 1, Foo: Hallo, FooBar: myFooBar}",
-			b.Bar, b.Foo, b.FooBar,
+			"ObjectFromJson - basic elements = {Bar: %d, Foo: %s, FooBar: %s}, want = {Bar: %d, Foo: %s, FooBar: myFooBar}",
+			b.Bar, b.Foo, b.FooBar, bar, foo,
 		)
 	}
 
