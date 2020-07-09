@@ -226,7 +226,7 @@ func TestAlarmApi_FindReturnsError(t *testing.T) {
 			"info": "https://www.cumulocity.com/guides/reference-guide/#error_reporting"
 		}`
 
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write([]byte(error))
 	}))
 	defer ts.Close()

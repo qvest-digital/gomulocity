@@ -42,8 +42,26 @@ func TestAlarmApi_Delete_Alarm_Success(t *testing.T) {
 		t.Fatalf("DeleteAlarm() got an unexpected error: %s", err.Error())
 	}
 
-	if strings.Contains(capturedUrl, expectedUrlParameters) == false {
+	if strings.HasSuffix(capturedUrl, expectedUrlParameters) == false {
 		t.Errorf("Delete() The target URL does not contains the alarmFilter: url: %s - expected %s", capturedUrl, expectedUrlParameters)
+	}
+}
+
+
+func TestMeasurementApi_Delete_Many_WithoutFilter(t *testing.T) {
+	// given: the api as system under test
+	api := buildAlarmApi("")
+
+	err := api.Delete(&AlarmFilter{})
+
+	if err == nil {
+		t.Errorf("Delete() expected error.")
+		return
+	}
+
+	if !strings.Contains(err.Message, "No filter set") {
+		t.Errorf("Delete() expected error with appropriate message. Got: %s", err.Message)
+		return
 	}
 }
 

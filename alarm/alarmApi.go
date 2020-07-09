@@ -26,6 +26,9 @@ type AlarmApi interface {
 	// Deletes alarms by filter. If error is nil, alarms were deleted successfully.
 	Delete(query *AlarmFilter) *generic.Error
 
+	// A special function to delete all alarms at once to avoid accident deletion using the delete()-function with filters
+	DeleteAll() *generic.Error
+
 	// Gets a alarm collection by a source (aka managed object id).
 	GetForDevice(sourceId string, pageSize int) (*AlarmCollection, *generic.Error)
 
@@ -173,15 +176,37 @@ Deletes alarms by filter.
 See: https://cumulocity.com/guides/reference/alarms/#delete-delete-an-alarm-collection
 */
 func (alarmApi *alarmApi) Delete(alarmFilter *AlarmFilter) *generic.Error {
+	if alarmFilter == nil {
+		return generic.ClientError("No filter set. At least one filter has to be set to avoid accident deletion of all alarms. Use `DeleteAll()` if you really want to remove them all", "DeleteAlarms")
+	}
 	queryParamsValues := &url.Values{}
 	err := alarmFilter.QueryParams(queryParamsValues)
 	if err != nil {
 		return generic.ClientError(fmt.Sprintf("Error while building query parameters for deletion of alarms: %s", err.Error()), "DeleteAlarms")
 	}
+	if len(*queryParamsValues) == 0 {
+		return generic.ClientError("No filter set. At least one filter has to be set to avoid accident deletion of all alarms. Use `DeleteAll()` if you really want to remove them all", "DeleteAlarms")
+	}
 
 	body, status, err := alarmApi.client.Delete(fmt.Sprintf("%s?%s", alarmApi.basePath, queryParamsValues.Encode()), generic.EmptyHeader())
 	if err != nil {
 		return generic.ClientError(fmt.Sprintf("Error while deleting alarms: %s", err.Error()), "DeleteAlarms")
+	}
+
+	if status != http.StatusNoContent {
+		return generic.CreateErrorFromResponse(body, status)
+	}
+
+	return nil
+}
+
+/*
+ATTENTION: This function deletes all alarms
+*/
+func (alarmApi *alarmApi) DeleteAll() *generic.Error {
+	body, status, err := alarmApi.client.Delete(fmt.Sprintf("%s", alarmApi.basePath), generic.EmptyHeader())
+	if err != nil {
+		return generic.ClientError(fmt.Sprintf("Error while deleting alarms: %s", err.Error()), "DeleteAllAlarms")
 	}
 
 	if status != http.StatusNoContent {
