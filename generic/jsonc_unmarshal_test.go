@@ -129,27 +129,20 @@ func TestJsonc_ObjectFromJson_CollectOtherFieldsInD(t *testing.T) {
 }
 
 func TestJsonc_ObjectFromJson_WrongTags(t *testing.T) {
-	// given: A struct with field B and C as well defined types and a field D as generic bucket.
-	type A struct {
-		B string `json:"myB"`
-		C int    `json:"myC"`
-		D string `jsonc:"flat"`
+	type WrongFlat struct {
+		A string `jsonc:"flat"`
+	}
+	type WrongCollection struct {
+		A string `jsonc:"collection"`
 	}
 
-	// and: A test json, with the fields B, C and other fields vom E to I.
-	a := &A{}
-	j := `{"myB":"Foo", "myC":4711, "myE": null, "myF": false, "G": 0, "myH": 0.567, "myI": [ "Hello", "Welt" ]}`
-
-	// when: We unmarshal the json
-	err := ObjectFromJson([]byte(j), a)
-
-	// then: We do no expect an error
-	if err != nil {
-		t.Errorf("JsonFromObject - unexpected error %v", err)
+	err := ObjectFromJson([]byte(`{"A": "Hello"}`), &WrongFlat{A: "Hello"})
+	if err == nil {
+		t.Errorf("JsonFromObject - no error, want error for wrong use of jsonc:flat.")
 	}
 
-	// and: B and C has correct data
-	if a.B != "Foo" || a.C != 4711 || a.D != "" {
-		t.Errorf("ObjectFromJson - basic elements = {B: %s, C: %d, D: %v}, want = {B: %s, C: %d, D: nil}", a.B, a.C, a.D, "Foo", 4711)
+	err = ObjectFromJson([]byte(`{"A": "Hello"}`), &WrongCollection{A: "Hello"})
+	if err == nil {
+		t.Errorf("JsonFromObject - no error, want error for wrong use of jsonc:collection.")
 	}
 }

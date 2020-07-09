@@ -3,7 +3,7 @@ package generic
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 	"reflect"
 )
 
@@ -22,8 +22,7 @@ func ObjectFromJson(j []byte, targetStruct interface{}) error {
 	// First - let json unmarshal to the target struct as far as it gets
 	err := json.Unmarshal(j, targetStruct)
 	if err != nil {
-		log.Printf("Error while unmarshaling json: %v", err)
-		return err
+		return errors.New(fmt.Sprintf("Error while unmarshaling json: %v", err))
 	}
 
 	// Second - Unmarshal json to a generic map: string -> interface
@@ -31,8 +30,7 @@ func ObjectFromJson(j []byte, targetStruct interface{}) error {
 	var fieldsMap map[string]interface{}
 	err = json.Unmarshal(j, &fieldsMap)
 	if err != nil {
-		log.Printf("Error while unmarshaling json: %v", err)
-		return err
+		return errors.New(fmt.Sprintf("Error while unmarshaling json: %v", err))
 	}
 
 	return mergeMapWithStruct(&fieldsMap, structValue)
@@ -68,8 +66,7 @@ func mergeMapWithStruct(structMapPtr *map[string]interface{}, structValue *refle
 			// The field is tagged with `jsonc:"flat"` -> set `flatFieldName`
 			case "flat":
 				if fieldValue.Kind() != reflect.Map {
-					log.Printf("warn: Field %s is not a map!", fieldType.Name)
-					break
+					return errors.New(fmt.Sprintf("error: Field %s is not a map! Can not deflat it.", fieldType.Name))
 				}
 
 				flatFieldName = fieldType.Name
@@ -77,8 +74,7 @@ func mergeMapWithStruct(structMapPtr *map[string]interface{}, structValue *refle
 			case "collection":
 				// The field is tagged with `jsonc:"collection"`. Handle all elements as an flatted struct
 				if fieldValue.Kind() != reflect.Slice {
-					log.Printf("warn: Field %s ist not a slice!", fieldType.Name)
-					break
+					return errors.New(fmt.Sprintf("error: Field %s ist not a slice! Can not use it as collection", fieldType.Name))
 				}
 
 				// What is the json name of the collection in the `structMap`?
@@ -98,14 +94,13 @@ func mergeMapWithStruct(structMapPtr *map[string]interface{}, structValue *refle
 					structElement := fieldValue.Index(i)
 					mapElement, ok := collection[i].(map[string]interface{})
 					if !ok {
-						log.Printf("Element of collection field %s is not a map. Ignoring it!", fieldType.Name)
-						break
+						return errors.New(fmt.Sprintf("error: Element of jsonc:collection field %s is not a map!", fieldType.Name))
 					}
 
 					// Call this function recursively with the collection element.
 					err := mergeMapWithStruct(&mapElement, &structElement)
 					if err != nil {
-						log.Printf("error while unmarshaling colletion field %s", fieldType.Name)
+						return errors.New(fmt.Sprintf("error: Can not unmarshaling jsonc:collection field %s", fieldType.Name))
 					}
 				}
 				break

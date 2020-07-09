@@ -152,3 +152,22 @@ func TestJsonc_DoesNotFlatUntaggedMaps(t *testing.T) {
 		t.Errorf("JsonFromObject - json = %v, want %v", j, want)
 	}
 }
+
+func TestJsonc_JsonFromObject_WrongTags(t *testing.T) {
+	type WrongFlat struct {
+		A string `jsonc:"flat"`
+	}
+	type WrongCollection struct {
+		A string `jsonc:"collection"`
+	}
+
+	_, err := JsonFromObject(&WrongFlat{A: "Hello"})
+	if err == nil {
+		t.Errorf("JsonFromObject - no error, want error for wrong use of jsonc:flat.")
+	}
+
+	_, err = JsonFromObject(&WrongCollection{A: "Hello"})
+	if err == nil {
+		t.Errorf("JsonFromObject - no error, want error for wrong use of jsonc:collection.")
+	}
+}

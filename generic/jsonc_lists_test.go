@@ -71,25 +71,6 @@ func TestJsonc_Marshal_Lists(t *testing.T) {
 	}
 }
 
-func TestJsonc_Marshal_Lists_WrongTags(t *testing.T) {
-	type WrongFlat struct {
-		A string `jsonc:"flat"`
-	}
-	type WrongCollection struct {
-		A string `jsonc:"collection"`
-	}
-
-	_, err := JsonFromObject(&WrongFlat{A: "Hello"})
-	if err == nil {
-		t.Errorf("JsonFromObject - no error, want error for wrong use of jsonc:flat.")
-	}
-
-	_, err = JsonFromObject(&WrongCollection{A: "Hello"})
-	if err == nil {
-		t.Errorf("JsonFromObject - no error, want error for wrong use of jsonc:collection.")
-	}
-}
-
 func TestJsonc_Unmarshal_Lists(t *testing.T) {
 	a := &A{}
 	err := ObjectFromJson([]byte(testJson), a)
