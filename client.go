@@ -9,14 +9,14 @@ import (
 	"time"
 )
 
-type Client struct {
+type Gomulocity struct {
 	DeviceCredentials  device_bootstrap.DeviceCredentialsApi
 	DeviceRegistration device_bootstrap.DeviceRegistrationApi
 	DeviceInformation  deviceinformation.Client
 	AlarmApi           alarm.AlarmApi
 }
 
-func NewClient(baseURL, username, password string, bootstrapUsername, bootstrapPassword string) Client {
+func NewGomulocity(baseURL, username, password string, bootstrapUsername, bootstrapPassword string) Gomulocity {
 	hc := http.Client{
 		Timeout: 2 * time.Second,
 	}
@@ -35,7 +35,7 @@ func NewClient(baseURL, username, password string, bootstrapUsername, bootstrapP
 		Password:   bootstrapPassword,
 	}
 
-	return Client{
+	return Gomulocity{
 		DeviceCredentials:  device_bootstrap.NewDeviceCredentialsApi(bootstrapClient),
 		DeviceRegistration: device_bootstrap.NewDeviceRegistrationApi(client),
 		DeviceInformation:  deviceinformation.Client{HTTPClient: &hc, BaseURL: baseURL, Username: username, Password: password},
