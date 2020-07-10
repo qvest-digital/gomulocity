@@ -246,9 +246,9 @@ func (measurementApi *measurementApi) getPage(reference string) (*MeasurementCol
 		return nil, generic.ClientError(fmt.Sprintf("Unparsable URL given for page reference: '%s'", reference), "GetPage")
 	}
 
-	collection, err2 := measurementApi.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
-	if err2 != nil {
-		return nil, err2
+	collection, genErr := measurementApi.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+	if genErr != nil {
+		return nil, genErr
 	}
 
 	if len(collection.Measurements) == 0 {
