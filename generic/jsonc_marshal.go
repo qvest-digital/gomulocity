@@ -146,6 +146,6 @@ func isEmptyValue(v *reflect.Value) bool {
 	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
 		return v.Len() == 0
 	default:
-		return v.IsZero() || !v.IsValid()
+		return !v.IsValid() || v.IsZero()
 	}
 }
