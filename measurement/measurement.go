@@ -26,24 +26,19 @@ type Source struct {
 }
 
 type NewMeasurement struct {
-	Time            *time.Time  `json:"time"`
-	MeasurementType string      `json:"type"`
-	Source          Source      `json:"source"`
-	Temperature     Temperature `json:"Temperature,omitempty"`
+	Time            *time.Time               `json:"time"`
+	MeasurementType string                   `json:"type"`
+	Source          Source                   `json:"source"`
+	Metrics         map[string]ValueFragment `jsonc:"flat"`
 }
 
 type Measurement struct {
-	Id              string      `json:"id"`
-	Self            string      `json:"self"`
-	Time            *time.Time  `json:"time"`
-	MeasurementType string      `json:"type"`
-	Source          Source      `json:"source"`
-	Temperature     Temperature `json:"Temperature,omitempty"`
-}
-
-type Temperature struct {
-	Cellar      ValueFragment `json:"Cellar,omitempty"`
-	GroundFloor ValueFragment `json:"GroundFloor,omitempty"`
+	Id              string                   `json:"id"`
+	Self            string                   `json:"self"`
+	Time            *time.Time               `json:"time"`
+	MeasurementType string                   `json:"type"`
+	Source          Source                   `json:"source"`
+	Metrics         map[string]ValueFragment `jsonc:"flat"`
 }
 
 type ValueFragment struct {
