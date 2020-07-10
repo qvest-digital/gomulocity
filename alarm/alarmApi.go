@@ -24,9 +24,13 @@ type AlarmApi interface {
 
 	// Deletion by alarm id is not supported/allowed by cumulocity.
 	// Deletes alarms by filter. If error is nil, alarms were deleted successfully.
+	// ATTENTION: at least one filter should be set otherwise an error will be thrown.
+	// Use DeleteAll() (with caution!) instead if you want delete all alarms!
 	Delete(query *AlarmFilter) *generic.Error
 
-	// A special function to delete all alarms at once to avoid accident deletion using the delete()-function with filters
+	// A special function to delete all alarms at once to avoid accident deletion using the delete()-function with filters.
+	// If error is nil, alarms were deleted successfully.
+	// ATTENTION: use it with caution!
 	DeleteAll() *generic.Error
 
 	// Gets a alarm collection by a source (aka managed object id).
@@ -212,6 +216,7 @@ func (alarmApi *alarmApi) DeleteAll() *generic.Error {
 	if status != http.StatusNoContent {
 		return generic.CreateErrorFromResponse(body, status)
 	}
+	log.Println("WARNING: all alarms of the tenant were deleted!")
 
 	return nil
 }
