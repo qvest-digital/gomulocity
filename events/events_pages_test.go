@@ -49,7 +49,11 @@ func TestEvents_NextPage_NotAvailable(t *testing.T) {
 
 	// when: We call `NextPage` with no URLs
 	collection := createCollection("", "")
-	nextCollection, _ := api.NextPage(collection)
+	nextCollection, err := api.NextPage(collection)
+
+	if err != nil {
+		t.Errorf("NextPage() should not return an error. Was: %v", err)
+	}
 
 	// then: No `nextCollection` is available.
 	if nextCollection != nil {
@@ -69,7 +73,11 @@ func TestEvents_NextPage_Empty(t *testing.T) {
 
 	// when: We call `NextPage` with a given URL
 	collection := createCollection(ts.URL+"/event/events?source=1111111&pageSize=5&currentPage=3", "")
-	nextCollection, _ := api.NextPage(collection)
+	nextCollection, err := api.NextPage(collection)
+
+	if err != nil {
+		t.Errorf("NextPage() should not return an error. Was: %v", err)
+	}
 
 	// then: `nextCollection` ist `nil`
 	if nextCollection != nil {
@@ -139,7 +147,11 @@ func TestEvents_PreviousPage_NotAvailable(t *testing.T) {
 
 	// when: We call `PreviousPage` with no URLs
 	collection := createCollection("", "")
-	nextCollection, _ := api.PreviousPage(collection)
+	nextCollection, err := api.PreviousPage(collection)
+
+	if err != nil {
+		t.Errorf("NextPage() should not return an error. Was: %v", err)
+	}
 
 	// then: No `previousCollection` is available.
 	if nextCollection != nil {
@@ -158,8 +170,12 @@ func TestEvents_PreviousPage_Empty(t *testing.T) {
 	api := buildEventsApi(ts.URL)
 
 	// when: We call `PreviousPage` with a given URL
-	collection := createCollection(ts.URL+"/event/events?source=1111111&pageSize=5&currentPage=3", "")
-	nextCollection, _ := api.NextPage(collection)
+	collection := createCollection("", "URL/event/events?source=1111111&pageSize=5&currentPage=1")
+	nextCollection, err := api.PreviousPage(collection)
+
+	if err != nil {
+		t.Errorf("PreviousPage() should not return an error. Was: %v", err)
+	}
 
 	// then: `previousCollection` ist `nil`
 	if nextCollection != nil {
