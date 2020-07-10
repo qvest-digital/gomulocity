@@ -5,6 +5,7 @@ import (
 	"github.com/tarent/gomulocity/device_bootstrap"
 	"github.com/tarent/gomulocity/deviceinformation"
 	"github.com/tarent/gomulocity/generic"
+	"github.com/tarent/gomulocity/measurement"
 	"net/http"
 	"time"
 )
@@ -14,6 +15,7 @@ type Gomulocity struct {
 	DeviceRegistration device_bootstrap.DeviceRegistrationApi
 	DeviceInformation  deviceinformation.Client
 	AlarmApi           alarm.AlarmApi
+	MeasurementApi    measurement.MeasurementApi
 }
 
 func NewGomulocity(baseURL, username, password string, bootstrapUsername, bootstrapPassword string) Gomulocity {
@@ -40,5 +42,6 @@ func NewGomulocity(baseURL, username, password string, bootstrapUsername, bootst
 		DeviceRegistration: device_bootstrap.NewDeviceRegistrationApi(client),
 		DeviceInformation:  deviceinformation.Client{HTTPClient: &hc, BaseURL: baseURL, Username: username, Password: password},
 		AlarmApi:           alarm.NewAlarmApi(client),
+		MeasurementApi:    measurement.NewMeasurementApi(client),
 	}
 }

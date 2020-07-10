@@ -3,8 +3,9 @@ package deviceinformation
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/tarent/gomulocity/generic"
 	"net/http"
+
+	"github.com/tarent/gomulocity/generic"
 )
 
 type DeviceCredentials struct {
