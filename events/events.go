@@ -113,7 +113,7 @@ func (e *events) DeleteEvent(eventId string) *generic.Error {
 }
 
 func (e *events) CreateEvent(event *CreateEvent) (*Event, *generic.Error) {
-	bytes, err := json.Marshal(event)
+	bytes, err := generic.JsonFromObject(event)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the event: %s", err.Error()), "CreateEvent")
 	}
