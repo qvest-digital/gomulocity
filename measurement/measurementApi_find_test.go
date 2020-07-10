@@ -90,28 +90,13 @@ func TestMeasurementApi_FindWithFilter(t *testing.T) {
 }
 
 func TestMeasurementApi_Find_WithInvalidFilter(t *testing.T) {
-	tests := []struct {
-		name          string
-		query         MeasurementQuery
-		expectedError string
-	}{
-		{
-			"Revert",
-			MeasurementQuery{Revert: true},
-			"if 'Revert' parameter is set to true, 'DateFrom' and 'DateTo' should be set as well",
-		},
-	}
-
 	api := buildMeasurementApi("test.url")
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := api.Find(&tt.query, 1)
+	_, err := api.Find(&MeasurementQuery{Revert: true}, 1)
 
-			if !strings.Contains(err.Message, tt.expectedError) {
-				t.Errorf("Error in Find(): [%v], expected: [%v]", err.Message, tt.expectedError)
-			}
-		})
+	expectedError := "if 'Revert' parameter is set to true, 'DateFrom' and 'DateTo' should be set as well"
+	if !strings.Contains(err.Message, expectedError) {
+		t.Errorf("Error in Find(): [%v], expected: [%v]", err.Message, expectedError)
 	}
 }
 
