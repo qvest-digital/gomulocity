@@ -29,9 +29,12 @@ type MeasurementApi interface {
 	Delete(measurementId string) *generic.Error
 
 	// Deletes measurements by filter. If error is nil, measurements were deleted successfully.
+	// ATTENTION: at least one filter should be set otherwise an error will be thrown.
+	// Use DeleteAll() (with caution!) instead if you want delete all measurements!
 	DeleteMany(measurementQuery *MeasurementQuery) *generic.Error
 
-	// Deletes measurements by filter. If error is nil, measurements were deleted successfully.
+	// Deletes all measurements. If error is nil, measurements were deleted successfully.
+	// ATTENTION: use it with caution!
 	DeleteAll() *generic.Error
 
 	// Gets a measurement collection by a source (aka managed object id).
@@ -189,12 +192,13 @@ ATTENTION: This function deletes all measurements
 func (measurementApi *measurementApi) DeleteAll() *generic.Error {
 	body, status, err := measurementApi.client.Delete(fmt.Sprintf("%s", measurementApi.basePath), generic.EmptyHeader())
 	if err != nil {
-		return generic.ClientError(fmt.Sprintf("Error while deleting measurements: %s", err.Error()), "DeleteManyMeasurements")
+		return generic.ClientError(fmt.Sprintf("Error while deleting measurements: %s", err.Error()), "DeleteAllMeasurements")
 	}
 
 	if status != http.StatusNoContent {
 		return generic.CreateErrorFromResponse(body, status)
 	}
+	log.Println("WARNING: all measurements of the tenant were deleted!")
 
 	return nil
 }
