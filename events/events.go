@@ -208,9 +208,9 @@ func (e *events) getPage(reference string) (*EventCollection, *generic.Error) {
 		return nil, clientError(fmt.Sprintf("Unparsable URL given for page reference: '%s'", reference), "GetPage")
 	}
 
-	collection, err2 := e.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
-	if err2 != nil {
-		return nil, err2
+	collection, genErr := e.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+	if genErr != nil {
+		return nil, genErr
 	}
 
 	if len(collection.Events) == 0 {

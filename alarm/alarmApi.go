@@ -243,9 +243,9 @@ func (alarmApi *alarmApi) getPage(reference string) (*AlarmCollection, *generic.
 		return nil, clientError(fmt.Sprintf("Unparsable URL given for page reference: '%s'", reference), "GetPage")
 	}
 
-	collection, err2 := alarmApi.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
-	if err2 != nil {
-		return nil, err2
+	collection, genErr := alarmApi.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+	if genErr != nil {
+		return nil, genErr
 	}
 
 	if len(collection.Alarms) == 0 {
