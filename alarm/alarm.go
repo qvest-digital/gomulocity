@@ -57,17 +57,17 @@ https://cumulocity.com/guides/reference/alarms/#post-create-a-new-alarm
 type Alarm struct {
 	Id           string    `json:"id,omitempty"`
 	Self         string    `json:"self,omitempty"`
-	CreationTime time.Time `json:"creationTime,omitempty"`
+	CreationTime *time.Time `json:"creationTime,omitempty"`
 
 	Type     string    `json:"type,omitempty"`
-	Time     time.Time `json:"time,omitempty"`
+	Time     *time.Time `json:"time,omitempty"`
 	Text     string    `json:"text,omitempty"`
 	Source   Source    `json:"source,omitempty"`
 	Status   Status    `json:"status,omitempty"`
 	Severity Severity  `json:"severity,omitempty"`
 
 	Count               int       `json:"count,omitempty"`
-	FirstOccurrenceTime time.Time `json:"firstOccurrenceTime,omitempty"`
+	FirstOccurrenceTime *time.Time `json:"firstOccurrenceTime,omitempty"`
 
 	// TODO: object - 0..n additional properties of the alarm.
 }
