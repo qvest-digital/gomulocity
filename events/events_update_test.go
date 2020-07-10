@@ -1,34 +1,10 @@
 package events
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
 )
-
-func updateEventHttpServer(status int) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		body, _ := ioutil.ReadAll(r.Body)
-
-		var event UpdateEvent
-		_ = json.Unmarshal(body, &event)
-		eventUpdateCapture = &event
-		updateUrlCapture = r.URL.Path
-		requestCapture = r
-
-		w.WriteHeader(status)
-		response, _ := json.Marshal(responseEvent)
-		_, _ = w.Write(response)
-	}))
-}
-
-var eventUpdateCapture *UpdateEvent
-var updateUrlCapture string
 
 // given: A create event
 var eventUpdate = &UpdateEvent{
@@ -49,16 +25,16 @@ func TestEvents_Update_Event_Success_SendsData(t *testing.T) {
 		t.Fatalf("UpdateEvent() got an unexpected error: %s", err.Error())
 	}
 
-	if strings.Contains(updateUrlCapture, eventId) == false {
+	if strings.Contains(requestCapture.URL.Path, eventId) == false {
 		t.Errorf("UpdateEvent() The target URL does not contains the event Id: url: %s - expected eventId %s", updateUrlCapture, eventId)
 	}
 
-	if eventUpdateCapture == nil {
+	if updateEventCapture == nil {
 		t.Fatalf("UpdateEvent() Captured event is nil.")
 	}
 
-	if !reflect.DeepEqual(eventUpdate, eventUpdateCapture) {
-		t.Errorf("UpdateEvent() event = %v, want %v", eventUpdate, eventUpdateCapture)
+	if !reflect.DeepEqual(eventUpdate, updateEventCapture) {
+		t.Errorf("UpdateEvent() event = %v, want %v", eventUpdate, updateEventCapture)
 	}
 
 	header := requestCapture.Header.Get("Accept")
