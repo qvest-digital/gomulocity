@@ -5,47 +5,42 @@ Comulocity (c8y) go SDK.
 Example:
 ```go
 import (
-	"fmt"
-	"github.com/tarent/gomulocity/devicecontrol"
-	"github.com/tarent/gomulocity/generic"
-	"net/http"
-	"testing"
+	"github.com/tarent/gomulocity"
 )
 
 func main() {
-	c := devicecontrol.Client{
-		HTTPClient: http.DefaultClient,
-		BaseURL:    "https://<tenant>.<c8yHost>",
-		Username:   "<username>",
-		Password:   "<password>",
-	}
-    
-    c.Devicecontrol //see: 'devicecontrol'-API 
+	gomulocity := gomulocity.NewGomulocity("https://<tenant>.<c8yHost>", "<username>", "<password>", "<bootstrap-user>", "<bootstrap-password>")
 }
 ```
 
-## 'devicecontrol'-API
+## Device Bootstrap
 
-### newDeviceRequest
-Create newDeviceRequest:
+### Device Registration API
+Start a new device registration with a unique device ID:
 ```go
-    newDeviceRequest, err := 'gomulocity.Client'.Devicecontrol.CreateNewDeviceRequest(<newDeviceRequestID>)
+    deviceRegistration, err := gomulocity.DeviceRegistration.Create("123")
 ```
-Find all newDeviceRequest (newDeviceRequestCollection):
+Get a device registration by device ID:
 ```go
-    newDeviceRequestCollection, err := 'gomulocity.Client'.Devicecontrol.NewDeviceRequestCollections(meta.Page(3))
+    deviceRegistration, err := gomulocity.DeviceRegistration.Get("123")
 ```
-Update newDeviceRequest:
+Get all device registrations page by page:
 ```go
-    err := 'gomulocity.Client'.Devicecontrol.UpdateNewDeviceRequest(<newDeviceRequestID>, <newDeviceRequestStatus>)
+    deviceRegistrations, err := gomulocity.DeviceRegistration.GetAll(10)
+    deviceRegistrations, err = gomulocity.DeviceRegistration.NextPage(deviceRegistrations)
+    deviceRegistrations, err = gomulocity.DeviceRegistration.PreviousPage(deviceRegistrations)
 ```
-Delete newDeviceRequest:
+Update device registration status:
 ```go
-    err := 'gomulocity.Client'.Devicecontrol.DeleteNewDeviceRequest(<newDeviceRequestID>)
+    deviceRegistration, err := gomulocity.DeviceRegistration.Update("123", device_bootstrap.ACCEPTED)
+```
+Delete device registration by device ID:
+```go
+    err := gomulocity.DeviceRegistration.Delete("123")
 ```
 
-### deviceCredentials
+### Device Credentials API
 Create DeviceCredentials:
 ```go
-    createdDeviceCredentials, err := 'gomulocity.Client'.Devicecontrol.CreateDeviceCredentials(<deviceID>)
+    deviceCredentials, err := gomulocity.DeviceCredentials.Create("123")
 ```
