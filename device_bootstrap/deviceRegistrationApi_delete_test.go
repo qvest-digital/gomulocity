@@ -112,12 +112,13 @@ func TestDeviceRegistrationApi_Delete(t *testing.T) {
 				Info:      "CreateErrorFromResponse",
 			},
 		}, {
-			name:     "post error",
-			deviceId: "4711",
+			name:        "post error",
+			deviceId:    "4711",
+			c8yRespCode: http.StatusInternalServerError,
 			expectedErr: &generic.Error{
-				ErrorType: "ClientError",
-				Message:   "Error while deleting a deviceRegistration with id 4711: Delete <dynamic-URL>/devicecontrol/newDeviceRequests/4711: EOF",
-				Info:      "DeleteDeviceRegistration",
+				ErrorType: "500: ClientError",
+				Message:   "Error while parsing response JSON []: unexpected end of JSON input",
+				Info:      "CreateErrorFromResponse",
 			},
 		},
 	}

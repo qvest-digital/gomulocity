@@ -145,11 +145,12 @@ func TestDeviceRegistrationApi_GetAll(t *testing.T) {
 				Info:      "GetDeviceRegistrationCollection",
 			},
 		}, {
-			name: "post error",
+			name:        "post error",
+			c8yRespCode: http.StatusInternalServerError,
 			expectedErr: &generic.Error{
-				ErrorType: "ClientError",
-				Message:   "Error while getting deviceRegistrations: Get <dynamic-URL>/devicecontrol/newDeviceRequests?pageSize=11: EOF",
-				Info:      "GetDeviceRegistrationCollection",
+				ErrorType: "500: ClientError",
+				Message:   "Error while parsing response JSON []: unexpected end of JSON input",
+				Info:      "CreateErrorFromResponse",
 			},
 		},
 	}
@@ -189,9 +190,9 @@ func TestDeviceRegistrationApi_GetAll(t *testing.T) {
 
 func TestDeviceRegistrationApi_GetAll_PageSize(t *testing.T) {
 	tests := []struct {
-		name                        string
-		reqPageSize                 int
-		expectedErr                 *generic.Error
+		name        string
+		reqPageSize int
+		expectedErr *generic.Error
 	}{
 		{
 			name:        "Negative",
@@ -250,7 +251,7 @@ func TestDeviceRegistrationApi_GetAll_PageSize(t *testing.T) {
 			}
 
 			if tt.expectedErr == nil && !strings.Contains(capturedUrl, fmt.Sprintf("pageSize=%d", tt.reqPageSize)) {
-					t.Errorf("GetAll() expected pageSize '%d' in url. '%s' given", tt.reqPageSize, capturedUrl)
+				t.Errorf("GetAll() expected pageSize '%d' in url. '%s' given", tt.reqPageSize, capturedUrl)
 			}
 		})
 	}

@@ -71,10 +71,10 @@ func TestDeviceRegistrationApi_Update(t *testing.T) {
 		expectedErr                *generic.Error
 	}{
 		{
-			name:        "happy case",
-			deviceId:    "4711",
+			name:                     "happy case",
+			deviceId:                 "4711",
 			deviceRegistrationStatus: ACCEPTED,
-			c8yRespCode: http.StatusOK,
+			c8yRespCode:              http.StatusOK,
 			c8yRespBody: `{
 				"id": "4711", 
 				"status": "ACCEPTED", 
@@ -96,12 +96,12 @@ func TestDeviceRegistrationApi_Update(t *testing.T) {
 			},
 			expectedErr: nil,
 		}, {
-			name:                   "bad credentials",
-			deviceId:               "401",
+			name:                     "bad credentials",
+			deviceId:                 "401",
 			deviceRegistrationStatus: ACCEPTED,
-			c8yRespCode:            http.StatusUnauthorized,
-			c8yRespContentType:     "application/vnd.com.nsn.cumulocity.error+json",
-			c8yExpectedRequestBody: `{"status": "ACCEPTED"}`,
+			c8yRespCode:              http.StatusUnauthorized,
+			c8yRespContentType:       "application/vnd.com.nsn.cumulocity.error+json",
+			c8yExpectedRequestBody:   `{"status": "ACCEPTED"}`,
 			c8yRespBody: `{
 				"error": "security/Unauthorized",
 				"message": "Invalid credentials! : Bad credentials",
@@ -113,11 +113,11 @@ func TestDeviceRegistrationApi_Update(t *testing.T) {
 				Info:      "https://www.cumulocity.com/guides/reference-guide/#error_reporting",
 			},
 		}, {
-			name:        "invalid json error response",
-			deviceId:    "4711",
+			name:                     "invalid json error response",
+			deviceId:                 "4711",
 			deviceRegistrationStatus: ACCEPTED,
-			c8yRespCode: http.StatusInternalServerError,
-			c8yRespBody: `#`,
+			c8yRespCode:              http.StatusInternalServerError,
+			c8yRespBody:              `#`,
 			expectedErr: &generic.Error{
 				ErrorType: "500: ClientError",
 				Message:   "Error while parsing response JSON [#]: invalid character '#' looking for beginning of value",
@@ -125,9 +125,9 @@ func TestDeviceRegistrationApi_Update(t *testing.T) {
 			},
 			c8yExpectedRequestBody: `{"status": "ACCEPTED"}`,
 		}, {
-			name:        "without deviceId",
+			name:                     "without deviceId",
 			deviceRegistrationStatus: ACCEPTED,
-			c8yRespCode: http.StatusUnprocessableEntity,
+			c8yRespCode:              http.StatusUnprocessableEntity,
 			expectedErr: &generic.Error{
 				ErrorType: "ClientError",
 				Message:   "Updating a deviceRegistration without an id is not allowed",
@@ -135,8 +135,8 @@ func TestDeviceRegistrationApi_Update(t *testing.T) {
 			},
 			c8yExpectedRequestBody: `{}`,
 		}, {
-			name:        "without status",
-			deviceId:    "4711",
+			name:     "without status",
+			deviceId: "4711",
 			//deviceRegistrationStatus: ACCEPTED,
 			c8yRespCode: http.StatusUnprocessableEntity,
 			c8yRespBody: `{
@@ -151,11 +151,11 @@ func TestDeviceRegistrationApi_Update(t *testing.T) {
 			},
 			c8yExpectedRequestBody: `{}`,
 		}, {
-			name:        "invalid json response",
-			deviceId:    "4711",
+			name:                     "invalid json response",
+			deviceId:                 "4711",
 			deviceRegistrationStatus: ACCEPTED,
-			c8yRespCode: http.StatusOK,
-			c8yRespBody: `#`,
+			c8yRespCode:              http.StatusOK,
+			c8yRespBody:              `#`,
 			expectedErr: &generic.Error{
 				ErrorType: "ClientError",
 				Message:   "Error while parsing response JSON: invalid character '#' looking for beginning of value",
@@ -163,10 +163,10 @@ func TestDeviceRegistrationApi_Update(t *testing.T) {
 			},
 			c8yExpectedRequestBody: `{"status": "ACCEPTED"}`,
 		}, {
-			name:        "empty json response",
-			deviceId:    "4711",
+			name:                     "empty json response",
+			deviceId:                 "4711",
 			deviceRegistrationStatus: ACCEPTED,
-			c8yRespCode: http.StatusOK,
+			c8yRespCode:              http.StatusOK,
 			expectedErr: &generic.Error{
 				ErrorType: "ClientError",
 				Message:   "Response body was empty",
@@ -174,13 +174,14 @@ func TestDeviceRegistrationApi_Update(t *testing.T) {
 			},
 			c8yExpectedRequestBody: `{"status": "ACCEPTED"}`,
 		}, {
-			name:     "post error",
-			deviceId: "4711",
+			name:                     "post error",
+			deviceId:                 "4711",
 			deviceRegistrationStatus: ACCEPTED,
+			c8yRespCode:              http.StatusInternalServerError,
 			expectedErr: &generic.Error{
-				ErrorType: "ClientError",
-				Message:   "Error while updating a deviceRegistration: Put <dynamic-URL>/devicecontrol/newDeviceRequests/4711: EOF",
-				Info:      "UpdateDeviceRegistration",
+				ErrorType: "500: ClientError",
+				Message:   "Error while parsing response JSON []: unexpected end of JSON input",
+				Info:      "CreateErrorFromResponse",
 			},
 			c8yExpectedRequestBody: `{"status": "ACCEPTED"}`,
 		},

@@ -68,9 +68,9 @@ func TestDeviceRegistrationApi_Get(t *testing.T) {
 		expectedErr                *generic.Error
 	}{
 		{
-			name:                   "happy case",
-			deviceId:               "4711",
-			c8yRespCode:            http.StatusOK,
+			name:        "happy case",
+			deviceId:    "4711",
+			c8yRespCode: http.StatusOK,
 			c8yRespBody: `{
 				"id": "4711", 
 				"status": "PENDING_ACCEPTANCE", 
@@ -85,15 +85,15 @@ func TestDeviceRegistrationApi_Get(t *testing.T) {
 				Status:           PENDING_ACCEPTANCE,
 				Self:             "https://myFancyCloudInstance.com/devicecontrol/newDeviceRequests/4711",
 				Owner:            "me@company.com",
-				CustomProperties: map[string]interface {}{},
+				CustomProperties: map[string]interface{}{},
 				CreationTime:     &deviceRegistrationTime,
 				TenantId:         "myCloud",
 			},
 			expectedErr: nil,
 		}, {
-			name:                   "bad credentials",
-			deviceId:               "401",
-			c8yRespCode:            http.StatusUnauthorized,
+			name:               "bad credentials",
+			deviceId:           "401",
+			c8yRespCode:        http.StatusUnauthorized,
 			c8yRespContentType: "application/vnd.com.nsn.cumulocity.error+json",
 			c8yRespBody: `{
 				"error": "security/Unauthorized",
@@ -106,11 +106,11 @@ func TestDeviceRegistrationApi_Get(t *testing.T) {
 				Info:      "https://www.cumulocity.com/guides/reference-guide/#error_reporting",
 			},
 		}, {
-			name:                   "invalid json error response",
-			deviceId:               "4711",
-			c8yRespCode:            http.StatusInternalServerError,
-			c8yRespBody:            `#`,
-			expectedErr:            &generic.Error{
+			name:        "invalid json error response",
+			deviceId:    "4711",
+			c8yRespCode: http.StatusInternalServerError,
+			c8yRespBody: `#`,
+			expectedErr: &generic.Error{
 				ErrorType: "500: ClientError",
 				Message:   "Error while parsing response JSON [#]: invalid character '#' looking for beginning of value",
 				Info:      "CreateErrorFromResponse",
@@ -143,12 +143,13 @@ func TestDeviceRegistrationApi_Get(t *testing.T) {
 				Info:      "GetDeviceRegistration",
 			},
 		}, {
-			name:     "post error",
-			deviceId: "4711",
+			name:        "post error",
+			deviceId:    "4711",
+			c8yRespCode: http.StatusInternalServerError,
 			expectedErr: &generic.Error{
-				ErrorType: "ClientError",
-				Message:   "Error while getting a deviceRegistration: Get <dynamic-URL>/devicecontrol/newDeviceRequests/4711: EOF",
-				Info:      "GetDeviceRegistration",
+				ErrorType: "500: ClientError",
+				Message:   "Error while parsing response JSON []: unexpected end of JSON input",
+				Info:      "CreateErrorFromResponse",
 			},
 		},
 	}

@@ -106,7 +106,7 @@ func (e *events) DeleteEvent(eventId string) *generic.Error {
 	}
 
 	if status != http.StatusNoContent {
-		return generic.CreateErrorFromResponse(body)
+		return generic.CreateErrorFromResponse(body, status)
 	}
 
 	return nil
@@ -123,7 +123,7 @@ func (e *events) CreateEvent(event *CreateEvent) (*Event, *generic.Error) {
 		return nil, generic.ClientError(fmt.Sprintf("Error while posting a new event: %s", err.Error()), "CreateEvent")
 	}
 	if status != http.StatusCreated {
-		return nil, generic.CreateErrorFromResponse(body)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	return parseEventResponse(body)
@@ -141,7 +141,7 @@ func (e *events) UpdateEvent(eventId string, event *UpdateEvent) (*Event, *gener
 		return nil, generic.ClientError(fmt.Sprintf("Error while updating an event: %s", err.Error()), "UpdateEvent")
 	}
 	if status != http.StatusOK {
-		return nil, generic.CreateErrorFromResponse(body)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	return parseEventResponse(body)
@@ -225,7 +225,7 @@ func (e *events) getCommon(path string) (*EventCollection, *generic.Error) {
 	body, status, err := e.client.Get(path, generic.EmptyHeader())
 
 	if status != http.StatusOK {
-		return nil, generic.CreateErrorFromResponse(body)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	var result EventCollection
