@@ -65,13 +65,8 @@ func TestDeviceRegistrationApi_NextPage_Success(t *testing.T) {
 }
 
 func TestDeviceRegistrationApi_NextPage_NotAvailable(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte(fmt.Sprintf(deviceRegistrationCollectionTemplate, "")))
-	}))
-	defer ts.Close()
-
 	// given: The system under test
-	api := buildDeviceRegistrationApi(ts)
+	api := NewDeviceRegistrationApi(nil)
 
 	// when: We call `NextPage` with no URLs
 	collection := createCollection("", "")
@@ -160,13 +155,8 @@ func TestDeviceRegistrationApi_PreviousPage_Success(t *testing.T) {
 }
 
 func TestDeviceRegistrationApi_PreviousPage_NotAvailable(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte(fmt.Sprintf(deviceRegistrationCollectionTemplate, "")))
-	}))
-	defer ts.Close()
-
 	// given: The system under test
-	api := buildDeviceRegistrationApi(ts)
+	api := NewDeviceRegistrationApi(nil)
 
 	// when: We call `PreviousPage` with no URLs
 	collection := createCollection("", "")

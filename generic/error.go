@@ -7,6 +7,7 @@ import (
 )
 
 var BadCredentialsErr = errors.New("bad credentials")
+var AccessDeniedErr = errors.New("access denied")
 
 /*
 Error represent cumulocity's 'application/vnd.com.nsn.cumulocity.error+json' without 'Error details'.

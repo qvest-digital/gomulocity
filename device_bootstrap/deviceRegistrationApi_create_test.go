@@ -73,8 +73,8 @@ func TestDeviceRegistrationApi_Create(t *testing.T) {
 			deviceId:    "4711",
 			c8yRespCode: http.StatusCreated,
 			c8yRespBody: `{
-				"id": "4711", 
-				"status": "PENDING_ACCEPTANCE", 
+				"id": "4711",
+				"status": "PENDING_ACCEPTANCE",
 				"self": "https://myFancyCloudInstance.com/devicecontrol/deviceCredentials/4711",
 				"owner": "me@company.com",
 				"customProperties": {},
@@ -87,7 +87,7 @@ func TestDeviceRegistrationApi_Create(t *testing.T) {
 				Status:           PENDING_ACCEPTANCE,
 				Self:             "https://myFancyCloudInstance.com/devicecontrol/deviceCredentials/4711",
 				Owner:            "me@company.com",
-				CustomProperties: map[string]interface {}{},
+				CustomProperties: map[string]interface{}{},
 				CreationTime:     &deviceRegistrationTime,
 				TenantId:         "myCloud",
 			},
@@ -155,12 +155,13 @@ func TestDeviceRegistrationApi_Create(t *testing.T) {
 			},
 			c8yExpectedRequestBody: `{"id": "4711"}`,
 		}, {
-			name:     "post error",
-			deviceId: "4711",
+			name:        "post error",
+			deviceId:    "4711",
+			c8yRespCode: http.StatusInternalServerError,
 			expectedErr: &generic.Error{
-				ErrorType: "ClientError",
-				Message:   "Error while posting a new deviceRegistration: Post <dynamic-URL>/devicecontrol/newDeviceRequests: EOF",
-				Info:      "CreateDeviceRegistration",
+				ErrorType: "500: ClientError",
+				Message:   "Error while parsing response JSON []: unexpected end of JSON input",
+				Info:      "CreateErrorFromResponse",
 			},
 			c8yExpectedRequestBody: `{"id": "4711"}`,
 		},
@@ -205,4 +206,3 @@ func TestDeviceRegistrationApi_Create(t *testing.T) {
 		})
 	}
 }
-

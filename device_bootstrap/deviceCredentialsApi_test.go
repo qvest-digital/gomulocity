@@ -161,12 +161,13 @@ func TestDeviceCredentialsApi_Create(t *testing.T) {
 			},
 			c8yExpectedRequestBody: `{"id": "4711"}`,
 		}, {
-			name:     "post error",
-			deviceID: "4711",
+			name:        "post error",
+			deviceID:    "4711",
+			c8yRespCode: http.StatusInternalServerError,
 			expectedErr: &generic.Error{
-				ErrorType: "ClientError",
-				Message:   "Error while posting new device credentials: Post <dynamic-URL>/devicecontrol/deviceCredentials: EOF",
-				Info:      "CreateDeviceCredentials",
+				ErrorType: "500: ClientError",
+				Message:   "Error while parsing response JSON []: unexpected end of JSON input",
+				Info:      "CreateErrorFromResponse",
 			},
 			c8yExpectedRequestBody: `{"id": "4711"}`,
 		},
