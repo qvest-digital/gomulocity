@@ -170,7 +170,7 @@ func TestEvents_PreviousPage_Empty(t *testing.T) {
 	api := buildEventsApi(ts.URL)
 
 	// when: We call `PreviousPage` with a given URL
-	collection := createCollection("", "URL/event/events?source=1111111&pageSize=5&currentPage=1")
+	collection := createCollection("", ts.URL+"/event/events?source=1111111&pageSize=5&currentPage=1")
 	nextCollection, err := api.PreviousPage(collection)
 
 	if err != nil {
