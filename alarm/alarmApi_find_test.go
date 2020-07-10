@@ -135,7 +135,7 @@ func TestAlarmApi_Find_WithInvalidFilter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := api.Find(&tt.query, 1)
 
-			if strings.Contains(tt.expectedError, err.Message) {
+			if !strings.Contains(err.Message, tt.expectedError) {
 				t.Errorf("Error in Find(): [%v], expected: [%v]", err.Message, tt.expectedError)
 			}
 		})
@@ -239,8 +239,8 @@ func TestAlarmApi_FindReturnsError(t *testing.T) {
 		t.Fatalf("Find() - Error expected")
 	}
 
-	if err.ErrorType != "undefined/validationError" {
-		t.Errorf("Find() = '%v', want '%v'", err.ErrorType, "undefined/validationError")
+	if err.ErrorType != "400: undefined/validationError" {
+		t.Errorf("Find() = '%v', want '%v'", err.ErrorType, "400: undefined/validationError")
 	}
 
 	if err.Message != "My fancy error" {

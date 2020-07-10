@@ -63,16 +63,16 @@ See: https://cumulocity.com/guides/reference/alarms/#post-create-a-new-alarm
 func (alarmApi *alarmApi) Create(newAlarm *NewAlarm) (*Alarm, *generic.Error) {
 	bytes, err := json.Marshal(newAlarm)
 	if err != nil {
-		return nil, clientError(fmt.Sprintf("Error while marhalling the alarm: %s", err.Error()), "CreateAlarm")
+		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the alarm: %s", err.Error()), "CreateAlarm")
 	}
 	headers := generic.AcceptAndContentTypeHeader(ALARM_TYPE, ALARM_TYPE)
 
 	body, status, err := alarmApi.client.Post(alarmApi.basePath, bytes, headers)
 	if err != nil {
-		return nil, clientError(fmt.Sprintf("Error while posting a new alarm: %s", err.Error()), "CreateAlarm")
+		return nil, generic.ClientError(fmt.Sprintf("Error while posting a new alarm: %s", err.Error()), "CreateAlarm")
 	}
 	if status != http.StatusCreated {
-		return nil, createErrorFromResponse(body)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	return parseAlarmResponse(body)
@@ -89,10 +89,13 @@ func (alarmApi *alarmApi) Get(alarmId string) (*Alarm, *generic.Error) {
 	body, status, err := alarmApi.client.Get(fmt.Sprintf("%s/%s", alarmApi.basePath, url.QueryEscape(alarmId)), generic.AcceptHeader(ALARM_TYPE))
 
 	if err != nil {
-		return nil, clientError(fmt.Sprintf("Error while getting an alarm: %s", err.Error()), "Get")
+		return nil, generic.ClientError(fmt.Sprintf("Error while getting an alarm: %s", err.Error()), "Get")
+	}
+	if status == http.StatusNotFound {
+		return nil, nil
 	}
 	if status != http.StatusOK {
-		return nil, nil
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	return parseAlarmResponse(body)
@@ -106,7 +109,7 @@ See: https://cumulocity.com/guides/reference/alarms/#update-an-alarm
 func (alarmApi *alarmApi) Update(alarmId string, alarm *UpdateAlarm) (*Alarm, *generic.Error) {
 	bytes, err := json.Marshal(alarm)
 	if err != nil {
-		return nil, clientError(fmt.Sprintf("Error while marhalling the update alarm: %s", err.Error()), "UpdateAlarm")
+		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the update alarm: %s", err.Error()), "UpdateAlarm")
 	}
 
 	path := fmt.Sprintf("%s/%s", alarmApi.basePath, url.QueryEscape(alarmId))
@@ -114,10 +117,10 @@ func (alarmApi *alarmApi) Update(alarmId string, alarm *UpdateAlarm) (*Alarm, *g
 
 	body, status, err := alarmApi.client.Put(path, bytes, headers)
 	if err != nil {
-		return nil, clientError(fmt.Sprintf("Error while updating an alarm: %s", err.Error()), "UpdateAlarm")
+		return nil, generic.ClientError(fmt.Sprintf("Error while updating an alarm: %s", err.Error()), "UpdateAlarm")
 	}
 	if status != http.StatusOK {
-		return nil, createErrorFromResponse(body)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	return parseAlarmResponse(body)
@@ -134,13 +137,13 @@ func (alarmApi *alarmApi) BulkStatusUpdate(updateAlarmsFilter *UpdateAlarmsFilte
 
 	bytes, err := json.Marshal(alarmStatus)
 	if err != nil {
-		return clientError(fmt.Sprintf("Error while marhalling the update of alarm: %s", err.Error()), "BulkStatusUpdate")
+		return generic.ClientError(fmt.Sprintf("Error while marshalling the update of alarms: %s", err.Error()), "BulkStatusUpdate")
 	}
 
 	queryParamsValues := &url.Values{}
 	err = updateAlarmsFilter.QueryParams(queryParamsValues)
 	if err != nil {
-		return clientError(fmt.Sprintf("Error while building query parameters for update of alarms: %s", err.Error()), "BulkStatusUpdate")
+		return generic.ClientError(fmt.Sprintf("Error while building query parameters for update of alarms: %s", err.Error()), "BulkStatusUpdate")
 	}
 
 	path := fmt.Sprintf("%s?%s", alarmApi.basePath, queryParamsValues.Encode())
@@ -148,7 +151,7 @@ func (alarmApi *alarmApi) BulkStatusUpdate(updateAlarmsFilter *UpdateAlarmsFilte
 
 	body, status, err := alarmApi.client.Put(path, bytes, headers)
 	if err != nil {
-		return clientError(fmt.Sprintf("Error while updating alarms: %s", err.Error()), "BulkStatusUpdate")
+		return generic.ClientError(fmt.Sprintf("Error while updating alarms: %s", err.Error()), "BulkStatusUpdate")
 	}
 
 	// Since this operations can take a lot of time, request returns after maximum 0.5 sec of processing,
@@ -157,7 +160,7 @@ func (alarmApi *alarmApi) BulkStatusUpdate(updateAlarmsFilter *UpdateAlarmsFilte
 	//	200 - if the process has completed, all alarms have been updated
 	//	202 - if process continues in background (maybe )
 	if status != http.StatusOK && status != http.StatusAccepted {
-		return createErrorFromResponse(body)
+		return generic.CreateErrorFromResponse(body, status)
 	}
 
 	return nil
@@ -173,16 +176,16 @@ func (alarmApi *alarmApi) Delete(alarmFilter *AlarmFilter) *generic.Error {
 	queryParamsValues := &url.Values{}
 	err := alarmFilter.QueryParams(queryParamsValues)
 	if err != nil {
-		return clientError(fmt.Sprintf("Error while building query parameters for deletion of alarms: %s", err.Error()), "DeleteAlarms")
+		return generic.ClientError(fmt.Sprintf("Error while building query parameters for deletion of alarms: %s", err.Error()), "DeleteAlarms")
 	}
 
 	body, status, err := alarmApi.client.Delete(fmt.Sprintf("%s?%s", alarmApi.basePath, queryParamsValues.Encode()), generic.EmptyHeader())
 	if err != nil {
-		return clientError(fmt.Sprintf("Error while deleting alarms: %s", err.Error()), "DeleteAlarms")
+		return generic.ClientError(fmt.Sprintf("Error while deleting alarms: %s", err.Error()), "DeleteAlarms")
 	}
 
 	if status != http.StatusNoContent {
-		return createErrorFromResponse(body)
+		return generic.CreateErrorFromResponse(body, status)
 	}
 
 	return nil
@@ -196,12 +199,12 @@ func (alarmApi *alarmApi) Find(alarmFilter *AlarmFilter, pageSize int) (*AlarmCo
 	queryParamsValues := &url.Values{}
 	err := alarmFilter.QueryParams(queryParamsValues)
 	if err != nil {
-		return nil, clientError(fmt.Sprintf("Error while building query parameters to search for alarms: %s", err.Error()), "FindAlarms")
+		return nil, generic.ClientError(fmt.Sprintf("Error while building query parameters to search for alarms: %s", err.Error()), "FindAlarms")
 	}
 
 	err = generic.PageSizeParameter(pageSize, queryParamsValues)
 	if err != nil {
-		return nil, clientError(fmt.Sprintf("Error while building pageSize parameter to fetch alarms: %s", err.Error()), "FindAlarms")
+		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch alarms: %s", err.Error()), "FindAlarms")
 	}
 
 	return alarmApi.getCommon(fmt.Sprintf("%s?%s", alarmApi.basePath, queryParamsValues.Encode()))
@@ -223,10 +226,10 @@ func parseAlarmResponse(body []byte) (*Alarm, *generic.Error) {
 	if len(body) > 0 {
 		err := json.Unmarshal(body, &result)
 		if err != nil {
-			return nil, clientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
+			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 		}
 	} else {
-		return nil, clientError("Response body was empty", "GetAlarm")
+		return nil, generic.ClientError("Response body was empty", "GetAlarm")
 	}
 
 	return &result, nil
@@ -240,12 +243,12 @@ func (alarmApi *alarmApi) getPage(reference string) (*AlarmCollection, *generic.
 
 	nextUrl, err := url.Parse(reference)
 	if err != nil {
-		return nil, clientError(fmt.Sprintf("Unparsable URL given for page reference: '%s'", reference), "GetPage")
+		return nil, generic.ClientError(fmt.Sprintf("Unparsable URL given for page reference: '%s'", reference), "GetPage")
 	}
 
-	collection, err2 := alarmApi.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
-	if err2 != nil {
-		return nil, err2
+	collection, genErr := alarmApi.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+	if genErr != nil {
+		return nil, genErr
 	}
 
 	if len(collection.Alarms) == 0 {
@@ -260,32 +263,18 @@ func (alarmApi *alarmApi) getCommon(path string) (*AlarmCollection, *generic.Err
 	body, status, err := alarmApi.client.Get(path, generic.AcceptHeader(ALARM_COLLECTION_TYPE))
 
 	if status != http.StatusOK {
-		return nil, createErrorFromResponse(body)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
 	var result AlarmCollection
 	if len(body) > 0 {
 		err = json.Unmarshal(body, &result)
 		if err != nil {
-			return nil, clientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "GetCollection")
+			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "GetCollection")
 		}
 	} else {
-		return nil, clientError("Response body was empty", "GetCollection")
+		return nil, generic.ClientError("Response body was empty", "GetCollection")
 	}
 
 	return &result, nil
-}
-
-func clientError(message string, info string) *generic.Error {
-	return &generic.Error{
-		ErrorType: "ClientError",
-		Message:   message,
-		Info:      info,
-	}
-}
-
-func createErrorFromResponse(responseBody []byte) *generic.Error {
-	var err generic.Error
-	_ = json.Unmarshal(responseBody, &err)
-	return &err
 }

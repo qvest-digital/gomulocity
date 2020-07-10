@@ -20,13 +20,13 @@ func TestAlarmApi_NextPage_Success(t *testing.T) {
 	api := buildAlarmApi(ts.URL)
 
 	// when: We create an existing collection and call `NextPage`
-	expectedUrl := ts.URL + "/alarm/alarms?source=1111111&pageSize=5&currentPage=3"
-	collection := createCollection(expectedUrl, "")
+	nextPageUrl := ts.URL + "/alarm/alarms?source=1111111&pageSize=5&currentPage=3"
+	collection := createCollection(nextPageUrl, "")
 	nextCollection, _ := api.NextPage(collection)
 
 	// then: We got the next collection with one alarm.
-	if capturedUrl != expectedUrl {
-		t.Fatalf("NextPage() captured URL = %v, expected %v", capturedUrl, expectedUrl)
+	if capturedUrl != nextPageUrl {
+		t.Fatalf("NextPage() captured URL = %v, expected %v", capturedUrl, nextPageUrl)
 	}
 
 	if nextCollection == nil {
@@ -34,7 +34,7 @@ func TestAlarmApi_NextPage_Success(t *testing.T) {
 	}
 
 	if len(nextCollection.Alarms) != 1 {
-		t.Fatalf("NextPage() captured URL = %v, expected %v", capturedUrl, expectedUrl)
+		t.Fatalf("NextPage() captured URL = %v, expected %v", capturedUrl, nextPageUrl)
 	}
 
 	alarm := nextCollection.Alarms[0]
@@ -49,7 +49,11 @@ func TestAlarmApi_NextPage_NotAvailable(t *testing.T) {
 
 	// when: We call `NextPage` with no URLs
 	collection := createCollection("", "")
-	nextCollection, _ := api.NextPage(collection)
+	nextCollection, err := api.NextPage(collection)
+
+	if err != nil {
+		t.Errorf("NextPage() should not return an error. Was: %v", err)
+	}
 
 	// then: No `nextCollection` is available.
 	if nextCollection != nil {
@@ -69,7 +73,11 @@ func TestAlarmApi_NextPage_Empty(t *testing.T) {
 
 	// when: We call `NextPage` with a given URL
 	collection := createCollection(ts.URL+"/alarm/alarms?source=1111111&pageSize=5&currentPage=3", "")
-	nextCollection, _ := api.NextPage(collection)
+	nextCollection, err := api.NextPage(collection)
+
+	if err != nil {
+		t.Errorf("NextPage() should not return an error. Was: %v", err)
+	}
 
 	// then: `nextCollection` ist `nil`
 	if nextCollection != nil {
@@ -110,13 +118,13 @@ func TestAlarmApi_PreviousPage_Success(t *testing.T) {
 	api := buildAlarmApi(ts.URL)
 
 	// when: We create an existing collection and call `PreviousPage`
-	expectedUrl := ts.URL + "/alarm/alarms?source=1111111&pageSize=5&currentPage=1"
-	collection := createCollection("", expectedUrl)
+	previousPageUrl := ts.URL + "/alarm/alarms?source=1111111&pageSize=5&currentPage=1"
+	collection := createCollection("", previousPageUrl)
 	nextCollection, _ := api.PreviousPage(collection)
 
 	// then: We got the previous collection with one alarm.
-	if capturedUrl != expectedUrl {
-		t.Fatalf("PreviousPage() captured URL = %v, expected %v", capturedUrl, expectedUrl)
+	if capturedUrl != previousPageUrl {
+		t.Fatalf("PreviousPage() captured URL = %v, expected %v", capturedUrl, previousPageUrl)
 	}
 
 	if nextCollection == nil {
@@ -124,7 +132,7 @@ func TestAlarmApi_PreviousPage_Success(t *testing.T) {
 	}
 
 	if len(nextCollection.Alarms) != 1 {
-		t.Fatalf("PreviousPage() captured URL = %v, expected %v", capturedUrl, expectedUrl)
+		t.Fatalf("PreviousPage() captured URL = %v, expected %v", capturedUrl, previousPageUrl)
 	}
 
 	alarm := nextCollection.Alarms[0]
@@ -139,7 +147,11 @@ func TestAlarmApi_PreviousPage_NotAvailable(t *testing.T) {
 
 	// when: We call `PreviousPage` with no URLs
 	collection := createCollection("", "")
-	nextCollection, _ := api.PreviousPage(collection)
+	nextCollection, err := api.PreviousPage(collection)
+
+	if err != nil {
+		t.Errorf("NextPage() should not return an error. Was: %v", err)
+	}
 
 	// then: No `previousCollection` is available.
 	if nextCollection != nil {
@@ -158,8 +170,12 @@ func TestAlarmApi_PreviousPage_Empty(t *testing.T) {
 	api := buildAlarmApi(ts.URL)
 
 	// when: We call `PreviousPage` with a given URL
-	collection := createCollection(ts.URL+"/alarm/alarms?source=1111111&pageSize=5&currentPage=3", "")
-	nextCollection, _ := api.NextPage(collection)
+	collection := createCollection("", ts.URL+"/alarm/alarms?source=1111111&pageSize=5&currentPage=1")
+	nextCollection, err := api.PreviousPage(collection)
+
+	if err != nil {
+		t.Errorf("PreviousPage() should not return an error. Was: %v", err)
+	}
 
 	// then: `previousCollection` ist `nil`
 	if nextCollection != nil {
