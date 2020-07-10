@@ -239,8 +239,8 @@ func TestAlarmApi_FindReturnsError(t *testing.T) {
 		t.Fatalf("Find() - Error expected")
 	}
 
-	if err.ErrorType != "undefined/validationError" {
-		t.Errorf("Find() = '%v', want '%v'", err.ErrorType, "undefined/validationError")
+	if err.ErrorType != "400: undefined/validationError" {
+		t.Errorf("Find() = '%v', want '%v'", err.ErrorType, "400: undefined/validationError")
 	}
 
 	if err.Message != "My fancy error" {

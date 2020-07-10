@@ -32,18 +32,18 @@ var alarmTime, _ = time.Parse(time.RFC3339, "2020-06-26T10:43:25.130Z")
 var responseAlarm = &Alarm{
 	Id:                  "1337",
 	Type:                "TestAlarm",
-	Time:                alarmTime,
-	CreationTime:        alarmTime,
+	Time:                &alarmTime,
+	CreationTime:        &alarmTime,
 	Text:                "This is my test alarm",
 	Source:              Source{Id: "4711"},
 	Self:                "https://t0815.cumulocity.com/alarm/alarms/1337",
 	Status:              ACTIVE,
 	Severity:            MAJOR,
 	Count:               1,
-	FirstOccurrenceTime: alarmTime,
+	FirstOccurrenceTime: &alarmTime,
 }
 
-// given: A create alarm
+// given: A new alarm
 var newAlarm = &NewAlarm{
 	Type:   "TestAlarm",
 	Time:   time.Time{},
