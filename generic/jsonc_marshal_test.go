@@ -42,7 +42,7 @@ func TestJsonc_MarshalStandardFields(t *testing.T) {
 	}
 
 	want := `{"B":"Foo","C":4711}`
-	if j != want {
+	if string(j) != want {
 		t.Errorf("JsonFromObject - json = %v, want %v", j, want)
 	}
 }
@@ -68,7 +68,7 @@ func TestJsonc_SupportsStandardJsonTags(t *testing.T) {
 	}
 
 	want := `{"myB":"Foo","myC":4711,"myI":""}`
-	if j != want {
+	if string(j) != want {
 		t.Errorf("JsonFromObject - json = %v, want %v", j, want)
 	}
 }
@@ -89,7 +89,7 @@ func TestJsonc_FlatsTaggedFields(t *testing.T) {
 	}
 
 	want := `{"Da":"foo","Db":"bar","Dc":"baz","myB":"Foo","myC":4711}`
-	if j != want {
+	if string(j) != want {
 		t.Errorf("JsonFromObject - json = %v, want %v", j, want)
 	}
 }
@@ -128,7 +128,7 @@ func TestJsonc_FlatsJsonTaggedStructs(t *testing.T) {
 	}
 
 	want := `{"foo":{"one":"myCustom1","two":"myCustom2"},"myB":"Foo","myC":4711}`
-	if j != want {
+	if string(j) != want {
 		t.Errorf("JsonFromObject - json = %v, want %v", j, want)
 	}
 }
@@ -148,7 +148,7 @@ func TestJsonc_DoesNotFlatUntaggedMaps(t *testing.T) {
 	}
 
 	want := `{"B":"Foo","C":{"foo1":"bar","foo2":"baz"}}`
-	if j != want {
+	if string(j) != want {
 		t.Errorf("JsonFromObject - json = %v, want %v", j, want)
 	}
 }
