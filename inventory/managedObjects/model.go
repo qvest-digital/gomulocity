@@ -5,69 +5,43 @@ import (
 	"time"
 )
 
-const (
-	MANAGED_OBJECT_ACCEPT       = "application/vnd.com.nsn.cumulocity.managedObject+json"
-	MANAGED_OBJECT_CONTENT_TYPE = "application/vnd.com.nsn.cumulocity.managedObject+json"
-
-	managedObjectPath = "/inventory/managedObjects"
-)
-
-type Update struct {
-	Type string `json:"type"`
-	Name string `json:"name"`
-}
-
-type UpdateResponse struct {
-	ID               string       `json:"id"`
-	Name             string       `json:"name"`
-	Self             string       `json:"self"`
-	Type             string       `json:"type"`
-	LastUpdated      time.Time    `json:"lastUpdated"`
-	StrongTypedClass struct{}     `json:"com_othercompany_StrongTypedClass"`
-	ChildDevices     ChildDevices `json:"childDevices"`
-}
-
-type Reference struct {
-	ManagedObject ManagedObject `json:"managedObject"`
-	Self          string        `json:"self"`
-}
-
-type ReferenceCollection struct {
-	Next       string      `json:"next"`
-	Self       string      `json:"self"`
-	References []Reference `json:"references"`
-}
-
 type NewManagedObject struct {
-	ID           string    `json:"id"`
-	Self         string    `json:"self"`
-	Type         string    `json:"type"`
-	Name         string    `json:"name"`
+	Type         string    `json:"type,omitempty"`
+	Name         string    `json:"name,omitempty"`
 	CreationDate time.Time `json:"creationDate"`
-	LastUpdated  time.Time `json:"lastUpdated"`
-	BinarySwitch struct {
-		State string `json:"state"`
-	} `json:"com_cumulocity_model_BinarySwitch"`
 }
 
-type CreateManagedObject struct {
-	Type         string    `json:"type"`
-	Name         string    `json:"name"`
-	CreationDate time.Time `json:"creationDate"`
+type ManagedObjectUpdate struct {
+	Type string `json:"type,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 type (
 	ManagedObjectCollection struct {
-		Next           string                   `json:"next"`
-		Self           string                   `json:"self"`
-		ManagedObjects []ManagedObject          `json:"managedObjects"`
-		Prev           string                   `json:"prev"`
-		Statistics     generic.PagingStatistics `json:"statistics"`
+		Self           string                    `json:"self"`
+		ManagedObjects []ManagedObject           `json:"managedObjects"`
+		Statistics     *generic.PagingStatistics `json:"statistics,omitempty"`
+		Prev           string                    `json:"prev,omitempty"`
+		Next           string                    `json:"next,omitempty"`
 	}
 
 	ManagedObject struct {
-		AdditionParents         AdditionParents         `json:"additionParents"`
-		AssetParents            AdditionParents         `json:"assetParents"`
+		ID           string    `json:"id"`
+		Type         string    `json:"type"`
+		Name         string    `json:"name"`
+		CreationTime time.Time `json:"creationTime"`
+		LastUpdated  time.Time `json:"lastUpdated"`
+		Self         string    `json:"self"`
+		Owner        string    `json:"owner"`
+
+		AdditionParents AdditionParents `json:"additionParents"`
+		AssetParents    AdditionParents `json:"assetParents"`
+		DeviceParents   DeviceParents   `json:"deviceParents"`
+
+		ChildAdditions ChildAdditions `json:"childAdditions"`
+		ChildAssets    ChildAssets    `json:"childAssets"`
+		ChildDevices   ChildDevices   `json:"childDevices"`
+
 		C8YActiveAlarmsStatus   C8YActiveAlarmsStatus   `json:"c8y_ActiveAlarmsStatus"`
 		C8YAvailability         C8YAvailability         `json:"c8y_Availability"`
 		C8YConnection           C8YConnection           `json:"c8y_Connection"`
@@ -78,17 +52,6 @@ type (
 		C8YIsSensorPhone        interface{}             `json:"c8y_IsSensorPhone"`
 		C8YRequiredAvailability C8YRequiredAvailability `json:"c8y_RequiredAvailability"`
 		C8YSupportedOperations  []string                `json:"c8y_SupportedOperations"`
-		ChildAdditions          ChildAdditions          `json:"childAdditions"`
-		ChildAssets             ChildAssets             `json:"childAssets"`
-		ChildDevices            ChildDevices            `json:"childDevices"`
-		ID                      string                  `json:"id"`
-		LastUpdated             time.Time               `json:"lastUpdated"`
-		Name                    string                  `json:"name"`
-		Owner                   string                  `json:"owner"`
-		Self                    string                  `json:"self"`
-		Type                    string                  `json:"type"`
-		CreationTime            time.Time               `json:"creationTime"`
-		DeviceParents           DeviceParents           `json:"deviceParents"`
 		C8YStatus               C8YStatus               `json:"c8y_Status"`
 	}
 
@@ -179,3 +142,31 @@ type (
 		Status string `json:"status"`
 	}
 )
+
+type ReferenceType string
+
+const (
+	CHILD_DEVICES ReferenceType = "childDevices"
+	CHILD_ASSETS  ReferenceType = "childAssets"
+)
+
+type Source struct {
+	Id string `json:"id"`
+}
+
+type NewManagedObjectReference struct {
+	ManagedObject Source `json:"managedObject"`
+}
+
+type ManagedObjectReference struct {
+	ManagedObject ManagedObject `json:"managedObject"`
+	Self          string        `json:"self"`
+}
+
+type ManagedObjectReferenceCollection struct {
+	Self       string                    `json:"self"`
+	References []ManagedObjectReference  `json:"references"`
+	Statistics *generic.PagingStatistics `json:"statistics,omitempty"`
+	Prev       string                    `json:"prev,omitempty"`
+	Next       string                    `json:"next,omitempty"`
+}

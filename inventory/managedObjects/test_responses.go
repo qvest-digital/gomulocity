@@ -471,7 +471,7 @@ var NewManagedObjectCollection_ResponseBody = func(next string) string {
 }`
 }
 
-var UpdateManagedObject = func(name string) string {
+var UpdatedManagedObject = func(name string) string {
 	return `{
     "id" : "104940",
     "name" : "` + name + `",

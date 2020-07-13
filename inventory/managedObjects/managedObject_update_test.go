@@ -9,6 +9,16 @@ import (
 	"time"
 )
 
+type UpdateResponse struct {
+	ID               string       `json:"id"`
+	Name             string       `json:"name"`
+	Self             string       `json:"self"`
+	Type             string       `json:"type"`
+	LastUpdated      time.Time    `json:"lastUpdated"`
+	StrongTypedClass struct{}     `json:"com_othercompany_StrongTypedClass"`
+	ChildDevices     ChildDevices `json:"childDevices"`
+}
+
 func TestManagedObjectApi_UpdateManagedObject(t *testing.T) {
 	lastUpdated, _ := time.Parse(time.RFC3339, "2019-08-23T15:10:00.653Z")
 

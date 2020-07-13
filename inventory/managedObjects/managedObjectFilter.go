@@ -1,32 +1,45 @@
 package managedObjects
 
 import (
+	"fmt"
 	"net/url"
+	"strconv"
+	"strings"
 )
 
-type ManagedObjectCollectionFilter struct {
-	Type          string
-	Owner         string
-	FragmentType  string
-	QueryLanguage string //please note: If the 'QueryLanguage' has been set, other parameters like 'DeviceID' and 'Type' will be ignored.
-
+type ManagedObjectFilter struct {
+	Type         string
+	FragmentType string
+	Ids          []int
+	Text         string
 }
 
-func (m ManagedObjectCollectionFilter) QueryParams() string {
-	params := url.Values{}
-
-	if len(m.QueryLanguage) > 0 {
-		return m.QueryLanguage
+// Appends the filter query parameters to the provided parameter values for a request.
+// When provided values is nil an error will be created
+func (managedObjectFilter ManagedObjectFilter) QueryParams(params *url.Values) error {
+	if params == nil {
+		return fmt.Errorf("The provided parameter values must not be nil!")
 	}
 
-	if len(m.Type) > 0 {
-		params.Add("type", m.Type)
+	if len(managedObjectFilter.Type) > 0 {
+		params.Add("type", managedObjectFilter.Type)
 	}
-	if len(m.Owner) > 0 {
-		params.Add("owner", m.Type)
+
+	if len(managedObjectFilter.FragmentType) > 0 {
+		params.Add("fragmentType", managedObjectFilter.FragmentType)
 	}
-	if len(m.FragmentType) > 0 {
-		params.Add("fragmentType", m.FragmentType)
+
+	if len(managedObjectFilter.Ids) > 0 {
+		var idsAsString []string
+		for _, id := range managedObjectFilter.Ids {
+			idsAsString = append(idsAsString, strconv.Itoa(id))
+		}
+		params.Add("ids", strings.Join(idsAsString, ","))
 	}
-	return params.Encode()
+
+	if len(managedObjectFilter.Text) > 0 {
+		params.Add("text", managedObjectFilter.Text)
+	}
+
+	return nil
 }

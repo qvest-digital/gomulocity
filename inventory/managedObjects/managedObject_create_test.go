@@ -19,13 +19,13 @@ func TestManagedObjectApi_CreateManagedObject(t *testing.T) {
 		c8yRespBody string
 		expectedErr error
 
-		requestData  *CreateManagedObject
+		requestData  *NewManagedObject
 		responseData NewManagedObject
 	}{
 		{
 			name: "create managed object - happy",
 
-			requestData: &CreateManagedObject{
+			requestData: &NewManagedObject{
 				Type:         "<type>",
 				Name:         "<name>",
 				CreationDate: creationDate,
@@ -50,7 +50,7 @@ func TestManagedObjectApi_CreateManagedObject(t *testing.T) {
 		},
 		{
 			name: "create managed object - status is not StatusCreated",
-			requestData: &CreateManagedObject{
+			requestData: &NewManagedObject{
 				Type:         "type",
 				Name:         "name",
 				CreationDate: time.Time{},
@@ -65,14 +65,14 @@ func TestManagedObjectApi_CreateManagedObject(t *testing.T) {
 		},
 		{
 			name: "create managed object - failed to unmarshal result",
-			requestData: &CreateManagedObject{
+			requestData: &NewManagedObject{
 				Type:         "type",
 				Name:         "name",
 				CreationDate: time.Time{},
 			},
 			c8yRespCode: http.StatusCreated,
 			c8yRespBody: `<invalid response body>`,
-			expectedErr: clientError("Error while unmarshalling response: invalid character '<' looking for beginning of value", "CreateManagedObject"),
+			expectedErr: clientError("Error while unmarshalling response: invalid character '<' looking for beginning of value", "NewManagedObject"),
 		},
 	}
 

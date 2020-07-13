@@ -1,273 +1,265 @@
 package managedObjects
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/tarent/gomulocity/generic"
+	"log"
 	"net/http"
 	"net/url"
 )
 
+const (
+	MANAGED_OBJECT_TYPE = "application/vnd.com.nsn.cumulocity.managedObject+json"
+	MANAGED_OBJECT_COLLECTION_TYPE = "application/vnd.com.nsn.cumulocity.managedObjectCollection+json"
+
+	MANAGED_OBJECT_API_PATH = "/inventory/managedObjects"
+)
+
 type ManagedObjectApi interface {
-	CreateManagedObject(object *CreateManagedObject) (*NewManagedObject, *generic.Error)
-	ManagedObjectCollection(filter ManagedObjectCollectionFilter) (ManagedObjectCollection, *generic.Error)
-	ManagedObjectByID(deviceID string) (ManagedObject, *generic.Error)
-	ReferenceByID(deviceID, reference, referenceID string) (Reference, *generic.Error)
-	ReferenceCollection(deviceID, reference string) (ReferenceCollection, *generic.Error)
-	DeleteReference(deviceID, reference, referenceID string) *generic.Error
-	AddReferenceToCollection(deviceID, reference string) (interface{}, *generic.Error)
-	UpdateManagedObject(deviceID string, model *Update) (UpdateResponse, *generic.Error)
-	DeleteManagedObject(deviceID string) *generic.Error
+	// Create a new managed object and returns the created entity with id, creation time and other properties
+	Create(newManagedObject *NewManagedObject) (*ManagedObject, *generic.Error)
+
+	// Gets an exiting managed object by its id. If the id does not exists, nil is returned.
+	Get(managedObjectId string) (*ManagedObject, *generic.Error)
+
+	Update(managedObjectId string, managedObject *ManagedObjectUpdate) (*ManagedObject, *generic.Error)
+
+	// Deletion by managedObject id. If error is nil, managed object was deleted successfully.
+	Delete(managedObjectId string) *generic.Error
+
+	// Returns a managed object collection, found by the given managed object filter parameters.
+	// All query parameters are AND concatenated.
+	Find(managedObjectFilter *ManagedObjectFilter, pageSize int) (*ManagedObjectCollection, *generic.Error)
+
+	// Returns a managed object collection, found by the given managed object query.
+	// See the query language: https://cumulocity.com/guides/reference/inventory/#query-language
+	FindByQuery(query string, pageSize int) (*ManagedObjectCollection, *generic.Error)
+
+	// Gets the next page from an existing managed object collection.
+	// If there is no next page, nil is returned.
+	NextPage(c *ManagedObjectCollection) (*ManagedObjectCollection, *generic.Error)
+
+	// Gets the previous page from an existing managed object collection.
+	// If there is no previous page, nil is returned.
+	PreviousPage(c *ManagedObjectCollection) (*ManagedObjectCollection, *generic.Error)
 }
 
 type managedObjectApi struct {
-	Client             *generic.Client
-	ManagedObjectsPath string
+	client   *generic.Client
+	basePath string
 }
 
+// Creates a new managed object api object
+//
+// client - Must be a gomulocity client.
+// returns - The `managed object`-api object
 func NewManagedObjectApi(client *generic.Client) ManagedObjectApi {
-	return managedObjectApi{
-		Client:             client,
-		ManagedObjectsPath: managedObjectPath,
-	}
+	return &managedObjectApi{client, MANAGED_OBJECT_API_PATH}
 }
 
 /*
 Creates a new managed object based on the given variables.
 
-See: https://cumulocity.com/guides/reference/inventory/#managed-object-collection
+See: https://cumulocity.com/guides/reference/inventory/#post-create-a-new-managedobject
 */
-func (m managedObjectApi) CreateManagedObject(model *CreateManagedObject) (*NewManagedObject, *generic.Error) {
-	bytes, err := json.Marshal(model)
+func (managedObjectApi *managedObjectApi) Create(newManagedObject *NewManagedObject) (*ManagedObject, *generic.Error) {
+	bytes, err := json.Marshal(newManagedObject)
 	if err != nil {
-		return nil, clientError(fmt.Sprintf("Error while marshalling managed object: %s", err), "CreateManagedObject")
+		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the managedObject: %s", err.Error()), "CreateManagedObject")
 	}
-	result, statusCode, err := m.Client.Post(fmt.Sprintf("%v", managedObjectPath), bytes, generic.AcceptAndContentTypeHeader(MANAGED_OBJECT_ACCEPT, MANAGED_OBJECT_CONTENT_TYPE))
+	headers := generic.AcceptAndContentTypeHeader(MANAGED_OBJECT_TYPE, MANAGED_OBJECT_TYPE)
+
+	body, status, err := managedObjectApi.client.Post(managedObjectApi.basePath, bytes, headers)
 	if err != nil {
-		return nil, clientError(fmt.Sprintf("Error while creating a new managed object: %s", err), "CreateManagedObject")
+		return nil, generic.ClientError(fmt.Sprintf("Error while posting a new managedObject: %s", err.Error()), "CreateManagedObject")
+	}
+	if status != http.StatusCreated {
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 
-	if statusCode != http.StatusCreated {
-		return nil, createErrorFromResponse(result)
-	}
-
-	newManagedObject := &NewManagedObject{}
-	if err = json.Unmarshal(result, newManagedObject); err != nil {
-		return nil, clientError(fmt.Sprintf("Error while unmarshalling response: %s", err), "CreateManagedObject")
-	}
-	return newManagedObject, nil
+	return parseManagedObjectResponse(body)
 }
 
 /*
-Returns a collection of managed objects.
+Gets a managedObject for a given Id.
 
-See: https://cumulocity.com/guides/reference/inventory/#managed-object-collection
+Returns 'ManagedObject' on success or nil if the id does not exist.
 */
-func (m managedObjectApi) ManagedObjectCollection(filter ManagedObjectCollectionFilter) (ManagedObjectCollection, *generic.Error) {
-	var tempCollection ManagedObjectCollection
+func (managedObjectApi *managedObjectApi) Get(managedObjectId string) (*ManagedObject, *generic.Error) {
+	if len(managedObjectId) == 0 {
+		return nil, generic.ClientError("managedObjectId must not be empty", "GetManagedObject")
+	}
 
-	url := fmt.Sprintf("%v?%v", m.ManagedObjectsPath, filter.QueryParams())
-	for {
-		result, statusCode, err := m.Client.Get(url, generic.EmptyHeader())
+	path := fmt.Sprintf("%s/%s", managedObjectApi.basePath, url.QueryEscape(managedObjectId))
+	body, status, err := managedObjectApi.client.Get(path, generic.AcceptHeader(MANAGED_OBJECT_TYPE))
+
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while getting a managedObject: %s", err.Error()), "GetManagedObject")
+	}
+	if status == http.StatusNotFound {
+		return nil, nil
+	}
+	if status != http.StatusOK {
+		return nil, generic.CreateErrorFromResponse(body, status)
+	}
+
+	return parseManagedObjectResponse(body)
+}
+
+
+/*
+Updates the managedObject with given Id.
+
+See: https://cumulocity.com/guides/reference/managedObjects/#update-an-managedObject
+*/
+func (managedObjectApi *managedObjectApi) Update(managedObjectId string, managedObject *ManagedObjectUpdate) (*ManagedObject, *generic.Error) {
+	if len(managedObjectId) == 0 {
+		return nil, generic.ClientError("Updating managedObject without an id is not allowed", "UpdateManagedObject")
+	}
+	bytes, err := json.Marshal(managedObject)
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the update managedObject: %s", err.Error()), "UpdateManagedObject")
+	}
+
+	path := fmt.Sprintf("%s/%s", managedObjectApi.basePath, url.QueryEscape(managedObjectId))
+	headers := generic.AcceptAndContentTypeHeader(MANAGED_OBJECT_TYPE, MANAGED_OBJECT_TYPE)
+
+	body, status, err := managedObjectApi.client.Put(path, bytes, headers)
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while updating an managedObject: %s", err.Error()), "UpdateManagedObject")
+	}
+	if status != http.StatusOK {
+		return nil, generic.CreateErrorFromResponse(body, status)
+	}
+
+	return parseManagedObjectResponse(body)
+}
+
+/*
+Deletes managedObject by id.
+*/
+func (managedObjectApi *managedObjectApi) Delete(managedObjectId string) *generic.Error {
+	if len(managedObjectId) == 0 {
+		return generic.ClientError("Deleting managedObject without an id is not allowed", "DeleteManagedObject")
+	}
+
+	body, status, err := managedObjectApi.client.Delete(fmt.Sprintf("%s/%s", managedObjectApi.basePath, url.QueryEscape(managedObjectId)), generic.EmptyHeader())
+	if err != nil {
+		return generic.ClientError(fmt.Sprintf("Error while deleting managedObject with id [%s]: %s", managedObjectId, err.Error()), "DeleteManagedObject")
+	}
+
+	if status != http.StatusNoContent {
+		return generic.CreateErrorFromResponse(body, status)
+	}
+
+	return nil
+}
+
+/*
+   Returns a collection of managed objects.
+
+   See: https://cumulocity.com/guides/reference/inventory/#managed-object-collection
+*/
+func (managedObjectApi *managedObjectApi) Find(managedObjectFilter *ManagedObjectFilter, pageSize int) (*ManagedObjectCollection, *generic.Error) {
+	queryParamsValues := &url.Values{}
+	err := managedObjectFilter.QueryParams(queryParamsValues)
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while building query parameters to search for managedObjects: %s", err.Error()), "FindManagedObjects")
+	}
+
+	err = generic.PageSizeParameter(pageSize, queryParamsValues)
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch managedObjects: %s", err.Error()), "FindManagedObjects")
+	}
+
+	return managedObjectApi.getCommon(fmt.Sprintf("%s?%s", managedObjectApi.basePath, queryParamsValues.Encode()))
+}
+
+func (managedObjectApi *managedObjectApi) FindByQuery(query string, pageSize int) (*ManagedObjectCollection, *generic.Error) {
+	queryParamsValues := &url.Values{}
+	if len(query) > 0 {
+		queryParamsValues.Add("query", query)
+	}
+
+	err := generic.PageSizeParameter(pageSize, queryParamsValues)
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch managedObjects: %s", err.Error()), "FindManagedObjectsByQuery")
+	}
+
+	return managedObjectApi.getCommon(fmt.Sprintf("%s?%s", managedObjectApi.basePath, queryParamsValues.Encode()))
+}
+
+
+func (managedObjectApi *managedObjectApi) NextPage(c *ManagedObjectCollection) (*ManagedObjectCollection, *generic.Error) {
+	return managedObjectApi.getPage(c.Next)
+}
+
+func (managedObjectApi *managedObjectApi) PreviousPage(c *ManagedObjectCollection) (*ManagedObjectCollection, *generic.Error) {
+	return managedObjectApi.getPage(c.Prev)
+}
+
+
+
+// -- internal
+
+func (managedObjectApi *managedObjectApi) getPage(reference string) (*ManagedObjectCollection, *generic.Error) {
+	if reference == "" {
+		log.Print("No page reference given. Returning nil.")
+		return nil, nil
+	}
+
+	nextUrl, err := url.Parse(reference)
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Unparsable URL given for page reference: '%s'", reference), "GetPage")
+	}
+
+	collection, genErr := managedObjectApi.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+	if genErr != nil {
+		return nil, genErr
+	}
+
+	if len(collection.ManagedObjects) == 0 {
+		log.Print("Returned collection is empty. Returning nil.")
+		return nil, nil
+	}
+
+	return collection, nil
+}
+
+func (managedObjectApi *managedObjectApi) getCommon(path string) (*ManagedObjectCollection, *generic.Error) {
+	body, status, err := managedObjectApi.client.Get(path, generic.AcceptHeader(MANAGED_OBJECT_COLLECTION_TYPE))
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while getting managedObjects: %s", err.Error()), "GetManagedObjectCollection")
+	}
+
+	if status != http.StatusOK {
+		return nil, generic.CreateErrorFromResponse(body, status)
+	}
+
+	var result ManagedObjectCollection
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &result)
 		if err != nil {
-			return ManagedObjectCollection{}, clientError(fmt.Sprintf("failed to execute rest request: %s", err), "ManagedObjectCollection")
+			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "GetManagedObjectCollection")
 		}
-		if statusCode != http.StatusOK {
-			return ManagedObjectCollection{}, createErrorFromResponse(result)
+	} else {
+		return nil, generic.ClientError("Response body was empty", "GetManagedObjectCollection")
+	}
+
+	return &result, nil
+}
+
+func parseManagedObjectResponse(body []byte) (*ManagedObject, *generic.Error) {
+	var result ManagedObject
+	if len(body) > 0 {
+		err := json.Unmarshal(body, &result)
+		if err != nil {
+			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 		}
-
-		objectCollection := ManagedObjectCollection{}
-		if err := json.NewDecoder(bytes.NewReader(result)).Decode(&objectCollection); err != nil {
-			return ManagedObjectCollection{}, clientError(fmt.Sprintf("failed to unmarshal response body: %s", err), "ManagedObjectCollection")
-		}
-
-		for _, collection := range objectCollection.ManagedObjects {
-			tempCollection.ManagedObjects = append(tempCollection.ManagedObjects, collection)
-		}
-
-		if objectCollection.hasNextPage() {
-			var genericErr *generic.Error
-			url, genericErr = objectCollection.NextPage()
-			if genericErr != nil {
-				return ManagedObjectCollection{}, genericErr
-			}
-		} else {
-			break
-		}
-
-	}
-	return tempCollection, nil
-}
-
-/*
-Returns a single managed object.
-*/
-func (m managedObjectApi) ManagedObjectByID(deviceID string) (ManagedObject, *generic.Error) {
-	if len(deviceID) == 0 {
-		return ManagedObject{}, clientError("given deviceID is empty", "ManagedObjectByID")
+	} else {
+		return nil, generic.ClientError("Response body was empty", "GetManagedObject")
 	}
 
-	result, code, err := m.Client.Get(fmt.Sprintf("%v/%v", m.ManagedObjectsPath, url.QueryEscape(deviceID)), generic.EmptyHeader())
-	if err != nil {
-		return ManagedObject{}, clientError(fmt.Sprintf("error while getting managedObject: %v", err), "ManagedObjectByID")
-	}
-
-	if code != http.StatusOK {
-		return ManagedObject{}, createErrorFromResponse(result)
-	}
-
-	managedObject := ManagedObject{}
-	if err := json.Unmarshal(result, &managedObject); err != nil {
-		return ManagedObject{}, clientError(fmt.Sprintf("error while unmarshalling managedObject: %v", err), "ManagedObjectByID")
-	}
-	return managedObject, nil
-}
-
-/*
-See: https://cumulocity.com/guides/reference/inventory/#managed-object-reference
-*/
-func (m managedObjectApi) ReferenceByID(deviceID, reference, referenceID string) (Reference, *generic.Error) {
-	if len(deviceID) == 0 || len(reference) == 0 || len(referenceID) == 0 {
-		return Reference{}, clientError("given deviceID, reference or referenceID is empty", "ReferenceByID")
-	}
-
-	result, code, err := m.Client.Get(fmt.Sprintf("%v/%v/%v/%v", m.ManagedObjectsPath, url.QueryEscape(deviceID), url.QueryEscape(reference), url.QueryEscape(referenceID)), generic.EmptyHeader())
-	if err != nil {
-		return Reference{}, clientError(fmt.Sprintf("error while getting reference: %v with referenceID: %v for device: %v, %s", reference, referenceID, deviceID, err), "ReferenceByID")
-	}
-
-	if code != http.StatusOK {
-		return Reference{}, createErrorFromResponse(result)
-	}
-
-	var referenceModel Reference
-	if err := json.Unmarshal(result, &referenceModel); err != nil {
-		return Reference{}, clientError(fmt.Sprintf("received an error while unmarshalling response: %s", err), "ReferenceByID")
-	}
-	return referenceModel, nil
-}
-
-/*
-Returns a reference collection for a device and reference.
-
-See: https://cumulocity.com/guides/reference/inventory/#managed-object-reference
-*/
-func (m managedObjectApi) ReferenceCollection(deviceID, reference string) (ReferenceCollection, *generic.Error) {
-	if len(deviceID) == 0 || len(reference) == 0 {
-		return ReferenceCollection{}, clientError("given deviceID or reference is empty", "ReferenceCollection")
-	}
-
-	result, code, err := m.Client.Get(fmt.Sprintf("%v/%v/%v", m.ManagedObjectsPath, url.QueryEscape(deviceID), url.QueryEscape(reference)), generic.EmptyHeader())
-	if err != nil {
-		return ReferenceCollection{}, clientError(fmt.Sprintf("error while getting reference collections: %s", err), "ReferenceCollection")
-	}
-
-	if code != http.StatusOK {
-		if code == http.StatusNotFound {
-			return ReferenceCollection{}, clientError(fmt.Sprintf("no reference collection found for reference: %v", reference), "ReferenceCollection")
-		}
-		return ReferenceCollection{}, createErrorFromResponse(result)
-	}
-
-	referenceCollection := ReferenceCollection{}
-	if err := json.Unmarshal(result, &referenceCollection); err != nil {
-		return ReferenceCollection{}, clientError(fmt.Sprintf("received an error while unmarshalling response: %s", err), "ReferenceCollection")
-	}
-	return referenceCollection, nil
-}
-
-func (m managedObjectApi) AddReferenceToCollection(deviceID, reference string) (interface{}, *generic.Error) {
-	return nil, nil
-}
-
-func (m managedObjectApi) DeleteReference(deviceID, reference, referenceID string) *generic.Error {
-	if len(deviceID) == 0 || len(reference) == 0 || len(referenceID) == 0 {
-		return clientError("given deviceID, reference or referenceID is empty", "DeleteReference")
-	}
-
-	result, code, err := m.Client.Delete(fmt.Sprintf("%v/%v/%v/%v", m.ManagedObjectsPath, url.QueryEscape(deviceID), url.QueryEscape(reference), url.QueryEscape(referenceID)), generic.EmptyHeader())
-	if err != nil {
-		return clientError(fmt.Sprintf("received an error while deleting reference: %s", err), "DeleteReference")
-	}
-
-	if code != http.StatusNoContent {
-		return createErrorFromResponse(result)
-	}
-	return nil
-}
-
-func (m managedObjectApi) UpdateManagedObject(deviceID string, model *Update) (UpdateResponse, *generic.Error) {
-	if len(deviceID) == 0 {
-		return UpdateResponse{}, clientError("given deviceID is empty", "UpdateManagedObject")
-	}
-	bytes, err := json.Marshal(model)
-	if err != nil {
-		return UpdateResponse{}, clientError(fmt.Sprintf("received an error while marshalling managedObject: %s", err), "UpdateManagedObject")
-	}
-
-	result, code, err := m.Client.Put(fmt.Sprintf("%v/%v", m.ManagedObjectsPath, url.QueryEscape(deviceID)), bytes, generic.ContentTypeHeader(MANAGED_OBJECT_CONTENT_TYPE))
-	if err != nil {
-		return UpdateResponse{}, clientError(fmt.Sprintf("received an error while updating managedObject: %s", err), "UpdateManagedObject")
-	}
-	if code != http.StatusOK {
-		return UpdateResponse{}, createErrorFromResponse(result)
-	}
-
-	updateResponse := UpdateResponse{}
-	if err = json.Unmarshal(result, &updateResponse); err != nil {
-		return UpdateResponse{}, clientError(fmt.Sprintf("received an error while unmarshalling response: %s", err), "UpdateManagedObject")
-	}
-	return updateResponse, nil
-}
-
-func (m managedObjectApi) DeleteManagedObject(deviceID string) *generic.Error {
-	if len(deviceID) == 0 {
-		return clientError("given deviceID is empty", "DeleteManagedObject")
-	}
-	result, code, err := m.Client.Delete(fmt.Sprintf("%v/%v", m.ManagedObjectsPath, url.QueryEscape(deviceID)), generic.EmptyHeader())
-	if err != nil {
-		return clientError(fmt.Sprintf("received an error while deleting managed object: %s", err), "DeleteManagedObject")
-	}
-	if code != http.StatusNoContent {
-		return createErrorFromResponse(result)
-	}
-	return nil
-}
-
-func (d ManagedObjectCollection) PrintToConsole() {
-	for _, managedObject := range d.ManagedObjects {
-		fmt.Println(fmt.Sprintf("Device ID: %v Device name: %v", managedObject.ID, managedObject.Name))
-	}
-	fmt.Printf("Amount of devices: %v", len(d.ManagedObjects))
-}
-
-func (d ManagedObjectCollection) NextPage() (string, *generic.Error) {
-	return buildURL(d.Next)
-}
-
-func (d ManagedObjectCollection) hasNextPage() bool {
-	return len(d.Next) > 0
-}
-
-func buildURL(next string) (string, *generic.Error) {
-	url, err := url.Parse(next)
-	if err != nil {
-		return "", clientError(fmt.Sprintf("failed to parse url of the next managedObject page: %s", err), "buildURL")
-	}
-	return fmt.Sprintf("%v?%v", url.Path, url.RawQuery), nil
-}
-
-func clientError(message string, info string) *generic.Error {
-	return &generic.Error{
-		ErrorType: "ClientError",
-		Message:   message,
-		Info:      info,
-	}
-}
-
-func createErrorFromResponse(responseBody []byte) *generic.Error {
-	var err generic.Error
-	_ = json.Unmarshal(responseBody, &err)
-	return &err
+	return &result, nil
 }
