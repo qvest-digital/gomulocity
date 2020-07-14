@@ -20,6 +20,7 @@ var responseAlarm = &Alarm{
 	Severity:            MAJOR,
 	Count:               1,
 	FirstOccurrenceTime: &alarmTime,
+	AdditionalFields:    map[string]interface{}{},
 }
 
 // given: A new alarm
