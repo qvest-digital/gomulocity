@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	url "net/url"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -127,7 +127,7 @@ func TestMeasurementApi_Find_HandlesPageSize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			query := MeasurementQuery{
-				SourceId:   deviceId,
+				SourceId: deviceId,
 			}
 			_, err := api.Find(&query, tt.pageSize)
 

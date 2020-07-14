@@ -9,7 +9,7 @@ import (
 )
 
 type MeasurementCollection struct {
-	Measurements []Measurement             `json:"measurements"`
+	Measurements []Measurement             `json:"measurements" jsonc:"collection"`
 	Self         string                    `json:"self,omitempty"`
 	Statistics   *generic.PagingStatistics `json:"statistics,omitempty"`
 	Prev         string                    `json:"prev,omitempty"`
