@@ -1,6 +1,7 @@
 package events
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 	"time"
@@ -50,6 +51,8 @@ func TestEvents_Create_Event_CustomFields(t *testing.T) {
 
 	// and: the api as system under test
 	api := buildEventsApi(ts.URL)
+
+	// and: The create event
 	createEvent := &CreateEvent{
 		Type:   "TestEvent",
 		Time:   time.Time{},
@@ -60,29 +63,33 @@ func TestEvents_Create_Event_CustomFields(t *testing.T) {
 			"Custom2": "Hello World",
 		},
 	}
+
+	// when: We send the create event
 	_, err := api.CreateEvent(createEvent)
 
+	// then: No error is returned
 	if err != nil {
 		t.Fatalf("CreateEvent() got an unexpected error: %s", err.Error())
 	}
 
-	if createEventCapture == nil {
-		t.Fatalf("CreateEvent() Captured event is nil.")
+	// and: A body was captured
+	if bodyCapture == nil {
+		t.Fatalf("CreateEvent() Captured request is nil.")
 	}
 
-	if createEvent.Type != createEventCapture.Type ||
-		createEvent.Time != createEventCapture.Time ||
-		createEvent.Text != createEventCapture.Text ||
-		createEvent.Source != createEventCapture.Source {
+	// and: The body is a json structure
+	var bodyMap map[string]interface{}
+	jErr := json.Unmarshal(*bodyCapture, &bodyMap)
 
-		t.Errorf("CreateEvent() basic fields - \nevent = %v \nwant %v", createEventCapture, createEvent)
+	if jErr != nil {
+		t.Fatalf("CreateEvent() request body can not be parsed %v", err)
 	}
 
-	custom1, _ := createEventCapture.AdditionalFields["Custom1"].(float64)
-	custom2, _ := createEventCapture.AdditionalFields["Custom2"].(string)
-	if custom1 != 4711 ||
-		custom2 != "Hello World" {
-		t.Errorf("CreateEvent() additional fields - \nevent = %v \nwant %v", createEventCapture, createEvent)
+	// and: The "Custom1" and "Custom2" field is flattened
+	custom1, _ := bodyMap["Custom1"].(float64)
+	custom2, _ := bodyMap["Custom2"].(string)
+	if custom1 != 4711 || custom2 != "Hello World" {
+		t.Errorf("CreateEvent() additional fields - \nevent = %v \nwant [Custom1, Custom2]", jErr)
 	}
 }
 

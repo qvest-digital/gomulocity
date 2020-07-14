@@ -1,6 +1,7 @@
 package events
 
 import (
+	"encoding/json"
 	"reflect"
 	"strings"
 	"testing"
@@ -52,6 +53,8 @@ func TestEvents_Update_Event_CustomFields(t *testing.T) {
 
 	// and: the api as system under test
 	api := buildEventsApi(ts.URL)
+
+	// and: The update event
 	updateEvent := &UpdateEvent{
 		Text: "This is my test event",
 		AdditionalFields: map[string]interface{}{
@@ -59,24 +62,33 @@ func TestEvents_Update_Event_CustomFields(t *testing.T) {
 			"Custom2": "Hello World",
 		},
 	}
+
+	// when: We send the create event
 	_, err := api.UpdateEvent(eventId, updateEvent)
 
+	// then: No error is returned
 	if err != nil {
 		t.Fatalf("UpdateEvent() got an unexpected error: %s", err.Error())
 	}
 
-	if strings.Contains(requestCapture.URL.Path, eventId) == false {
-		t.Errorf("UpdateEvent() The target URL does not contains the event Id: url: %s - expected eventId %s", updateUrlCapture, eventId)
+	// and: A body was captured
+	if bodyCapture == nil {
+		t.Fatalf("UpdateEvent() Captured request is nil.")
 	}
 
-	if updateEventCapture == nil {
-		t.Fatalf("UpdateEvent() Captured event is nil.")
+	// and: The body is a json structure
+	var bodyMap map[string]interface{}
+	jErr := json.Unmarshal(*bodyCapture, &bodyMap)
+
+	if jErr != nil {
+		t.Fatalf("UpdateEvent() request body can not be parsed %v", err)
 	}
 
-	custom1, _ := updateEventCapture.AdditionalFields["Custom1"].(float64)
-	custom2, _ := updateEventCapture.AdditionalFields["Custom2"].(string)
+	// and: The "Custom1" and "Custom2" field is flattened
+	custom1, _ := bodyMap["Custom1"].(float64)
+	custom2, _ := bodyMap["Custom2"].(string)
 	if custom1 != 4711 || custom2 != "Hello World" {
-		t.Errorf("UpdateEvent() additional fields - \nevent = %v \nwant %v", updateEventCapture, updateEvent)
+		t.Errorf("CreateEvent() additional fields - \nevent = %v \nwant [Custom1, Custom2]", jErr)
 	}
 }
 
