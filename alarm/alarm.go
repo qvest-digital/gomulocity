@@ -88,7 +88,7 @@ See: https://cumulocity.com/guides/reference/alarms/#alarm-collection
 */
 type AlarmCollection struct {
 	Self       string                    `json:"self"`
-	Alarms     []Alarm                   `json:"alarms"`
+	Alarms     []Alarm                   `json:"alarms" jsonc:"collection"`
 	Statistics *generic.PagingStatistics `json:"statistics,omitempty"`
 	Prev       string                    `json:"prev,omitempty"`
 	Next       string                    `json:"next,omitempty"`

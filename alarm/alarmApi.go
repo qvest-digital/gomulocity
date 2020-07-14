@@ -265,7 +265,7 @@ func (alarmApi *alarmApi) getCommon(path string) (*AlarmCollection, *generic.Err
 
 	var result AlarmCollection
 	if len(body) > 0 {
-		err = json.Unmarshal(body, &result)
+		err = generic.ObjectFromJson(body, &result)
 		if err != nil {
 			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "GetCollection")
 		}

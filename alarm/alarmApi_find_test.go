@@ -169,7 +169,7 @@ func TestAlarmApi_Find_HandlesPageSize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			query := AlarmFilter{
-				SourceId:   deviceId,
+				SourceId: deviceId,
 			}
 			_, err := api.Find(&query, tt.pageSize)
 
@@ -215,6 +215,40 @@ func TestAlarmApi_ReturnsCollection(t *testing.T) {
 	alarm := collection.Alarms[0]
 	if alarm.Id != alarmId {
 		t.Fatalf("Find() = Collection alarm id = %v, want %v", alarm.Id, alarmId)
+	}
+}
+
+func TestEvents_Find_CustomElements(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(fmt.Sprintf(alarmCollectionTemplate, alarm)))
+	}))
+	defer ts.Close()
+
+	api := buildAlarmApi(ts.URL)
+
+	collection, err := api.Find(&AlarmFilter{}, 1)
+
+	if err != nil {
+		t.Fatalf("Find() - Error given but no expected")
+	}
+
+	if len(collection.Alarms) != 1 {
+		t.Fatalf("Find() = Collection size = %v, want %v", len(collection.Alarms), 1)
+	}
+
+	alarm := collection.Alarms[0]
+	if len(alarm.AdditionalFields) != 2 {
+		t.Fatalf("GetForDevice() AdditionalFields length = %d, want %d", len(alarm.AdditionalFields), 2)
+	}
+
+	custom1, ok1 := alarm.AdditionalFields["custom1"].(string)
+	custom2, ok2 := alarm.AdditionalFields["custom2"].([]interface{})
+
+	if !(ok1 && custom1 == "Hello") {
+		t.Errorf("GetForDevice() custom1 = %v, want %v", custom1, "Hello")
+	}
+	if !(ok2 && custom2[0] == "Foo" && custom2[1] == "Bar") {
+		t.Errorf("GetForDevice() custom2 = [%v, %v], want [%v, %v]", custom2[0], custom2[1], "Foo", "Bar")
 	}
 }
 

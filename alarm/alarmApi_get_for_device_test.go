@@ -8,7 +8,6 @@ import (
 	"testing"
 )
 
-
 func TestAlarmApi_GetForDevice_ExistingId(t *testing.T) {
 	// given: A test server
 	ts := buildHttpServer(200, fmt.Sprintf(alarmCollectionTemplate, alarm))
@@ -34,6 +33,44 @@ func TestAlarmApi_GetForDevice_ExistingId(t *testing.T) {
 	alarm := collection.Alarms[0]
 	if alarm.Id != alarmId {
 		t.Errorf("GetForDevice() alarm id = %v, want %v", alarm.Id, alarmId)
+	}
+}
+
+func TestEvents_GetForDevice_CustomElements(t *testing.T) {
+	// given: A test server
+	ts := buildHttpServer(200, fmt.Sprintf(alarmCollectionTemplate, alarm))
+	defer ts.Close()
+
+	// and: the api as system under test
+	api := buildAlarmApi(ts.URL)
+
+	collection, err := api.GetForDevice(deviceId, 5)
+
+	if err != nil {
+		t.Fatalf("GetForDevice() got an unexpected error: %s", err.Error())
+	}
+
+	if collection == nil {
+		t.Fatalf("GetForDevice() got no explict error but the collection was nil.")
+	}
+
+	if len(collection.Alarms) != 1 {
+		t.Fatalf("GetForDevice() alarms count = %v, want %v", len(collection.Alarms), 1)
+	}
+
+	alarm := collection.Alarms[0]
+	if len(alarm.AdditionalFields) != 2 {
+		t.Fatalf("GetForDevice() AdditionalFields length = %d, want %d", len(alarm.AdditionalFields), 2)
+	}
+
+	custom1, ok1 := alarm.AdditionalFields["custom1"].(string)
+	custom2, ok2 := alarm.AdditionalFields["custom2"].([]interface{})
+
+	if !(ok1 && custom1 == "Hello") {
+		t.Errorf("GetForDevice() custom1 = %v, want %v", custom1, "Hello")
+	}
+	if !(ok2 && custom2[0] == "Foo" && custom2[1] == "Bar") {
+		t.Errorf("GetForDevice() custom2 = [%v, %v], want [%v, %v]", custom2[0], custom2[1], "Foo", "Bar")
 	}
 }
 
