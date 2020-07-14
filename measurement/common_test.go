@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
+	"testing"
 	"time"
 )
 
@@ -42,6 +44,23 @@ func createMeasurementHttpServer(status int) *httptest.Server {
 	}))
 }
 
+func createManyMeasurementsHttpServer(status int) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := ioutil.ReadAll(r.Body)
+
+		var measurement NewMeasurements
+		_ = generic.ObjectFromJson(body, &measurement)
+		measurementCollection = &measurement
+		bodyCapture = &body
+		requestCapture = r
+
+		w.WriteHeader(status)
+		responseCapture, _ := generic.JsonFromObject(responseMeasurementCollection)
+		_, _ = w.Write(responseCapture)
+	}))
+}
+
+var measurementCollection *NewMeasurements
 var createMeasurementCapture *NewMeasurement
 
 var requestCapture *http.Request
@@ -89,3 +108,39 @@ var measurementCollectionTemplate = `{
         "pageSize": 5
     }
 }`
+
+func assertCommonNewMeasurement(given *NewMeasurement, want *NewMeasurement, t *testing.T) {
+	if given.MeasurementType != want.MeasurementType ||
+		!given.Time.Equal(*want.Time) ||
+		!reflect.DeepEqual(given.Source, want.Source) {
+
+		t.Errorf("CreateMeasurement()\n measurement = %v\n want %v", measurement, responseMeasurement)
+	}
+}
+
+func assertCommonMeasurement(given *Measurement, want *Measurement, t *testing.T) {
+	if given.Id != want.Id ||
+		given.MeasurementType != want.MeasurementType ||
+		!given.Time.Equal(*want.Time) ||
+		!reflect.DeepEqual(given.Source, want.Source) {
+
+		t.Errorf("CreateMeasurement()\n measurement = %v\n want %v", measurement, responseMeasurement)
+	}
+}
+
+func assertMetricsOfMeasurement(metricsMap map[string]interface{}, t *testing.T) {
+	temperature, _ := metricsMap["Temperature"].(map[string]interface{})
+	if temperature["value"] != 23.45 || temperature["unit"] != "C" {
+		t.Errorf("CreateEvent() metrics\n temperature = %.2f, %s \nwant {23.45, C}", temperature["value"], temperature["unit"])
+	}
+
+	humidity, _ := metricsMap["Humidity"].(map[string]interface{})
+	if humidity["value"] != 51.00 || humidity["unit"] != "%RH" {
+		t.Errorf("CreateEvent() metrics\n humidity = %.2f, %s \nwant {51.00, %%RH}", humidity["value"], humidity["unit"])
+	}
+
+	airPressure, _ := metricsMap["AirPressure"].(map[string]interface{})
+	if airPressure["value"] != 1011.2 || airPressure["unit"] != "hPa" {
+		t.Errorf("CreateEvent() metrics\n air pressure = %.2f, %s \nwant {1011.2, hPa}", airPressure["value"], airPressure["unit"])
+	}
+}

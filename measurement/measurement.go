@@ -17,7 +17,7 @@ type MeasurementCollection struct {
 }
 
 type NewMeasurements struct {
-	Measurements []NewMeasurement `json:"measurements"`
+	Measurements []NewMeasurement `json:"measurements" jsonc:"collection"`
 }
 
 type Source struct {

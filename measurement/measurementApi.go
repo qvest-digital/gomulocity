@@ -1,7 +1,6 @@
 package measurement
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/tarent/gomulocity/generic"
 	"log"
@@ -94,7 +93,7 @@ Creates many measurements at once for an existing device.
 Returns a 'Measurement' collection on success, otherwise an error.
 */
 func (measurementApi *measurementApi) CreateMany(measurements *NewMeasurements) (*MeasurementCollection, *generic.Error) {
-	bytes, err := json.Marshal(measurements)
+	bytes, err := generic.JsonFromObject(measurements)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marhalling the measurements: %s", err.Error()), "CreateManyMeasurement")
 	}
@@ -286,7 +285,7 @@ func parseMeasurementResponse(body []byte) (*Measurement, *generic.Error) {
 func parseMeasurementCollectionResponse(body []byte) (*MeasurementCollection, *generic.Error) {
 	var result MeasurementCollection
 	if len(body) > 0 {
-		err := json.Unmarshal(body, &result)
+		err := generic.ObjectFromJson(body, &result)
 		if err != nil {
 			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "CollectionResponseParser")
 		}
