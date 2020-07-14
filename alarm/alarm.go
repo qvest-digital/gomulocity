@@ -76,10 +76,10 @@ Represents cumulocity's alarm structure for update purposes.
 See: https://cumulocity.com/guides/reference/alarms/#update-an-alarm
 */
 type UpdateAlarm struct {
-	Text     string   `json:"text,omitempty"`
-	Status   Status   `json:"status,omitempty"`
-	Severity Severity `json:"severity,omitempty"`
-	// TODO: object - 0..n additional properties of the alarm.
+	Text             string                 `json:"text,omitempty"`
+	Status           Status                 `json:"status,omitempty"`
+	Severity         Severity               `json:"severity,omitempty"`
+	AdditionalFields map[string]interface{} `jsonc:"flat"`
 }
 
 /*

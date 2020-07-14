@@ -1,36 +1,15 @@
 package alarm
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
 )
 
-func bulkStatusUpdateAlarmsHttpServer(status int) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		body, _ := ioutil.ReadAll(r.Body)
-
-		var statusUpdate UpdateAlarm
-		_ = json.Unmarshal(body, &statusUpdate)
-		statusUpdateCapture = &statusUpdate
-		updateUrlCapture = r.URL.String()
-		requestCapture = r
-
-		w.WriteHeader(status)
-		_, _ = w.Write(nil)
-	}))
-}
-
-var statusUpdateCapture *UpdateAlarm
-
 // given: A new alarm status and an updateAlarmsFilter
 var newAlarmStatus = ACKNOWLEDGED
-var expectedStatusUpdate = &UpdateAlarm {
-	Status:   newAlarmStatus,
+var expectedStatusUpdate = &UpdateAlarm{
+	Status: newAlarmStatus,
 }
 
 var updateAlarmsFilter = &UpdateAlarmsFilter{
@@ -44,10 +23,9 @@ var updateAlarmsFilter = &UpdateAlarmsFilter{
 
 var expectedUpdateFilter = "alarm/alarms?dateFrom=2020-06-29T10%3A11%3A12Z&dateTo=2020-06-30T13%3A14%3A15Z&resolved=false&severity=MINOR&source=123&status=ACTIVE"
 
-
 func TestAlarmApi_BulkStatusUpdate_Alarm_Success_SendsData(t *testing.T) {
 	// given: A test server
-	ts := bulkStatusUpdateAlarmsHttpServer(200)
+	ts := updateAlarmHttpServer(200)
 	defer ts.Close()
 
 	// and: the api as system under test
@@ -59,16 +37,17 @@ func TestAlarmApi_BulkStatusUpdate_Alarm_Success_SendsData(t *testing.T) {
 		t.Fatalf("BulkStatusUpdate() got an unexpected error: %s", err.Error())
 	}
 
-	if strings.Contains(updateUrlCapture, expectedUpdateFilter) == false {
-		t.Errorf("BulkStatusUpdate() The target URL does not contains the request parameters: url: [%s] - expected [%s]", updateUrlCapture, expectedUpdateFilter)
+	if strings.Contains(urlCapture, expectedUpdateFilter) == false {
+		t.Errorf("BulkStatusUpdate() The target URL does not contains the request parameters: url: [%s] - expected [%s]",
+			urlCapture, expectedUpdateFilter)
 	}
 
-	if statusUpdateCapture == nil {
+	if updateAlarmCapture == nil {
 		t.Fatalf("BulkStatusUpdate() Captured alarm is nil.")
 	}
 
-	if !reflect.DeepEqual(expectedStatusUpdate, statusUpdateCapture) {
-		t.Errorf("BulkStatusUpdate() alarm = %v, want %v", statusUpdateCapture, expectedStatusUpdate)
+	if !reflect.DeepEqual(expectedStatusUpdate, updateAlarmCapture) {
+		t.Errorf("BulkStatusUpdate() alarm = %v, want %v", updateAlarmCapture, expectedStatusUpdate)
 	}
 
 	header := requestCapture.Header.Get("Accept")
@@ -80,7 +59,7 @@ func TestAlarmApi_BulkStatusUpdate_Alarm_Success_SendsData(t *testing.T) {
 
 func TestAlarmApi_BulkStatusUpdate_Alarm_Success_Background(t *testing.T) {
 	// given: A test server
-	ts := bulkStatusUpdateAlarmsHttpServer(202)
+	ts := updateAlarmHttpServer(202)
 	defer ts.Close()
 
 	// and: the api as system under test
@@ -94,7 +73,7 @@ func TestAlarmApi_BulkStatusUpdate_Alarm_Success_Background(t *testing.T) {
 
 func TestAlarmApi_BulkStatusUpdate_Alarm_BadRequest(t *testing.T) {
 	// given: A test server
-	ts := bulkStatusUpdateAlarmsHttpServer(400)
+	ts := updateAlarmHttpServer(400)
 	defer ts.Close()
 
 	// and: the api as system under test

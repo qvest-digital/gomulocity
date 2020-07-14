@@ -26,6 +26,24 @@ func createAlarmHttpServer(status int) *httptest.Server {
 	}))
 }
 
+func updateAlarmHttpServer(status int) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+		body, _ := ioutil.ReadAll(r.Body)
+
+		var alarm UpdateAlarm
+		_ = generic.ObjectFromJson(body, &alarm)
+		updateAlarmCapture = &alarm
+		bodyCapture = &body
+		urlCapture = r.URL.Path
+		requestCapture = r
+
+		w.WriteHeader(status)
+		response, _ := json.Marshal(responseAlarm)
+		_, _ = w.Write(response)
+	}))
+}
+
 func buildAlarmApi(url string) AlarmApi {
 	httpClient := http.DefaultClient
 	client := generic.Client{
@@ -47,6 +65,7 @@ func buildHttpServer(status int, body string) *httptest.Server {
 var requestCapture *http.Request
 var bodyCapture *[]byte
 var urlCapture string
+var updateAlarmCapture *UpdateAlarm
 var createAlarmCapture *NewAlarm
 
 var dateFrom, _ = time.Parse(time.RFC3339, "2020-06-29T10:11:12.000Z")

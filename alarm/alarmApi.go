@@ -107,7 +107,7 @@ Updates the alarm with given Id.
 See: https://cumulocity.com/guides/reference/alarms/#update-an-alarm
 */
 func (alarmApi *alarmApi) Update(alarmId string, alarm *UpdateAlarm) (*Alarm, *generic.Error) {
-	bytes, err := json.Marshal(alarm)
+	bytes, err := generic.JsonFromObject(alarm)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the update alarm: %s", err.Error()), "UpdateAlarm")
 	}
