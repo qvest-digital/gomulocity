@@ -94,6 +94,32 @@ func TestJsonc_FlatsTaggedFields(t *testing.T) {
 	}
 }
 
+func TestJsonc_FlatStructs(t *testing.T) {
+	type B struct {
+		Field1 string
+		Field2 string
+	}
+
+	type A struct {
+		Bs map[string]B `jsonc:"flat"`
+	}
+
+	a := &A{Bs: map[string]B{
+		"foo": {Field1: "#Field2", Field2: "#Field1"},
+	}}
+
+	j, err := JsonFromObject(a)
+
+	if err != nil {
+		t.Errorf("JsonFromObject - unexpected error %v", err)
+	}
+
+	want := `{"foo":{"Field1":"#Field2","Field2":"#Field1"}}`
+	if string(j) != want {
+		t.Errorf("JsonFromObject\n json = %v\n want %v", string(j), want)
+	}
+}
+
 func TestJsonc_FlatsJsonTaggedStructs(t *testing.T) {
 	type Sub struct {
 		Custom1 string `json:"one"`
