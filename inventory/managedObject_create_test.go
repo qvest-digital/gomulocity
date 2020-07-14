@@ -92,7 +92,7 @@ func TestManagedObjectApi_CreateManagedObject(t *testing.T) {
 
 			u := "<username>"
 			p := "<password>"
-			c := managedObjectApi{
+			c := inventoryApi{
 				Client: &generic.Client{
 					HTTPClient: testServer.Client(),
 					BaseURL:    testServer.URL,

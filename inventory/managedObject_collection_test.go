@@ -15,7 +15,7 @@ const (
 func TestManagedObjectApi_ManagedObjectCollection(t *testing.T) {
 	tests := []struct {
 		name             string
-		filter           ManagedObjectFilter
+		filter           InventoryFilter
 		respCode         int
 		respBody         string
 		expectedRespBody string
@@ -23,7 +23,7 @@ func TestManagedObjectApi_ManagedObjectCollection(t *testing.T) {
 	}{
 		{
 			name: "Happy - no QueryLanguage given",
-			filter: ManagedObjectFilter{
+			filter: InventoryFilter{
 				Type:          "c8y_SensorPhone",
 				Owner:         "device_4D8AFED3",
 				FragmentType:  "fragmentType",
@@ -34,7 +34,7 @@ func TestManagedObjectApi_ManagedObjectCollection(t *testing.T) {
 		},
 		{
 			name: "Happy - QueryLanguage given",
-			filter: ManagedObjectFilter{
+			filter: InventoryFilter{
 				//Filter like Type and Owner should be ignored
 				Type:          "c8y_SensorPhone",
 				Owner:         "device_4D8AFED3",
@@ -76,7 +76,7 @@ func TestManagedObjectApi_ManagedObjectCollection(t *testing.T) {
 			u := "<username>"
 			p := "<password>"
 
-			c := managedObjectApi{
+			c := inventoryApi{
 				Client: &generic.Client{
 					HTTPClient: testserver.Client(),
 					BaseURL:    testserver.URL,

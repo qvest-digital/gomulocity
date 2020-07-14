@@ -13,10 +13,10 @@ const (
 	MANAGED_OBJECT_TYPE = "application/vnd.com.nsn.cumulocity.managedObject+json"
 	MANAGED_OBJECT_COLLECTION_TYPE = "application/vnd.com.nsn.cumulocity.managedObjectCollection+json"
 
-	MANAGED_OBJECT_API_PATH = "/inventory/managedObjects"
+	INVENTORY_API_PATH = "/inventory/managedObjects"
 )
 
-type ManagedObjectApi interface {
+type InventoryApi interface {
 	// Create a new managed object and returns the created entity with id, creation time and other properties
 	Create(newManagedObject *NewManagedObject) (*ManagedObject, *generic.Error)
 
@@ -30,7 +30,7 @@ type ManagedObjectApi interface {
 
 	// Returns a managed object collection, found by the given managed object filter parameters.
 	// All query parameters are AND concatenated.
-	Find(managedObjectFilter *ManagedObjectFilter, pageSize int) (*ManagedObjectCollection, *generic.Error)
+	Find(managedObjectFilter *InventoryFilter, pageSize int) (*ManagedObjectCollection, *generic.Error)
 
 	// Returns a managed object collection, found by the given managed object query.
 	// See the query language: https://cumulocity.com/guides/reference/inventory/#query-language
@@ -45,17 +45,17 @@ type ManagedObjectApi interface {
 	PreviousPage(c *ManagedObjectCollection) (*ManagedObjectCollection, *generic.Error)
 }
 
-type managedObjectApi struct {
+type inventoryApi struct {
 	client   *generic.Client
 	basePath string
 }
 
-// Creates a new managed object api object
+// Creates a new inventory api object
 //
 // client - Must be a gomulocity client.
-// returns - The `managed object`-api object
-func NewManagedObjectApi(client *generic.Client) ManagedObjectApi {
-	return &managedObjectApi{client, MANAGED_OBJECT_API_PATH}
+// returns - The `inventory`-api object
+func NewInventoryApi(client *generic.Client) InventoryApi {
+	return &inventoryApi{client, INVENTORY_API_PATH}
 }
 
 /*
@@ -63,14 +63,14 @@ Creates a new managed object based on the given variables.
 
 See: https://cumulocity.com/guides/reference/inventory/#post-create-a-new-managedobject
 */
-func (managedObjectApi *managedObjectApi) Create(newManagedObject *NewManagedObject) (*ManagedObject, *generic.Error) {
+func (inventoryApi *inventoryApi) Create(newManagedObject *NewManagedObject) (*ManagedObject, *generic.Error) {
 	bytes, err := json.Marshal(newManagedObject)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the managedObject: %s", err.Error()), "CreateManagedObject")
 	}
 	headers := generic.AcceptAndContentTypeHeader(MANAGED_OBJECT_TYPE, MANAGED_OBJECT_TYPE)
 
-	body, status, err := managedObjectApi.client.Post(managedObjectApi.basePath, bytes, headers)
+	body, status, err := inventoryApi.client.Post(inventoryApi.basePath, bytes, headers)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while posting a new managedObject: %s", err.Error()), "CreateManagedObject")
 	}
@@ -86,13 +86,13 @@ Gets a managedObject for a given Id.
 
 Returns 'ManagedObject' on success or nil if the id does not exist.
 */
-func (managedObjectApi *managedObjectApi) Get(managedObjectId string) (*ManagedObject, *generic.Error) {
+func (inventoryApi *inventoryApi) Get(managedObjectId string) (*ManagedObject, *generic.Error) {
 	if len(managedObjectId) == 0 {
 		return nil, generic.ClientError("managedObjectId must not be empty", "GetManagedObject")
 	}
 
-	path := fmt.Sprintf("%s/%s", managedObjectApi.basePath, url.QueryEscape(managedObjectId))
-	body, status, err := managedObjectApi.client.Get(path, generic.AcceptHeader(MANAGED_OBJECT_TYPE))
+	path := fmt.Sprintf("%s/%s", inventoryApi.basePath, url.QueryEscape(managedObjectId))
+	body, status, err := inventoryApi.client.Get(path, generic.AcceptHeader(MANAGED_OBJECT_TYPE))
 
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while getting a managedObject: %s", err.Error()), "GetManagedObject")
@@ -113,7 +113,7 @@ Updates the managedObject with given Id.
 
 See: https://cumulocity.com/guides/reference/managedObjects/#update-an-managedObject
 */
-func (managedObjectApi *managedObjectApi) Update(managedObjectId string, managedObject *ManagedObjectUpdate) (*ManagedObject, *generic.Error) {
+func (inventoryApi *inventoryApi) Update(managedObjectId string, managedObject *ManagedObjectUpdate) (*ManagedObject, *generic.Error) {
 	if len(managedObjectId) == 0 {
 		return nil, generic.ClientError("Updating managedObject without an id is not allowed", "UpdateManagedObject")
 	}
@@ -122,10 +122,10 @@ func (managedObjectApi *managedObjectApi) Update(managedObjectId string, managed
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the update managedObject: %s", err.Error()), "UpdateManagedObject")
 	}
 
-	path := fmt.Sprintf("%s/%s", managedObjectApi.basePath, url.QueryEscape(managedObjectId))
+	path := fmt.Sprintf("%s/%s", inventoryApi.basePath, url.QueryEscape(managedObjectId))
 	headers := generic.AcceptAndContentTypeHeader(MANAGED_OBJECT_TYPE, MANAGED_OBJECT_TYPE)
 
-	body, status, err := managedObjectApi.client.Put(path, bytes, headers)
+	body, status, err := inventoryApi.client.Put(path, bytes, headers)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while updating an managedObject: %s", err.Error()), "UpdateManagedObject")
 	}
@@ -139,12 +139,12 @@ func (managedObjectApi *managedObjectApi) Update(managedObjectId string, managed
 /*
 Deletes managedObject by id.
 */
-func (managedObjectApi *managedObjectApi) Delete(managedObjectId string) *generic.Error {
+func (inventoryApi *inventoryApi) Delete(managedObjectId string) *generic.Error {
 	if len(managedObjectId) == 0 {
 		return generic.ClientError("Deleting managedObject without an id is not allowed", "DeleteManagedObject")
 	}
 
-	body, status, err := managedObjectApi.client.Delete(fmt.Sprintf("%s/%s", managedObjectApi.basePath, url.QueryEscape(managedObjectId)), generic.EmptyHeader())
+	body, status, err := inventoryApi.client.Delete(fmt.Sprintf("%s/%s", inventoryApi.basePath, url.QueryEscape(managedObjectId)), generic.EmptyHeader())
 	if err != nil {
 		return generic.ClientError(fmt.Sprintf("Error while deleting managedObject with id [%s]: %s", managedObjectId, err.Error()), "DeleteManagedObject")
 	}
@@ -161,7 +161,7 @@ func (managedObjectApi *managedObjectApi) Delete(managedObjectId string) *generi
 
    See: https://cumulocity.com/guides/reference/inventory/#managed-object-collection
 */
-func (managedObjectApi *managedObjectApi) Find(managedObjectFilter *ManagedObjectFilter, pageSize int) (*ManagedObjectCollection, *generic.Error) {
+func (inventoryApi *inventoryApi) Find(managedObjectFilter *InventoryFilter, pageSize int) (*ManagedObjectCollection, *generic.Error) {
 	queryParamsValues := &url.Values{}
 	err := managedObjectFilter.QueryParams(queryParamsValues)
 	if err != nil {
@@ -173,10 +173,10 @@ func (managedObjectApi *managedObjectApi) Find(managedObjectFilter *ManagedObjec
 		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch managedObjects: %s", err.Error()), "FindManagedObjects")
 	}
 
-	return managedObjectApi.getCommon(fmt.Sprintf("%s?%s", managedObjectApi.basePath, queryParamsValues.Encode()))
+	return inventoryApi.getCommon(fmt.Sprintf("%s?%s", inventoryApi.basePath, queryParamsValues.Encode()))
 }
 
-func (managedObjectApi *managedObjectApi) FindByQuery(query string, pageSize int) (*ManagedObjectCollection, *generic.Error) {
+func (inventoryApi *inventoryApi) FindByQuery(query string, pageSize int) (*ManagedObjectCollection, *generic.Error) {
 	queryParamsValues := &url.Values{}
 	if len(query) > 0 {
 		queryParamsValues.Add("query", query)
@@ -187,23 +187,23 @@ func (managedObjectApi *managedObjectApi) FindByQuery(query string, pageSize int
 		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch managedObjects: %s", err.Error()), "FindManagedObjectsByQuery")
 	}
 
-	return managedObjectApi.getCommon(fmt.Sprintf("%s?%s", managedObjectApi.basePath, queryParamsValues.Encode()))
+	return inventoryApi.getCommon(fmt.Sprintf("%s?%s", inventoryApi.basePath, queryParamsValues.Encode()))
 }
 
 
-func (managedObjectApi *managedObjectApi) NextPage(c *ManagedObjectCollection) (*ManagedObjectCollection, *generic.Error) {
-	return managedObjectApi.getPage(c.Next)
+func (inventoryApi *inventoryApi) NextPage(c *ManagedObjectCollection) (*ManagedObjectCollection, *generic.Error) {
+	return inventoryApi.getPage(c.Next)
 }
 
-func (managedObjectApi *managedObjectApi) PreviousPage(c *ManagedObjectCollection) (*ManagedObjectCollection, *generic.Error) {
-	return managedObjectApi.getPage(c.Prev)
+func (inventoryApi *inventoryApi) PreviousPage(c *ManagedObjectCollection) (*ManagedObjectCollection, *generic.Error) {
+	return inventoryApi.getPage(c.Prev)
 }
 
 
 
 // -- internal
 
-func (managedObjectApi *managedObjectApi) getPage(reference string) (*ManagedObjectCollection, *generic.Error) {
+func (inventoryApi *inventoryApi) getPage(reference string) (*ManagedObjectCollection, *generic.Error) {
 	if reference == "" {
 		log.Print("No page reference given. Returning nil.")
 		return nil, nil
@@ -214,7 +214,7 @@ func (managedObjectApi *managedObjectApi) getPage(reference string) (*ManagedObj
 		return nil, generic.ClientError(fmt.Sprintf("Unparsable URL given for page reference: '%s'", reference), "GetPage")
 	}
 
-	collection, genErr := managedObjectApi.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+	collection, genErr := inventoryApi.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
 	if genErr != nil {
 		return nil, genErr
 	}
@@ -227,8 +227,8 @@ func (managedObjectApi *managedObjectApi) getPage(reference string) (*ManagedObj
 	return collection, nil
 }
 
-func (managedObjectApi *managedObjectApi) getCommon(path string) (*ManagedObjectCollection, *generic.Error) {
-	body, status, err := managedObjectApi.client.Get(path, generic.AcceptHeader(MANAGED_OBJECT_COLLECTION_TYPE))
+func (inventoryApi *inventoryApi) getCommon(path string) (*ManagedObjectCollection, *generic.Error) {
+	body, status, err := inventoryApi.client.Get(path, generic.AcceptHeader(MANAGED_OBJECT_COLLECTION_TYPE))
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while getting managedObjects: %s", err.Error()), "GetManagedObjectCollection")
 	}

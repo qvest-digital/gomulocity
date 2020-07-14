@@ -13,10 +13,10 @@ const (
 	MANAGED_OBJECT_REFERENCE_TYPE            = "application/vnd.com.nsn.cumulocity.managedObjectReference+json"
 	MANAGED_OBJECT_REFERENCE_COLLECTION_TYPE = "application/vnd.com.nsn.cumulocity.managedObjectReferenceCollection+json"
 
-	MANAGED_OBJECT_REFERENCE_API_PATH = "/inventory/managedObjects"
+	INVENTORY_REFERENCE_API_PATH = "/inventory/managedObjects"
 )
 
-type ManagedObjectReferenceApi interface {
+type InventoryReferenceApi interface {
 	// Create a new managed object reference and returns the created entity with id, creation time and other properties
 	Create(managedObjectId string, referenceType ReferenceType) (*ManagedObjectReference, *generic.Error)
 
@@ -37,17 +37,17 @@ type ManagedObjectReferenceApi interface {
 	PreviousPage(c *ManagedObjectReferenceCollection) (*ManagedObjectReferenceCollection, *generic.Error)
 }
 
-type managedObjectReferenceApi struct {
+type inventoryReferenceApi struct {
 	client   *generic.Client
 	basePath string
 }
 
-// Creates a new managed object reference api object
+// Creates a new inventory reference api object
 //
 // client - Must be a gomulocity client.
-// returns - The `ManagedObjectReferenceApi` object
-func NewManagedObjectReferenceApi(client *generic.Client) ManagedObjectReferenceApi {
-	return &managedObjectReferenceApi{client, MANAGED_OBJECT_REFERENCE_API_PATH}
+// returns - The `InventoryReferenceApi` object
+func NewInventoryReferenceApi(client *generic.Client) InventoryReferenceApi {
+	return &inventoryReferenceApi{client, INVENTORY_REFERENCE_API_PATH}
 }
 
 /*
@@ -55,7 +55,7 @@ Creates a new managed object reference based on the given variables.
 
 See: https://cumulocity.com/guides/reference/inventory/#post-create-a-new-managedobject
 */
-func (managedObjectReferenceApi *managedObjectReferenceApi) Create(managedObjectId string, referenceType ReferenceType) (*ManagedObjectReference, *generic.Error) {
+func (inventoryReferenceApi *inventoryReferenceApi) Create(managedObjectId string, referenceType ReferenceType) (*ManagedObjectReference, *generic.Error) {
 	if len(managedObjectId) == 0 {
 		return nil, generic.ClientError("managedObjectId must not be empty", "GetManagedObjectReference")
 	}
@@ -67,8 +67,8 @@ func (managedObjectReferenceApi *managedObjectReferenceApi) Create(managedObject
 	}
 	headers := generic.AcceptAndContentTypeHeader(MANAGED_OBJECT_REFERENCE_TYPE, MANAGED_OBJECT_REFERENCE_TYPE)
 
-	path := fmt.Sprintf("%s/%s/%s", managedObjectReferenceApi.basePath, url.QueryEscape(managedObjectId), url.QueryEscape(string(referenceType)))
-	body, status, err := managedObjectReferenceApi.client.Post(path, bytes, headers)
+	path := fmt.Sprintf("%s/%s/%s", inventoryReferenceApi.basePath, url.QueryEscape(managedObjectId), url.QueryEscape(string(referenceType)))
+	body, status, err := inventoryReferenceApi.client.Post(path, bytes, headers)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while posting a new managedObjectReference: %s", err.Error()), "CreateManagedObjectReference")
 	}
@@ -84,7 +84,7 @@ Gets a managedObjectReference for a given Id.
 
 Returns 'ManagedObjectReference' on success or nil if the id does not exist.
 */
-func (managedObjectReferenceApi *managedObjectReferenceApi) Get(managedObjectId string, referenceType ReferenceType, referenceID string) (*ManagedObjectReference, *generic.Error) {
+func (inventoryReferenceApi *inventoryReferenceApi) Get(managedObjectId string, referenceType ReferenceType, referenceID string) (*ManagedObjectReference, *generic.Error) {
 	if len(managedObjectId) == 0 {
 		return nil, generic.ClientError("managedObjectId must not be empty", "GetManagedObjectReference")
 	}
@@ -92,8 +92,8 @@ func (managedObjectReferenceApi *managedObjectReferenceApi) Get(managedObjectId 
 		return nil, generic.ClientError("referenceID must not be empty", "GetManagedObjectReference")
 	}
 
-	path := fmt.Sprintf("%s/%s/%s/%s", managedObjectReferenceApi.basePath, url.QueryEscape(managedObjectId), url.QueryEscape(string(referenceType)), url.QueryEscape(referenceID))
-	body, status, err := managedObjectReferenceApi.client.Get(path, generic.AcceptHeader(MANAGED_OBJECT_REFERENCE_TYPE))
+	path := fmt.Sprintf("%s/%s/%s/%s", inventoryReferenceApi.basePath, url.QueryEscape(managedObjectId), url.QueryEscape(string(referenceType)), url.QueryEscape(referenceID))
+	body, status, err := inventoryReferenceApi.client.Get(path, generic.AcceptHeader(MANAGED_OBJECT_REFERENCE_TYPE))
 
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while getting a managedObjectReference: %s", err.Error()), "GetManagedObjectReference")
@@ -111,7 +111,7 @@ func (managedObjectReferenceApi *managedObjectReferenceApi) Get(managedObjectId 
 /*
    Returns a collection of managed object references on success or nil if the id does not exist.
 */
-func (managedObjectReferenceApi *managedObjectReferenceApi) GetMany(managedObjectId string, referenceType ReferenceType, pageSize int) (*ManagedObjectReferenceCollection, *generic.Error) {
+func (inventoryReferenceApi *inventoryReferenceApi) GetMany(managedObjectId string, referenceType ReferenceType, pageSize int) (*ManagedObjectReferenceCollection, *generic.Error) {
 	if len(managedObjectId) == 0 {
 		return nil, generic.ClientError("managedObjectId must not be empty", "GetManagedObjectReference")
 	}
@@ -121,15 +121,15 @@ func (managedObjectReferenceApi *managedObjectReferenceApi) GetMany(managedObjec
 		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch managedObjectReferences: %s", err.Error()), "FindManagedObjectReferences")
 	}
 
-	path := fmt.Sprintf("%s/%s/%s?%s", managedObjectReferenceApi.basePath, url.QueryEscape(managedObjectId), url.QueryEscape(string(referenceType)), queryParamsValues.Encode())
+	path := fmt.Sprintf("%s/%s/%s?%s", inventoryReferenceApi.basePath, url.QueryEscape(managedObjectId), url.QueryEscape(string(referenceType)), queryParamsValues.Encode())
 
-	return managedObjectReferenceApi.getCommon(path)
+	return inventoryReferenceApi.getCommon(path)
 }
 
 /*
 Deletes managedObjectReference by id.
 */
-func (managedObjectReferenceApi *managedObjectReferenceApi) Delete(managedObjectId string, referenceType ReferenceType, referenceID string) *generic.Error {
+func (inventoryReferenceApi *inventoryReferenceApi) Delete(managedObjectId string, referenceType ReferenceType, referenceID string) *generic.Error {
 	if len(managedObjectId) == 0 {
 		return generic.ClientError("Deleting managedObjectReference without an id is not allowed", "DeleteManagedObjectReference")
 	}
@@ -137,9 +137,9 @@ func (managedObjectReferenceApi *managedObjectReferenceApi) Delete(managedObject
 		return generic.ClientError("referenceID must not be empty", "DeleteManagedObjectReference")
 	}
 
-	path := fmt.Sprintf("%s/%s/%s/%s", managedObjectReferenceApi.basePath, url.QueryEscape(managedObjectId), url.QueryEscape(string(referenceType)), url.QueryEscape(referenceID))
+	path := fmt.Sprintf("%s/%s/%s/%s", inventoryReferenceApi.basePath, url.QueryEscape(managedObjectId), url.QueryEscape(string(referenceType)), url.QueryEscape(referenceID))
 
-	body, status, err := managedObjectReferenceApi.client.Delete(path, generic.EmptyHeader())
+	body, status, err := inventoryReferenceApi.client.Delete(path, generic.EmptyHeader())
 	if err != nil {
 		return generic.ClientError(fmt.Sprintf("Error while deleting managedObjectReference with id [%s]: %s", managedObjectId, err.Error()), "DeleteManagedObjectReference")
 	}
@@ -151,17 +151,17 @@ func (managedObjectReferenceApi *managedObjectReferenceApi) Delete(managedObject
 	return nil
 }
 
-func (managedObjectReferenceApi *managedObjectReferenceApi) NextPage(c *ManagedObjectReferenceCollection) (*ManagedObjectReferenceCollection, *generic.Error) {
-	return managedObjectReferenceApi.getPage(c.Next)
+func (inventoryReferenceApi *inventoryReferenceApi) NextPage(c *ManagedObjectReferenceCollection) (*ManagedObjectReferenceCollection, *generic.Error) {
+	return inventoryReferenceApi.getPage(c.Next)
 }
 
-func (managedObjectReferenceApi *managedObjectReferenceApi) PreviousPage(c *ManagedObjectReferenceCollection) (*ManagedObjectReferenceCollection, *generic.Error) {
-	return managedObjectReferenceApi.getPage(c.Prev)
+func (inventoryReferenceApi *inventoryReferenceApi) PreviousPage(c *ManagedObjectReferenceCollection) (*ManagedObjectReferenceCollection, *generic.Error) {
+	return inventoryReferenceApi.getPage(c.Prev)
 }
 
 // -- internal
 
-func (managedObjectReferenceApi *managedObjectReferenceApi) getPage(reference string) (*ManagedObjectReferenceCollection, *generic.Error) {
+func (inventoryReferenceApi *inventoryReferenceApi) getPage(reference string) (*ManagedObjectReferenceCollection, *generic.Error) {
 	if reference == "" {
 		log.Print("No page reference given. Returning nil.")
 		return nil, nil
@@ -172,7 +172,7 @@ func (managedObjectReferenceApi *managedObjectReferenceApi) getPage(reference st
 		return nil, generic.ClientError(fmt.Sprintf("Unparsable URL given for page reference: '%s'", reference), "GetPage")
 	}
 
-	collection, genErr := managedObjectReferenceApi.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+	collection, genErr := inventoryReferenceApi.getCommon(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
 	if genErr != nil {
 		return nil, genErr
 	}
@@ -185,8 +185,8 @@ func (managedObjectReferenceApi *managedObjectReferenceApi) getPage(reference st
 	return collection, nil
 }
 
-func (managedObjectReferenceApi *managedObjectReferenceApi) getCommon(path string) (*ManagedObjectReferenceCollection, *generic.Error) {
-	body, status, err := managedObjectReferenceApi.client.Get(path, generic.AcceptHeader(MANAGED_OBJECT_REFERENCE_COLLECTION_TYPE))
+func (inventoryReferenceApi *inventoryReferenceApi) getCommon(path string) (*ManagedObjectReferenceCollection, *generic.Error) {
+	body, status, err := inventoryReferenceApi.client.Get(path, generic.AcceptHeader(MANAGED_OBJECT_REFERENCE_COLLECTION_TYPE))
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while getting managedObjectReferences: %s", err.Error()), "GetManagedObjectReferenceCollection")
 	}

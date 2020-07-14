@@ -15,7 +15,7 @@ type Gomulocity struct {
 	DeviceRegistration device_bootstrap.DeviceRegistrationApi
 	AlarmApi           alarm.AlarmApi
 	MeasurementApi     measurement.MeasurementApi
-	Inventory          inventory.ManagedObjectApi
+	Inventory          inventory.InventoryApi
 }
 
 func NewGomulocity(baseURL, username, password string, bootstrapUsername, bootstrapPassword string) Gomulocity {
@@ -42,6 +42,6 @@ func NewGomulocity(baseURL, username, password string, bootstrapUsername, bootst
 		DeviceRegistration: device_bootstrap.NewDeviceRegistrationApi(client),
 		AlarmApi:           alarm.NewAlarmApi(client),
 		MeasurementApi:     measurement.NewMeasurementApi(client),
-		Inventory:          inventory.NewManagedObjectApi(client),
+		Inventory:          inventory.NewInventoryApi(client),
 	}
 }

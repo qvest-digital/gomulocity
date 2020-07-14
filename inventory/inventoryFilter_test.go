@@ -7,7 +7,7 @@ import (
 
 func TestManagedObjectCollectionFilter_QueryParams_WithoutQueryLanguage(t *testing.T) {
 	// given
-	collectionFilter := ManagedObjectFilter{
+	collectionFilter := InventoryFilter{
 		Type:          "Type",
 		Owner:         "Owner",
 		FragmentType:  "FragmentType",
@@ -35,7 +35,7 @@ func TestManagedObjectCollectionFilter_QueryParams_WithoutQueryLanguage(t *testi
 
 func TestManagedObjectCollectionFilter_QueryParams_WithQueryLanguage(t *testing.T) {
 	// given
-	collectionFilter := ManagedObjectFilter{
+	collectionFilter := InventoryFilter{
 		Type:          "Type",
 		Owner:         "Owner",
 		FragmentType:  "FragmentType",

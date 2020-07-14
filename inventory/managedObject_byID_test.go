@@ -55,7 +55,7 @@ func TestManagedObjectApi_ManagedObjectByID(t *testing.T) {
 			}))
 			defer testserver.Close()
 
-			c := managedObjectApi{
+			c := inventoryApi{
 				Client: &generic.Client{
 					HTTPClient: testserver.Client(),
 					BaseURL:    testserver.URL,
