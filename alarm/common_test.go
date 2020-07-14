@@ -35,7 +35,7 @@ func updateAlarmHttpServer(status int) *httptest.Server {
 		_ = generic.ObjectFromJson(body, &alarm)
 		updateAlarmCapture = &alarm
 		bodyCapture = &body
-		urlCapture = r.URL.Path
+		urlCapture = r.URL.String()
 		requestCapture = r
 
 		w.WriteHeader(status)

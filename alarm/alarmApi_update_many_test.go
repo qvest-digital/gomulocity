@@ -1,7 +1,6 @@
 package alarm
 
 import (
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -21,7 +20,7 @@ var updateAlarmsFilter = &UpdateAlarmsFilter{
 	DateTo:   &dateTo,
 }
 
-var expectedUpdateFilter = "alarm/alarms?dateFrom=2020-06-29T10%3A11%3A12Z&dateTo=2020-06-30T13%3A14%3A15Z&resolved=false&severity=MINOR&source=123&status=ACTIVE"
+var expectedUpdateFilter = "/alarm/alarms?dateFrom=2020-06-29T10%3A11%3A12Z&dateTo=2020-06-30T13%3A14%3A15Z&resolved=false&severity=MINOR&source=123&status=ACTIVE"
 
 func TestAlarmApi_BulkStatusUpdate_Alarm_Success_SendsData(t *testing.T) {
 	// given: A test server
@@ -46,8 +45,8 @@ func TestAlarmApi_BulkStatusUpdate_Alarm_Success_SendsData(t *testing.T) {
 		t.Fatalf("BulkStatusUpdate() Captured alarm is nil.")
 	}
 
-	if !reflect.DeepEqual(expectedStatusUpdate, updateAlarmCapture) {
-		t.Errorf("BulkStatusUpdate() alarm = %v, want %v", updateAlarmCapture, expectedStatusUpdate)
+	if expectedStatusUpdate.Status != updateAlarmCapture.Status {
+		t.Errorf("BulkStatusUpdate()\n alarm = %v\n want %v", updateAlarmCapture, expectedStatusUpdate)
 	}
 
 	header := requestCapture.Header.Get("Accept")
