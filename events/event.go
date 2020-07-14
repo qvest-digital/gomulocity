@@ -20,7 +20,8 @@ type CreateEvent struct {
 }
 
 type UpdateEvent struct {
-	Text string `json:"text"`
+	Text             string                 `json:"text"`
+	AdditionalFields map[string]interface{} `jsonc:"flat"`
 }
 
 // ---- Event
