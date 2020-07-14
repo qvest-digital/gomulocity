@@ -87,7 +87,11 @@ var alarm = `{
             "status": "ACTIVE",
             "severity": "MINOR",
             "count": 1,
-            "firstOccurrenceTime": "2020-06-30T08:32:04Z"
+            "firstOccurrenceTime": "2020-06-30T08:32:04Z",
+			"custom1": "Hello",
+			"custom2": [
+				"Foo", "Bar"
+			]
         }`
 
 var alarmCollectionTemplate = `{

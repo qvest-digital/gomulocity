@@ -221,7 +221,7 @@ func (alarmApi *alarmApi) PreviousPage(c *AlarmCollection) (*AlarmCollection, *g
 func parseAlarmResponse(body []byte) (*Alarm, *generic.Error) {
 	var result Alarm
 	if len(body) > 0 {
-		err := json.Unmarshal(body, &result)
+		err := generic.ObjectFromJson(body, &result)
 		if err != nil {
 			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 		}
