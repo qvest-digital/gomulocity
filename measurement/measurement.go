@@ -26,19 +26,19 @@ type Source struct {
 }
 
 type NewMeasurement struct {
-	Time            *time.Time               `json:"time"`
-	MeasurementType string                   `json:"type"`
-	Source          Source                   `json:"source"`
-	Metrics         map[string]ValueFragment `jsonc:"flat"`
+	Time            *time.Time             `json:"time"`
+	MeasurementType string                 `json:"type"`
+	Source          Source                 `json:"source"`
+	Metrics         map[string]interface{} `jsonc:"flat"`
 }
 
 type Measurement struct {
-	Id              string                   `json:"id"`
-	Self            string                   `json:"self"`
-	Time            *time.Time               `json:"time"`
-	MeasurementType string                   `json:"type"`
-	Source          Source                   `json:"source"`
-	Metrics         map[string]ValueFragment `jsonc:"flat"`
+	Id              string                 `json:"id"`
+	Self            string                 `json:"self"`
+	Time            *time.Time             `json:"time"`
+	MeasurementType string                 `json:"type"`
+	Source          Source                 `json:"source"`
+	Metrics         map[string]interface{} `jsonc:"flat"`
 }
 
 type ValueFragment struct {
