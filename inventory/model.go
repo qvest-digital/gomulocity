@@ -34,112 +34,112 @@ type (
 		Self         string    `json:"self"`
 		Owner        string    `json:"owner"`
 
-		AdditionParents AdditionParents `json:"additionParents"`
-		AssetParents    AdditionParents `json:"assetParents"`
-		DeviceParents   DeviceParents   `json:"deviceParents"`
+		AdditionParents AdditionParents `json:"additionParents,omitempty"`
+		AssetParents    AdditionParents `json:"assetParents,omitempty"`
+		DeviceParents   DeviceParents   `json:"deviceParents,omitempty"`
 
-		ChildAdditions ChildAdditions `json:"childAdditions"`
-		ChildAssets    ChildAssets    `json:"childAssets"`
-		ChildDevices   ChildDevices   `json:"childDevices"`
+		ChildAdditions ChildAdditions `json:"childAdditions,omitempty"`
+		ChildAssets    ChildAssets    `json:"childAssets,omitempty"`
+		ChildDevices   ChildDevices   `json:"childDevices,omitempty"`
 
-		C8YActiveAlarmsStatus   C8YActiveAlarmsStatus   `json:"c8y_ActiveAlarmsStatus"`
-		C8YAvailability         C8YAvailability         `json:"c8y_Availability"`
-		C8YConnection           C8YConnection           `json:"c8y_Connection"`
-		C8YDataPoint            C8YDataPoint            `json:"c8y_DataPoint"`
-		C8YFirmware             C8YFirmware             `json:"c8y_Firmware"`
-		C8YHardware             C8YHardware             `json:"c8y_Hardware"`
-		C8YIsDevice             interface{}             `json:"c8y_IsDevice"`
-		C8YIsSensorPhone        interface{}             `json:"c8y_IsSensorPhone"`
-		C8YRequiredAvailability C8YRequiredAvailability `json:"c8y_RequiredAvailability"`
-		C8YSupportedOperations  []string                `json:"c8y_SupportedOperations"`
-		C8YStatus               C8YStatus               `json:"c8y_Status"`
+		C8YActiveAlarmsStatus   *C8YActiveAlarmsStatus   `json:"c8y_ActiveAlarmsStatus,omitempty"`
+		C8YAvailability         *C8YAvailability         `json:"c8y_Availability,omitempty"`
+		C8YConnection           *C8YConnection           `json:"c8y_Connection,omitempty"`
+		C8YDataPoint            *C8YDataPoint            `json:"c8y_DataPoint,omitempty"`
+		C8YFirmware             *C8YFirmware             `json:"c8y_Firmware,omitempty"`
+		C8YHardware             *C8YHardware             `json:"c8y_Hardware,omitempty"`
+		C8YIsDevice             *interface{}             `json:"c8y_IsDevice,omitempty"`
+		C8YIsSensorPhone        *interface{}             `json:"c8y_IsSensorPhone,omitempty"`
+		C8YRequiredAvailability *C8YRequiredAvailability `json:"c8y_RequiredAvailability,omitempty"`
+		C8YSupportedOperations  *[]string                `json:"c8y_SupportedOperations,omitempty"`
+		C8YStatus               *C8YStatus               `json:"c8y_Status,omitempty"`
 	}
 
 	AssetParents struct {
 		References []interface{} `json:"references"`
-		Self       string        `json:"self"`
+		Self       string        `json:"self,omitempty"`
 	}
 	AdditionParents struct {
 		References []interface{} `json:"references"`
-		Self       string        `json:"self"`
+		Self       string        `json:"self,omitempty"`
 	}
 	C8YActiveAlarmsStatus struct {
-		Critical int `json:"critical"`
-		Major    int `json:"major"`
+		Critical int `json:"critical,omitempty"`
+		Major    int `json:"major,omitempty"`
 	}
 	C8YAvailability struct {
-		LastMessage time.Time `json:"lastMessage"`
-		Status      string    `json:"status"`
+		LastMessage *time.Time `json:"lastMessage,omitempty"`
+		Status      string     `json:"status,omitempty"`
 	}
 	C8YConnection struct {
-		Status string `json:"status"`
+		Status string `json:"status,omitempty"`
 	}
 	C8YDataPoint struct {
 	}
 	C8YFirmware struct {
-		Version string `json:"version"`
+		Version string `json:"version,omitempty"`
 	}
 	C8YHardware struct {
-		Model        string `json:"model"`
-		SerialNumber string `json:"serialNumber"`
+		Model        string `json:"model,omitempty"`
+		SerialNumber string `json:"serialNumber,omitempty"`
 	}
 	C8YRequiredAvailability struct {
-		ResponseInterval int `json:"responseInterval"`
+		ResponseInterval int `json:"responseInterval,omitempty"`
 	}
 	ChildAdditions struct {
 		References []struct {
 			ManagedObject struct {
-				ID   string `json:"id"`
-				Name string `json:"name"`
-				Self string `json:"self"`
-			} `json:"managedObject"`
-			Self string `json:"self"`
+				Id   string `json:"id,omitempty"`
+				Name string `json:"name,omitempty"`
+				Self string `json:"self,omitempty"`
+			} `json:"managedObject,omitempty"`
+			Self string `json:"self,omitempty"`
 		} `json:"references"`
-		Self string `json:"self"`
+		Self string `json:"self,omitempty"`
 	}
 	ChildAssets struct {
 		References []interface{} `json:"references"`
-		Self       string        `json:"self"`
+		Self       string        `json:"self,omitempty"`
 	}
 	ChildDevices struct {
 		References []interface{} `json:"references"`
-		Self       string        `json:"self"`
+		Self       string        `json:"self,omitempty"`
 	}
 	DeviceParents struct {
 		References []interface{} `json:"references"`
-		Self       string        `json:"self"`
+		Self       string        `json:"self,omitempty"`
 	}
 
 	C8YStatus struct {
 		Details struct {
-			Active              int `json:"active"`
+			Active              int `json:"active,omitempty"`
 			AggregatedResources struct {
-				CPU    string `json:"cpu"`
-				Memory string `json:"memory"`
-			} `json:"aggregatedResources"`
-			Desired  int `json:"desired"`
-			Restarts int `json:"restarts"`
-		} `json:"details"`
+				CPU    string `json:"cpu,omitempty"`
+				Memory string `json:"memory,omitempty"`
+			} `json:"aggregatedResources,omitempty"`
+			Desired  int `json:"desired,omitempty"`
+			Restarts int `json:"restarts,omitempty"`
+		} `json:"details,omitempty"`
 		Instances struct {
 			DeviceSimulatorScopeManagementDeployment77678578B4Vkn66 struct {
-				CPUInMillis int `json:"cpuInMillis"`
+				CPUInMillis int `json:"cpuInMillis,omitempty"`
 				LastUpdated struct {
 					Date struct {
-						Date time.Time `json:"$date"`
-					} `json:"date"`
-					Offset int `json:"offset"`
-				} `json:"lastUpdated"`
-				MemoryInBytes int `json:"memoryInBytes"`
-				Restarts      int `json:"restarts"`
-			} `json:"device-simulator-scope-management-deployment-77678578b4-vkn66"`
-		} `json:"instances"`
+						Date *time.Time `json:"date,omitempty"`
+					} `json:"date,omitempty"`
+					Offset int `json:"offset,omitempty"`
+				} `json:"lastUpdated,omitempty"`
+				MemoryInBytes int `json:"memoryInBytes,omitempty"`
+				Restarts      int `json:"restarts,omitempty"`
+			} `json:"device-simulator-scope-management-deployment-77678578b4-vkn66,omitempty"`
+		} `json:"instances,omitempty"`
 		LastUpdated struct {
 			Date struct {
-				Date time.Time `json:"$date"`
-			} `json:"date"`
-			Offset int `json:"offset"`
-		} `json:"lastUpdated"`
-		Status string `json:"status"`
+				Date *time.Time `json:"date,omitempty"`
+			} `json:"date,omitempty"`
+			Offset int `json:"offset,omitempty"`
+		} `json:"lastUpdated,omitempty"`
+		Status string `json:"status,omitempty"`
 	}
 )
 

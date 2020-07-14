@@ -3,14 +3,13 @@ package inventory
 import (
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
 type InventoryFilter struct {
 	Type         string
 	FragmentType string
-	Ids          []int
+	Ids          []string
 	Text         string
 }
 
@@ -30,11 +29,7 @@ func (inventoryFilter InventoryFilter) QueryParams(params *url.Values) error {
 	}
 
 	if len(inventoryFilter.Ids) > 0 {
-		var idsAsString []string
-		for _, id := range inventoryFilter.Ids {
-			idsAsString = append(idsAsString, strconv.Itoa(id))
-		}
-		params.Add("ids", strings.Join(idsAsString, ","))
+		params.Add("ids", strings.Join(inventoryFilter.Ids, ","))
 	}
 
 	if len(inventoryFilter.Text) > 0 {

@@ -18,7 +18,7 @@ const (
 
 type InventoryReferenceApi interface {
 	// Create a new managed object reference and returns the created entity with id, creation time and other properties
-	Create(managedObjectId string, referenceType ReferenceType) (*ManagedObjectReference, *generic.Error)
+	Create(managedObjectId string, referenceType ReferenceType, referenceID string) (*ManagedObjectReference, *generic.Error)
 
 	// Gets an exiting managed object reference by its id. If the id does not exists, nil is returned.
 	Get(managedObjectId string, referenceType ReferenceType, referenceID string) (*ManagedObjectReference, *generic.Error)
@@ -55,12 +55,12 @@ Creates a new managed object reference based on the given variables.
 
 See: https://cumulocity.com/guides/reference/inventory/#post-create-a-new-managedobject
 */
-func (inventoryReferenceApi *inventoryReferenceApi) Create(managedObjectId string, referenceType ReferenceType) (*ManagedObjectReference, *generic.Error) {
+func (inventoryReferenceApi *inventoryReferenceApi) Create(managedObjectId string, referenceType ReferenceType, referenceID string) (*ManagedObjectReference, *generic.Error) {
 	if len(managedObjectId) == 0 {
 		return nil, generic.ClientError("managedObjectId must not be empty", "GetManagedObjectReference")
 	}
 
-	newManagedObjectReference := NewManagedObjectReference{Source{Id: managedObjectId}}
+	newManagedObjectReference := NewManagedObjectReference{Source{Id: referenceID}}
 	bytes, err := json.Marshal(newManagedObjectReference)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the managedObjectReference: %s", err.Error()), "CreateManagedObjectReference")
