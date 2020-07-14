@@ -2,31 +2,10 @@ package alarm
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
 )
-
-func createAlarmHttpServer(status int) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		body, _ := ioutil.ReadAll(r.Body)
-
-		var alarm NewAlarm
-		_ = json.Unmarshal(body, &alarm)
-		createAlarmCapture = &alarm
-		requestCapture = r
-
-		w.WriteHeader(status)
-		responseCapture, _ := json.Marshal(responseAlarm)
-		_, _ = w.Write(responseCapture)
-	}))
-}
-
-var requestCapture *http.Request
-var createAlarmCapture *NewAlarm
 
 var alarmTime, _ = time.Parse(time.RFC3339, "2020-06-26T10:43:25.130Z")
 var responseAlarm = &Alarm{
@@ -45,12 +24,13 @@ var responseAlarm = &Alarm{
 
 // given: A new alarm
 var newAlarm = &NewAlarm{
-	Type:   "TestAlarm",
-	Time:   time.Time{},
-	Text:   "This is my test alarm",
-	Source: Source{Id: "4711"},
-	Severity: MAJOR,
-	Status: ACTIVE,
+	Type:             "TestAlarm",
+	Time:             time.Time{},
+	Text:             "This is my test alarm",
+	Source:           Source{Id: "4711"},
+	Severity:         MAJOR,
+	Status:           ACTIVE,
+	AdditionalFields: map[string]interface{}{},
 }
 
 func TestAlarmApi_Create_Alarm_Success_SendsData(t *testing.T) {
@@ -84,6 +64,53 @@ func TestAlarmApi_Create_Alarm_Success_SendsData(t *testing.T) {
 	want = "application/vnd.com.nsn.cumulocity.alarm+json"
 	if header != want {
 		t.Errorf("CreateAlarm() Content-Type header = %v, want %v", header, want)
+	}
+}
+
+func TestEvents_Create_Alarm_CustomFields(t *testing.T) {
+	// given: A test server
+	ts := createAlarmHttpServer(201)
+	defer ts.Close()
+
+	// and: the api as system under test
+	api := buildAlarmApi(ts.URL)
+	newAlarm = &NewAlarm{
+		Type:     "TestAlarm",
+		Time:     time.Time{},
+		Text:     "This is my test alarm",
+		Source:   Source{Id: "4711"},
+		Severity: MAJOR,
+		Status:   ACTIVE,
+		AdditionalFields: map[string]interface{}{
+			"Custom1": 4711,
+			"Custom2": "Hello World",
+		},
+	}
+
+	_, err := api.Create(newAlarm)
+
+	if err != nil {
+		t.Fatalf("CreateAlarm() got an unexpected error: %s", err.Error())
+	}
+
+	// and: A body was captured
+	if bodyCapture == nil {
+		t.Fatalf("CreateAlarm() Captured request is nil.")
+	}
+
+	// and: The body is a json structure
+	var bodyMap map[string]interface{}
+	jErr := json.Unmarshal(*bodyCapture, &bodyMap)
+
+	if jErr != nil {
+		t.Fatalf("CreateAlarm() request body can not be parsed %v", err)
+	}
+
+	// and: The "Custom1" and "Custom2" field is flattened
+	custom1, _ := bodyMap["Custom1"].(float64)
+	custom2, _ := bodyMap["Custom2"].(string)
+	if custom1 != 4711 || custom2 != "Hello World" {
+		t.Errorf("CreateAlarm() additional fields - \ncustom fields = [%.2f, %s] \nwant [4711, Hello World]", custom1, custom2)
 	}
 }
 

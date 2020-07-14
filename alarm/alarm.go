@@ -39,14 +39,13 @@ Represents cumulocity's alarm structure for creation purposes.
 See: https://cumulocity.com/guides/reference/alarms/#post-create-a-new-alarm
 */
 type NewAlarm struct {
-	Type     string    `json:"type"`
-	Time     time.Time `json:"time"`
-	Text     string    `json:"text"`
-	Source   Source    `json:"source"`
-	Status   Status    `json:"status"`
-	Severity Severity  `json:"severity"`
-	// TODO: object - 0..n additional properties of the alarm.
-	//Other map[string]interface{}
+	Type             string                 `json:"type"`
+	Time             time.Time              `json:"time"`
+	Text             string                 `json:"text"`
+	Source           Source                 `json:"source"`
+	Status           Status                 `json:"status"`
+	Severity         Severity               `json:"severity"`
+	AdditionalFields map[string]interface{} `jsonc:"flat"`
 }
 
 /*
