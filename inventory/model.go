@@ -1,4 +1,4 @@
-package managedObjects
+package inventory
 
 import (
 	"github.com/tarent/gomulocity/generic"
@@ -26,7 +26,7 @@ type (
 	}
 
 	ManagedObject struct {
-		ID           string    `json:"id"`
+		Id           string    `json:"id"`
 		Type         string    `json:"type"`
 		Name         string    `json:"name"`
 		CreationTime time.Time `json:"creationTime"`

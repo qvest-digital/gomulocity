@@ -1,4 +1,4 @@
-package managedObjects
+package inventory
 
 import (
 	"strings"

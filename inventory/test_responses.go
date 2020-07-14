@@ -1,4 +1,4 @@
-package managedObjects
+package inventory
 
 const ReferenceCollectionJson = `{
     "next": "https://t200588189.cumulocity.com/inventory/managedObjects/104940/childAdditions?pageSize=5&currentPage=2",
