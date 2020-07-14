@@ -198,6 +198,44 @@ func TestEvents_ReturnsCollection(t *testing.T) {
 	}
 }
 
+func TestEvents_ReturnsCollection_CustomElements(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(fmt.Sprintf(eventCollectionTemplate, event)))
+	}))
+	defer ts.Close()
+
+	api := buildEventsApi(ts.URL)
+
+	collection, err := api.Find(EventQuery{})
+
+	if err != nil {
+		t.Fatalf("Find() - Error given but no expected")
+	}
+
+	if len(collection.Events) != 1 {
+		t.Fatalf("Find() = Collection size = %v, want %v", len(collection.Events), 1)
+	}
+
+	event := collection.Events[0]
+	if event.Id != eventId {
+		t.Fatalf("Find() = Collection event id = %v, want %v", event.Id, eventId)
+	}
+
+	if len(event.AdditionalFields) != 2 {
+		t.Fatalf("GetForDevice() AdditionalFields length = %d, want %d", len(event.AdditionalFields), 2)
+	}
+
+	custom1, ok1 := event.AdditionalFields["custom1"].(string)
+	custom2, ok2 := event.AdditionalFields["custom2"].([]interface{})
+
+	if !(ok1 && custom1 == "Hello") {
+		t.Errorf("GetForDevice() custom1 = %v, want %v", custom1, "Hello")
+	}
+	if !(ok2 && custom2[0] == "Foo" && custom2[1] == "Bar") {
+		t.Errorf("GetForDevice() custom2 = [%v, %v], want [%v, %v]", custom2[0], custom2[1], "Foo", "Bar")
+	}
+}
+
 func TestEvents_FindReturnsError(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		error := `{
