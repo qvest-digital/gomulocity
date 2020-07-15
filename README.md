@@ -1,5 +1,5 @@
 # gomulocity
-Comulocity (c8y) go SDK.
+Cumulocity (c8y) go SDK.
 
 # Usage
 Example:

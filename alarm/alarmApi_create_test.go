@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -107,7 +108,7 @@ func TestAlarmApi_Create_Alarm_Success_ReceivesData(t *testing.T) {
 
 func TestAlarmApi_Create_Alarm_BadRequest(t *testing.T) {
 	// given: A test server
-	ts := createAlarmHttpServer(400)
+	ts := createAlarmHttpServer(http.StatusBadRequest)
 	defer ts.Close()
 
 	// and: the api as system under test
@@ -116,6 +117,11 @@ func TestAlarmApi_Create_Alarm_BadRequest(t *testing.T) {
 
 	if err == nil {
 		t.Errorf("CreateAlarm() expected error on 400 - bad request")
+		return
+	}
+
+	if !strings.Contains(err.ErrorType, "400") {
+		t.Errorf("CreateAlarm() expected error on 400 - bad request. Got: %s", err.ErrorType)
 		return
 	}
 }
