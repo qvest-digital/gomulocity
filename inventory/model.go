@@ -8,7 +8,7 @@ import (
 type NewManagedObject struct {
 	Type         string    `json:"type,omitempty"`
 	Name         string    `json:"name,omitempty"`
-	CreationDate time.Time `json:"creationDate"`
+	CreationTime *time.Time `json:"creationTime,omitempty"`
 }
 
 type ManagedObjectUpdate struct {
@@ -35,7 +35,7 @@ type (
 		Owner        string    `json:"owner"`
 
 		AdditionParents AdditionParents `json:"additionParents,omitempty"`
-		AssetParents    AdditionParents `json:"assetParents,omitempty"`
+		AssetParents    AssetParents    `json:"assetParents,omitempty"`
 		DeviceParents   DeviceParents   `json:"deviceParents,omitempty"`
 
 		ChildAdditions ChildAdditions `json:"childAdditions,omitempty"`

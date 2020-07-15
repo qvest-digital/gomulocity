@@ -27,7 +27,7 @@ func TestDeviceRegistrationApi_CommonPropertiesOnGetAll(t *testing.T) {
 		reqBasicAuthUsername, reqBasicAuthPassword, _ = req.BasicAuth()
 		reqAccept = req.Header.Get("Accept")
 		reqContentType = req.Header.Get("Content-Type")
-		res.WriteHeader(http.StatusCreated)
+		res.WriteHeader(http.StatusOK)
 		_, err = res.Write([]byte(`{}`))
 		if err != nil {
 			t.Fatalf("failed to write resp body: %s", err)

@@ -127,7 +127,7 @@ func (inventoryApi *inventoryApi) Update(managedObjectId string, managedObject *
 
 	body, status, err := inventoryApi.client.Put(path, bytes, headers)
 	if err != nil {
-		return nil, generic.ClientError(fmt.Sprintf("Error while updating an managedObject: %s", err.Error()), "UpdateManagedObject")
+		return nil, generic.ClientError(fmt.Sprintf("Error while updating a managedObject: %s", err.Error()), "UpdateManagedObject")
 	}
 	if status != http.StatusOK {
 		return nil, generic.CreateErrorFromResponse(body, status)
@@ -258,7 +258,7 @@ func parseManagedObjectResponse(body []byte) (*ManagedObject, *generic.Error) {
 			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 		}
 	} else {
-		return nil, generic.ClientError("Response body was empty", "GetManagedObject")
+		return nil, generic.ClientError("Response body was empty", "ResponseParser")
 	}
 
 	return &result, nil
