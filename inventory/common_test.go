@@ -159,3 +159,13 @@ var givenManagedObjectCollectionResponse = `{
 		},
 		"next": "https://t200588189.cumulocity.com/inventory/managedObjects?ids=9963944&text=Test%20Device&type=integration-test&pageSize=5&currentPage=2"
 	}`
+
+var managedObjectCollectionTemplate = `{
+    "self": "https://t200588189.cumulocity.com/inventory/managedObjects?type=test-type&pageSize=5&currentPage=1",
+	"next": "https://t200588189.cumulocity.com/inventory/managedObjects?type=test-type&pageSize=5&currentPage=2",
+	"managedObjects": [%s],
+    "statistics": {
+			"pageSize": 5,
+			"currentPage": 1
+	}
+}`
