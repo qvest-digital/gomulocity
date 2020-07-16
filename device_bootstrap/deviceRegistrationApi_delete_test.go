@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 )
 
@@ -90,7 +91,7 @@ func TestDeviceRegistrationApi_Delete(t *testing.T) {
 			c8yRespBody: `#`,
 			expectedErr: &generic.Error{
 				ErrorType: "500: ClientError",
-				Message:   "Error while parsing response JSON [#]: invalid character '#' looking for beginning of value",
+				Message:   "Error while parsing response JSON \\[#\\]: invalid character '#' looking for beginning of value",
 				Info:      "CreateErrorFromResponse",
 			},
 		}, {
@@ -108,17 +109,16 @@ func TestDeviceRegistrationApi_Delete(t *testing.T) {
 			c8yRespBody: `#`,
 			expectedErr: &generic.Error{
 				ErrorType: "500: ClientError",
-				Message:   "Error while parsing response JSON [#]: invalid character '#' looking for beginning of value",
+				Message:   "Error while parsing response JSON \\[#\\]: invalid character '#' looking for beginning of value",
 				Info:      "CreateErrorFromResponse",
 			},
 		}, {
 			name:        "post error",
 			deviceId:    "4711",
-			c8yRespCode: http.StatusInternalServerError,
 			expectedErr: &generic.Error{
-				ErrorType: "500: ClientError",
-				Message:   "Error while parsing response JSON []: unexpected end of JSON input",
-				Info:      "CreateErrorFromResponse",
+				ErrorType: "ClientError",
+				Message:   "Error while deleting a deviceRegistration with id 4711: Delete.*",
+				Info:      "DeleteDeviceRegistration",
 			},
 		},
 	}
@@ -151,9 +151,8 @@ func TestDeviceRegistrationApi_Delete(t *testing.T) {
 				t.Errorf("unexpected c8y request body. Expected none. Given: %q", reqBody)
 			}
 
-			setDynamicUrl(tt.expectedErr, testServer.URL)
-			if fmt.Sprint(err) != fmt.Sprint(tt.expectedErr) {
-				t.Fatalf("respond with unexpected error. \nExpected: %s\nGiven:    %s", tt.expectedErr, err)
+			if matched, _ := regexp.MatchString(fmt.Sprint(tt.expectedErr), fmt.Sprint(err)); !matched {
+				t.Fatalf("received an unexpected error: %s\nExpected: %s", err, tt.expectedErr)
 			}
 		})
 	}

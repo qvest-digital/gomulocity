@@ -4,12 +4,11 @@ import (
 	"fmt"
 	jsoncompare "github.com/orasik/gocomparejson"
 	"github.com/tarent/gomulocity/generic"
-	"strings"
-
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"regexp"
 	"testing"
 )
 
@@ -163,11 +162,10 @@ func TestDeviceCredentialsApi_Create(t *testing.T) {
 		}, {
 			name:        "post error",
 			deviceID:    "4711",
-			c8yRespCode: http.StatusInternalServerError,
 			expectedErr: &generic.Error{
-				ErrorType: "500: ClientError",
-				Message:   "Error while parsing response JSON []: unexpected end of JSON input",
-				Info:      "CreateErrorFromResponse",
+				ErrorType: "ClientError",
+				Message:   "Error while posting new device credentials: Post.*",
+				Info:      "CreateDeviceCredentials",
 			},
 			c8yExpectedRequestBody: `{"id": "4711"}`,
 		},
@@ -211,20 +209,13 @@ func TestDeviceCredentialsApi_Create(t *testing.T) {
 				t.Errorf("unexpected c8y request body. Expected %q. Given: %q", tt.c8yExpectedRequestBody, reqBody)
 			}
 
-			setDynamicUrl(tt.expectedErr, testServer.URL)
-			if fmt.Sprint(err) != fmt.Sprint(tt.expectedErr) {
-				t.Fatalf("respond with unexpected error. \nExpected: %s\nGiven:    %s", tt.expectedErr, err)
+			if matched, _ := regexp.MatchString(fmt.Sprint(tt.expectedErr), fmt.Sprint(err)); !matched {
+				t.Fatalf("received an unexpected error: %s\nExpected: %s", err, tt.expectedErr)
 			}
 
 			if !reflect.DeepEqual(deviceCredentials, tt.expectedDeviceCredentials) {
 				t.Errorf("respond with unexpected deviceCredentials. \nExpected: %#v. \nGiven: %#v", tt.expectedDeviceCredentials, deviceCredentials)
 			}
 		})
-	}
-}
-
-func setDynamicUrl(err *generic.Error, url string) {
-	if err != nil {
-		err.Message = strings.ReplaceAll(err.Message, "<dynamic-URL>", url)
 	}
 }
