@@ -5,10 +5,6 @@ import (
 	"github.com/tarent/gomulocity/generic"
 )
 
-type IdentityAPI struct{
-	client *generic.Client
-}
-
 type Identity struct {
 	self string
 	externalId string
@@ -29,6 +25,13 @@ type ExternalID struct {
 	managedObject deviceinformation.ManagedObject
 }
 
+type IdentityAPI interface{
+	GetIdentity()(Identity, *generic.Error)
+	GetExternalIDCollection() //TODO
+	GetExternalID(externalID ExternalID)(ExternalID, *generic.Error)
+	CreateExternalID(ID ExternalID)(ExternalID, *generic.Error)
+	DeleteExternalID(externalID ExternalID)(*generic.Error)
+}
 func NewIdentityAPI(client *generic.Client)IdentityAPI{
 	return IdentityAPI{client: client}
 }
