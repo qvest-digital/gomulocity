@@ -222,7 +222,7 @@ func parseManagedObjectReferenceResponse(body []byte) (*ManagedObjectReference, 
 			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 		}
 	} else {
-		return nil, generic.ClientError("Response body was empty", "GetManagedObjectReference")
+		return nil, generic.ClientError("Response body was empty", "ResponseParser")
 	}
 
 	return &result, nil
