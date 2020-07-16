@@ -96,7 +96,9 @@ var measurement = `{
 	},
 	"AirPressure":{"value":1011.2,"unit":"hPa"},
 	"Humidity":{"value":51,"unit":"%RH"},
-	"Temperature":{"value":23.45,"unit":"C"}
+	"Temperature":{"value":23.45,"unit":"C"},
+	"Custom1":"Hello world",
+	"Custom2": 1234
 }`
 
 var measurementCollectionTemplate = `{
