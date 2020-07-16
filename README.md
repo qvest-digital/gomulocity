@@ -1,4 +1,5 @@
 # gomulocity
+[![Go Report Card](https://goreportcard.com/badge/github.com/tarent/gomulocity)](https://goreportcard.com/report/github.com/tarent/gomulocity)
 Cumulocity (c8y) go SDK.
 
 # Usage
