@@ -1,17 +1,17 @@
 package inventory
 
 const ReferenceCollectionJson = `{
-    "next": "https://t200588189.cumulocity.com/inventory/managedObjects/104940/childAdditions?pageSize=5&currentPage=2",
+    "next": "https://t0815.cumulocity.com/inventory/managedObjects/104940/childAdditions?pageSize=5&currentPage=2",
     "references": [
         {
             "managedObject": {
                 "additionParents": {
                     "references": [],
-                    "self": "https://t200588189.cumulocity.com/inventory/managedObjects/235167/additionParents"
+                    "self": "https://t0815.cumulocity.com/inventory/managedObjects/235167/additionParents"
                 },
                 "assetParents": {
                     "references": [],
-                    "self": "https://t200588189.cumulocity.com/inventory/managedObjects/235167/assetParents"
+                    "self": "https://t0815.cumulocity.com/inventory/managedObjects/235167/assetParents"
                 },
                 "c8y_Dashboard": {
                     "children": {
@@ -57,30 +57,30 @@ const ReferenceCollectionJson = `{
                 "c8y_Dashboard!group!104940": {},
                 "childAdditions": {
                     "references": [],
-                    "self": "https://t200588189.cumulocity.com/inventory/managedObjects/235167/childAdditions"
+                    "self": "https://t0815.cumulocity.com/inventory/managedObjects/235167/childAdditions"
                 },
                 "childAssets": {
                     "references": [],
-                    "self": "https://t200588189.cumulocity.com/inventory/managedObjects/235167/childAssets"
+                    "self": "https://t0815.cumulocity.com/inventory/managedObjects/235167/childAssets"
                 },
                 "childDevices": {
                     "references": [],
-                    "self": "https://t200588189.cumulocity.com/inventory/managedObjects/235167/childDevices"
+                    "self": "https://t0815.cumulocity.com/inventory/managedObjects/235167/childDevices"
                 },
                 "creationTime": "2019-08-27T05:56:42.484Z",
                 "deviceParents": {
                     "references": [],
-                    "self": "https://t200588189.cumulocity.com/inventory/managedObjects/235167/deviceParents"
+                    "self": "https://t0815.cumulocity.com/inventory/managedObjects/235167/deviceParents"
                 },
                 "id": "235167",
                 "lastUpdated": "2020-03-02T15:34:51.747Z",
                 "owner": "l.buhl@tarent.de",
-                "self": "https://t200588189.cumulocity.com/inventory/managedObjects/235167"
+                "self": "https://t0815.cumulocity.com/inventory/managedObjects/235167"
             },
-            "self": "https://t200588189.cumulocity.com/inventory/managedObjects/104940/childAdditions/235167"
+            "self": "https://t0815.cumulocity.com/inventory/managedObjects/104940/childAdditions/235167"
         }
     ],
-    "self": "https://t200588189.cumulocity.com/inventory/managedObjects/104940/childAdditions?pageSize=5&currentPage=1",
+    "self": "https://t0815.cumulocity.com/inventory/managedObjects/104940/childAdditions?pageSize=5&currentPage=1",
     "statistics": {
         "currentPage": 1,
         "pageSize": 5
@@ -91,11 +91,11 @@ const ReferenceByID = `{
     "managedObject": {
         "additionParents": {
             "references": [],
-            "self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/additionParents"
+            "self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/additionParents"
         },
         "assetParents": {
             "references": [],
-            "self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/assetParents"
+            "self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/assetParents"
         },
         "c8y_DataPoint": {
             "61470130711723": {
@@ -135,63 +135,63 @@ const ReferenceByID = `{
                 {
                     "managedObject": {
                         "id": "347746",
-                        "self": "https://t200588189.cumulocity.com/inventory/managedObjects/347746"
+                        "self": "https://t0815.cumulocity.com/inventory/managedObjects/347746"
                     },
-                    "self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/childAdditions/347746"
+                    "self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/childAdditions/347746"
                 }
             ],
-            "self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/childAdditions"
+            "self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/childAdditions"
         },
         "childAssets": {
             "references": [],
-            "self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/childAssets"
+            "self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/childAssets"
         },
         "childDevices": {
             "references": [],
-            "self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/childDevices"
+            "self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/childDevices"
         },
         "creationTime": "2019-08-27T04:37:24.074Z",
         "deviceParents": {
             "references": [],
-            "self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/deviceParents"
+            "self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/deviceParents"
         },
         "id": "232704",
         "lastUpdated": "2019-09-03T13:11:11.720Z",
         "name": "flora1",
         "owner": "l.buhl@tarent.de",
-        "self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704"
+        "self": "https://t0815.cumulocity.com/inventory/managedObjects/232704"
     },
-    "self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/childAdditions/232704"
+    "self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/childAdditions/232704"
 }`
 
 const ManagedObjectByID = `{
 "additionParents": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/100/additionParents",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/100/additionParents",
 "references": []
 },
 "childDevices": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/100/childDevices",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/100/childDevices",
 "references": []
 },
 "childAssets": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/100/childAssets",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/100/childAssets",
 "references": []
 },
 "type": "c8y_Application_2835",
 "childAdditions": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/100/childAdditions",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/100/childAdditions",
 "references": []
 },
 "name": "device-simulator",
 "deviceParents": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/100/deviceParents",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/100/deviceParents",
 "references": []
 },
 "assetParents": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/100/assetParents",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/100/assetParents",
 "references": []
 },
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/100",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/100",
 "id": "100",
 "c8y_Status": {
 "lastUpdated": {
@@ -231,48 +231,48 @@ const ManagedObjectByID = `{
 var NewManagedObjectCollection_ResponseBody = func(next string) string {
 	return `{
 "next": "` + next + `",
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects?query=has(c8y_IsDevice)&pageSize=3&currentPage=1",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects?query=has(c8y_IsDevice)&pageSize=3&currentPage=1",
 "managedObjects": [
 {
 "additionParents": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/2323353/additionParents",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/2323353/additionParents",
 "references": []
 },
 "owner": "device_4D8AFED3",
 "childDevices": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/2323353/childDevices",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/2323353/childDevices",
 "references": []
 },
 "childAssets": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/2323353/childAssets",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/2323353/childAssets",
 "references": []
 },
 "creationTime": "2019-11-07T20:48:43.472Z",
 "type": "c8y_SensorPhone",
 "lastUpdated": "2020-04-24T09:36:05.112Z",
 "childAdditions": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/2323353/childAdditions",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/2323353/childAdditions",
 "references": [
 {
 "managedObject": {
 "name": "Creates alarm when measurements are missing",
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/5755502",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/5755502",
 "id": "5755502"
 },
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/2323353/childAdditions/5755502"
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/2323353/childAdditions/5755502"
 }
 ]
 },
 "name": "Ridcully",
 "assetParents": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/2323353/assetParents",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/2323353/assetParents",
 "references": []
 },
 "deviceParents": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/2323353/deviceParents",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/2323353/deviceParents",
 "references": []
 },
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/2323353",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/2323353",
 "id": "2323353",
 "c8y_Firmware": {
 "version": "13.2"
@@ -347,34 +347,34 @@ var NewManagedObjectCollection_ResponseBody = func(next string) string {
 },
 {
 "additionParents": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232397/additionParents",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232397/additionParents",
 "references": []
 },
 "owner": "l.buhl@tarent.de",
 "childDevices": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232397/childDevices",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232397/childDevices",
 "references": []
 },
 "childAssets": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232397/childAssets",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232397/childAssets",
 "references": []
 },
 "creationTime": "2019-08-27T04:37:28.768Z",
 "lastUpdated": "2019-09-03T13:11:11.695Z",
 "childAdditions": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232397/childAdditions",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232397/childAdditions",
 "references": []
 },
 "name": "flora2",
 "assetParents": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232397/assetParents",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232397/assetParents",
 "references": []
 },
 "deviceParents": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232397/deviceParents",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232397/deviceParents",
 "references": []
 },
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232397",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232397",
 "id": "232397",
 "c8y_IsDevice": {},
 "c8y_DataPoint": {
@@ -392,42 +392,42 @@ var NewManagedObjectCollection_ResponseBody = func(next string) string {
 },
 {
 "additionParents": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/additionParents",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/additionParents",
 "references": []
 },
 "owner": "l.buhl@tarent.de",
 "childDevices": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/childDevices",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/childDevices",
 "references": []
 },
 "childAssets": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/childAssets",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/childAssets",
 "references": []
 },
 "creationTime": "2019-08-27T04:37:24.074Z",
 "lastUpdated": "2019-09-03T13:11:11.720Z",
 "childAdditions": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/childAdditions",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/childAdditions",
 "references": [
 {
 "managedObject": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/347746",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/347746",
 "id": "347746"
 },
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/childAdditions/347746"
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/childAdditions/347746"
 }
 ]
 },
 "name": "flora1",
 "assetParents": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/assetParents",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/assetParents",
 "references": []
 },
 "deviceParents": {
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704/deviceParents",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232704/deviceParents",
 "references": []
 },
-"self": "https://t200588189.cumulocity.com/inventory/managedObjects/232704",
+"self": "https://t0815.cumulocity.com/inventory/managedObjects/232704",
 "id": "232704",
 "c8y_IsDevice": {},
 "c8y_DataPoint": {
@@ -475,12 +475,12 @@ var UpdatedManagedObject = func(name string) string {
 	return `{
     "id" : "104940",
     "name" : "` + name + `",
-    "self" : "https://t200588189.cumulocity.com/inventory/managedObjects/104940",
+    "self" : "https://t0815.cumulocity.com/inventory/managedObjects/104940",
     "type" :"c8y_DeviceGroup",
     "lastUpdated": "2019-08-23T15:10:00.653Z",
     "com_othercompany_StrongTypedClass" : {},
     "childDevices": {
-		"self":"https://t200588189.cumulocity.com/inventory/managedObjects/104940/childDevices",
+		"self":"https://t0815.cumulocity.com/inventory/managedObjects/104940/childDevices",
 		"references":[{}]
 	}
   }`

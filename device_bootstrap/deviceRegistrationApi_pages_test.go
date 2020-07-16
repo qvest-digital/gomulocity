@@ -19,7 +19,7 @@ var deviceRegistration = `{
 }`
 
 var deviceRegistrationCollectionTemplate = `{
-	"next": "https://t0818.cumulocity.com/devicecontrol/newDeviceRequests?pageSize=5&currentPage=2",
+	"next": "https://t0815.cumulocity.com/devicecontrol/newDeviceRequests?pageSize=5&currentPage=2",
 	"self": "https://t0815.cumulocity.com/devicecontrol/newDeviceRequests?pageSize=5&currentPage=1", 
 	"newDeviceRequests":[%s], 
 	"statistics": {
@@ -211,7 +211,7 @@ func TestDeviceRegistrationApi_PreviousPage_Error(t *testing.T) {
 func createCollection(next string, prev string) *DeviceRegistrationCollection {
 	return &DeviceRegistrationCollection{
 		Next:                next,
-		Self:                "https://t0818.cumulocity.com/devicecontrol/newDeviceRequests?pageSize=5&currentPage=2",
+		Self:                "https://t0815.cumulocity.com/devicecontrol/newDeviceRequests?pageSize=5&currentPage=2",
 		Prev:                prev,
 		DeviceRegistrations: []DeviceRegistration{},
 		Statistics:          nil,

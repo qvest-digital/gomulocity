@@ -206,7 +206,7 @@ func TestMeasurementApi_PreviousPage_Error(t *testing.T) {
 func createCollection(next string, prev string) *MeasurementCollection {
 	return &MeasurementCollection{
 		Next:       next,
-		Self:       "https://t0818.cumulocity.com/measurement/measurements?source=1111111&pageSize=5&currentPage=2",
+		Self:       "https://t0815.cumulocity.com/measurement/measurements?source=1111111&pageSize=5&currentPage=2",
 		Prev:       prev,
 		Measurements:     []Measurement{},
 		Statistics: nil,

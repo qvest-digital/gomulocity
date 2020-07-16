@@ -27,8 +27,8 @@ type (
 
 	ManagedObject struct {
 		Id           string    `json:"id"`
-		Type         string    `json:"type"`
-		Name         string    `json:"name"`
+		Type         string    `json:"type,omitempty"`
+		Name         string    `json:"name,omitempty"`
 		CreationTime time.Time `json:"creationTime"`
 		LastUpdated  time.Time `json:"lastUpdated"`
 		Self         string    `json:"self"`

@@ -48,7 +48,7 @@ var alarm = `{
         }`
 
 var alarmCollectionTemplate = `{
-    "next": "https://t0818.cumulocity.com/alarm/alarms?source=1111111&pageSize=5&currentPage=2",
+    "next": "https://t0815.cumulocity.com/alarm/alarms?source=1111111&pageSize=5&currentPage=2",
     "self": "https://t0815.cumulocity.com/alarm/alarms?source=1111111&pageSize=5&currentPage=1",
     "alarms": [%s],
     "statistics": {

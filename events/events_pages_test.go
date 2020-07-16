@@ -206,7 +206,7 @@ func TestEvents_PreviousPage_Error(t *testing.T) {
 func createCollection(next string, prev string) *EventCollection {
 	return &EventCollection{
 		Next:       next,
-		Self:       "https://t0818.cumulocity.com/event/events?source=1111111&pageSize=5&currentPage=2",
+		Self:       "https://t0815.cumulocity.com/event/events?source=1111111&pageSize=5&currentPage=2",
 		Prev:       prev,
 		Events:     []Event{},
 		Statistics: nil,
