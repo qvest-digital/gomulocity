@@ -119,3 +119,21 @@ func (i identityAPI) GetExternalID(externalIDtype string, externalID string) (Ex
 
 	return result, nil
 }
+
+func (i identityAPI) DeleteExternalID(externalIDType, externalID string) *generic.Error {
+	if len(externalIDType) == 0 || len(externalID) == 0 {
+		return generic.ClientError("Deleting deviceRegistrations without an id is not allowed", "DeleteDeviceRegistration")
+	}
+
+	path := fmt.Sprintf("%s/%s/%s/%s", i.basePath, "externalIds", url.QueryEscape(externalIDType), url.QueryEscape(externalID))
+	body, status, err := i.client.Delete(path, generic.EmptyHeader())
+	if err != nil {
+		return generic.ClientError(fmt.Sprintf("Error while deleting an ExternalID with id %s: %s", err.Error()), "Delete ExternalID")
+	}
+
+	if status != http.StatusNoContent {
+		return generic.CreateErrorFromResponse(body, status)
+	}
+
+	return nil
+}
