@@ -36,19 +36,7 @@ func TestMeasurementApi_GetForDevice_ExistingId(t *testing.T) {
 		t.Errorf("GetForDevice() measurement id = %v, want %v", measurement.Id, measurementId)
 	}
 
-	if len(collection.Measurements) > 0 {
-		for _, measurement := range collection.Measurements {
-			custom1, ok1 := measurement.Metrics["Custom1"].(string)
-			custom2, ok2 := measurement.Metrics["Custom2"].(interface{})
-
-			if !(ok1 && custom1 == "Hello world") {
-				t.Errorf("GetForDevice() custom1 = %v, want %v", custom1, "Hello world")
-			}
-			if !(ok2 && custom2.(float64) == 1234) {
-				t.Errorf("GetForDevice() custom2 = %v, want %v", custom2, 1234)
-			}
-		}
-	}
+	assertMetricsOfMeasurement(measurement.Metrics, t)
 }
 
 func TestMeasurementApi_GetForDevice_HandlesPageSize(t *testing.T) {

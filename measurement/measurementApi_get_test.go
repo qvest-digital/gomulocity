@@ -27,15 +27,7 @@ func TestMeasurementApi_Get_ExistingId(t *testing.T) {
 		t.Errorf("Get() measurement id = %v, want %v", measurement.Id, measurementId)
 	}
 
-	custom1, ok1 := measurement.Metrics["Custom1"].(string)
-	custom2, ok2 := measurement.Metrics["Custom2"].(interface{})
-
-	if !(ok1 && custom1 == "Hello world") {
-		t.Errorf("GetForDevice() custom1 = %v, want %v", custom1, "Hello world")
-	}
-	if !(ok2 && custom2.(float64) == 1234) {
-		t.Errorf("GetForDevice() custom2 = %v, want %v", custom2, 1234)
-	}
+	assertMetricsOfMeasurement(measurement.Metrics, t)
 }
 
 func TestMeasurementApi_Get_NotExistingId(t *testing.T) {

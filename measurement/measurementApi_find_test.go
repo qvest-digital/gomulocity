@@ -89,19 +89,12 @@ func TestMeasurementApi_FindWithFilter(t *testing.T) {
 				t.Errorf("Find() = %v, want %v", cUrl.RawQuery, tt.expectedQuery)
 			}
 
-			if len(measurementCollection.Measurements) > 0 {
-				for _, measurement := range measurementCollection.Measurements {
-					custom1, ok1 := measurement.Metrics["Custom1"].(string)
-					custom2, ok2 := measurement.Metrics["Custom2"].(interface{})
-
-					if !(ok1 && custom1 == "Hello world") {
-						t.Errorf("GetForDevice() custom1 = %v, want %v", custom1, "Hello world")
-					}
-					if !(ok2 && custom2.(float64) == 1234) {
-						t.Errorf("GetForDevice() custom2 = %v, want %v", custom2, 1234)
-					}
-				}
+			if len(measurementCollection.Measurements) != 1 {
+				t.Fatalf("Find() measurements count = %v, want %v", len(measurementCollection.Measurements), 1)
 			}
+
+			measurement := measurementCollection.Measurements[0]
+			assertMetricsOfMeasurement(measurement.Metrics, t)
 		})
 	}
 }
