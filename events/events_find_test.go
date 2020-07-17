@@ -222,17 +222,17 @@ func TestEvents_ReturnsCollection_CustomElements(t *testing.T) {
 	}
 
 	if len(event.AdditionalFields) != 2 {
-		t.Fatalf("GetForDevice() AdditionalFields length = %d, want %d", len(event.AdditionalFields), 2)
+		t.Fatalf("Find() AdditionalFields length = %d, want %d", len(event.AdditionalFields), 2)
 	}
 
 	custom1, ok1 := event.AdditionalFields["custom1"].(string)
 	custom2, ok2 := event.AdditionalFields["custom2"].([]interface{})
 
 	if !(ok1 && custom1 == "Hello") {
-		t.Errorf("GetForDevice() custom1 = %v, want %v", custom1, "Hello")
+		t.Errorf("Find() custom1 = %v, want %v", custom1, "Hello")
 	}
 	if !(ok2 && custom2[0] == "Foo" && custom2[1] == "Bar") {
-		t.Errorf("GetForDevice() custom2 = [%v, %v], want [%v, %v]", custom2[0], custom2[1], "Foo", "Bar")
+		t.Errorf("Find() custom2 = [%v, %v], want [%v, %v]", custom2[0], custom2[1], "Foo", "Bar")
 	}
 }
 

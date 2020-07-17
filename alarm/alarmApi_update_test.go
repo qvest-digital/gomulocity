@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 )
 
 // given: An update alarm
@@ -55,18 +54,15 @@ func TestAlarmApi_Update_Alarm_Success_SendsData(t *testing.T) {
 	}
 }
 
-func TestEvents_Update_Alarm_CustomFields(t *testing.T) {
+func TestAlarmApi_Update_Alarm_CustomFields(t *testing.T) {
 	// given: A test server
-	ts := createAlarmHttpServer(201)
+	ts := updateAlarmHttpServer(200)
 	defer ts.Close()
 
 	// and: the api as system under test
 	api := buildAlarmApi(ts.URL)
-	newAlarm = &NewAlarm{
-		Type:     "TestAlarm",
-		Time:     time.Time{},
+	alarmUpdate = &UpdateAlarm{
 		Text:     "This is my test alarm",
-		Source:   Source{Id: "4711"},
 		Severity: MAJOR,
 		Status:   ACTIVE,
 		AdditionalFields: map[string]interface{}{
@@ -75,7 +71,7 @@ func TestEvents_Update_Alarm_CustomFields(t *testing.T) {
 		},
 	}
 
-	_, err := api.Create(newAlarm)
+	_, err := api.Update(alarmId, alarmUpdate)
 
 	if err != nil {
 		t.Fatalf("UpdateAlarm() got an unexpected error: %s", err.Error())

@@ -88,7 +88,7 @@ func TestEvents_Update_Event_CustomFields(t *testing.T) {
 	custom1, _ := bodyMap["Custom1"].(float64)
 	custom2, _ := bodyMap["Custom2"].(string)
 	if custom1 != 4711 || custom2 != "Hello World" {
-		t.Errorf("CreateEvent() additional fields - \nevent = %v \nwant [Custom1, Custom2]", jErr)
+		t.Errorf("UpdateEvent() additional fields - \nevent = %v \nwant [Custom1, Custom2]", jErr)
 	}
 }
 
