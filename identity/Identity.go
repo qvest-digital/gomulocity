@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	IDENTITY_TYPE = "application/vnd.com.nsn.cumulocity.identityApi+json"
+	IDENTITY_TYPE               = "application/vnd.com.nsn.cumulocity.identityApi+json"
+	EXTERNAL_ID_COLLECTION_TYPE = "application/vnd.com.nsn.cumulocity.exteralIdCollection+json"
 )
 
 type Identity struct {
@@ -70,6 +71,27 @@ func (i identityAPI) GetIdentity(identity Identity) (Identity, *generic.Error) {
 	err = json.Unmarshal(body, &result)
 	if err != nil {
 		return Identity{}, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
+	}
+
+	return result, nil
+}
+
+func (i identityAPI) GetExternalIDCollection() (ExternalIDCollection, *generic.Error) {
+	body, status, err := i.client.Get(fmt.Sprintf("%s/%s", i.basePath, url.QueryEscape("identity")), generic.AcceptHeader(EXTERNAL_ID_COLLECTION_TYPE))
+
+	if err != nil {
+		return ExternalIDCollection{}, generic.ClientError(fmt.Sprintf("Error while getting the Identity Ressource: %s", err.Error()), "Get")
+	}
+	if status == http.StatusNotFound {
+		return ExternalIDCollection{}, nil
+	}
+	if status != http.StatusOK {
+		return ExternalIDCollection{}, generic.CreateErrorFromResponse(body, status)
+	}
+	result := ExternalIDCollection{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return ExternalIDCollection{}, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 	}
 
 	return result, nil
