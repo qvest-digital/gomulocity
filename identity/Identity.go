@@ -13,6 +13,7 @@ import (
 const (
 	IDENTITY_TYPE               = "application/vnd.com.nsn.cumulocity.identityApi+json"
 	EXTERNAL_ID_COLLECTION_TYPE = "application/vnd.com.nsn.cumulocity.exteralIdCollection+json"
+	EXTERNAL_ID_TYPE            = "application/vnd.com.nsn.cumulocity.externalId+json"
 )
 
 type Identity struct {
@@ -76,22 +77,23 @@ func (i identityAPI) GetIdentity(identity Identity) (Identity, *generic.Error) {
 	return result, nil
 }
 
-func (i identityAPI) GetExternalIDCollection() (ExternalIDCollection, *generic.Error) {
-	body, status, err := i.client.Get(fmt.Sprintf("%s/%s", i.basePath, url.QueryEscape("identity")), generic.AcceptHeader(EXTERNAL_ID_COLLECTION_TYPE))
-
+func (i identityAPI) CreateExternalID(externalId ExternalID) (ExternalID, *generic.Error) {
+	bytes, err := json.Marshal(externalId)
 	if err != nil {
-		return ExternalIDCollection{}, generic.ClientError(fmt.Sprintf("Error while getting the Identity Ressource: %s", err.Error()), "Get")
+		return ExternalID{}, generic.ClientError(fmt.Sprintf("Error while marshalling the event: %s", err.Error()), "CreateExternalID")
 	}
-	if status == http.StatusNotFound {
-		return ExternalIDCollection{}, nil
+
+	body, status, err := i.client.Post(i.basePath, bytes, generic.AcceptAndContentTypeHeader(EXTERNAL_ID_TYPE, EXTERNAL_ID_TYPE))
+	if err != nil {
+		return ExternalID{}, generic.ClientError(fmt.Sprintf("Error while posting a new event: %s", err.Error()), "CreateEvent")
 	}
-	if status != http.StatusOK {
-		return ExternalIDCollection{}, generic.CreateErrorFromResponse(body, status)
+	if status != http.StatusCreated {
+		return ExternalID{}, generic.CreateErrorFromResponse(body, status)
 	}
-	result := ExternalIDCollection{}
+	result := ExternalID{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return ExternalIDCollection{}, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
+		return ExternalID{}, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 	}
 
 	return result, nil
