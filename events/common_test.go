@@ -45,8 +45,9 @@ func updateEventHttpServer(status int) *httptest.Server {
 		body, _ := ioutil.ReadAll(r.Body)
 
 		var event UpdateEvent
-		_ = json.Unmarshal(body, &event)
+		_ = generic.ObjectFromJson(body, &event)
 		updateEventCapture = &event
+		bodyCapture = &body
 		requestCapture = r
 
 		w.WriteHeader(status)
@@ -61,8 +62,9 @@ func createEventHttpServer(status int) *httptest.Server {
 		body, _ := ioutil.ReadAll(r.Body)
 
 		var event CreateEvent
-		_ = json.Unmarshal(body, &event)
+		_ = generic.ObjectFromJson(body, &event)
 		createEventCapture = &event
+		bodyCapture = &body
 		requestCapture = r
 
 		w.WriteHeader(status)
@@ -72,6 +74,7 @@ func createEventHttpServer(status int) *httptest.Server {
 }
 
 var requestCapture *http.Request
+var bodyCapture *[]byte
 var createEventCapture *CreateEvent
 var updateEventCapture *UpdateEvent
 var updateUrlCapture string

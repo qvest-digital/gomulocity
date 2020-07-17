@@ -68,7 +68,7 @@ Returns created 'Alarm' on success, otherwise an error.
 See: https://cumulocity.com/guides/reference/alarms/#post-create-a-new-alarm
 */
 func (alarmApi *alarmApi) Create(newAlarm *NewAlarm) (*Alarm, *generic.Error) {
-	bytes, err := json.Marshal(newAlarm)
+	bytes, err := generic.JsonFromObject(newAlarm)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the alarm: %s", err.Error()), "CreateAlarm")
 	}
@@ -114,7 +114,7 @@ Updates the alarm with given Id.
 See: https://cumulocity.com/guides/reference/alarms/#update-an-alarm
 */
 func (alarmApi *alarmApi) Update(alarmId string, alarm *UpdateAlarm) (*Alarm, *generic.Error) {
-	bytes, err := json.Marshal(alarm)
+	bytes, err := generic.JsonFromObject(alarm)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the update alarm: %s", err.Error()), "UpdateAlarm")
 	}
@@ -133,14 +133,13 @@ func (alarmApi *alarmApi) Update(alarmId string, alarm *UpdateAlarm) (*Alarm, *g
 	return parseAlarmResponse(body)
 }
 
-
 /*
 Updates the status of many alarms at once searching by filter.
 
 See: https://cumulocity.com/guides/reference/alarms/#put-bulk-update-of-alarm-collection
 */
 func (alarmApi *alarmApi) BulkStatusUpdate(updateAlarmsFilter *UpdateAlarmsFilter, newStatus Status) *generic.Error {
-	alarmStatus := UpdateAlarm {Status: newStatus}
+	alarmStatus := UpdateAlarm{Status: newStatus}
 
 	bytes, err := json.Marshal(alarmStatus)
 	if err != nil {
@@ -172,7 +171,6 @@ func (alarmApi *alarmApi) BulkStatusUpdate(updateAlarmsFilter *UpdateAlarmsFilte
 
 	return nil
 }
-
 
 /*
 Deletes alarms by filter.
@@ -248,13 +246,12 @@ func (alarmApi *alarmApi) PreviousPage(c *AlarmCollection) (*AlarmCollection, *g
 	return alarmApi.getPage(c.Prev)
 }
 
-
 // -- internal
 
 func parseAlarmResponse(body []byte) (*Alarm, *generic.Error) {
 	var result Alarm
 	if len(body) > 0 {
-		err := json.Unmarshal(body, &result)
+		err := generic.ObjectFromJson(body, &result)
 		if err != nil {
 			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 		}
@@ -298,7 +295,7 @@ func (alarmApi *alarmApi) getCommon(path string) (*AlarmCollection, *generic.Err
 
 	var result AlarmCollection
 	if len(body) > 0 {
-		err = json.Unmarshal(body, &result)
+		err = generic.ObjectFromJson(body, &result)
 		if err != nil {
 			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "GetCollection")
 		}

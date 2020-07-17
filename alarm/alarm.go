@@ -39,14 +39,13 @@ Represents cumulocity's alarm structure for creation purposes.
 See: https://cumulocity.com/guides/reference/alarms/#post-create-a-new-alarm
 */
 type NewAlarm struct {
-	Type     string    `json:"type"`
-	Time     time.Time `json:"time"`
-	Text     string    `json:"text"`
-	Source   Source    `json:"source"`
-	Status   Status    `json:"status"`
-	Severity Severity  `json:"severity"`
-	// TODO: object - 0..n additional properties of the alarm.
-	//Other map[string]interface{}
+	Type             string                 `json:"type"`
+	Time             time.Time              `json:"time"`
+	Text             string                 `json:"text"`
+	Source           Source                 `json:"source"`
+	Status           Status                 `json:"status"`
+	Severity         Severity               `json:"severity"`
+	AdditionalFields map[string]interface{} `jsonc:"flat"`
 }
 
 /*
@@ -55,21 +54,21 @@ See: https://cumulocity.com/guides/reference/alarms/#alarm
 https://cumulocity.com/guides/reference/alarms/#post-create-a-new-alarm
 */
 type Alarm struct {
-	Id           string    `json:"id,omitempty"`
-	Self         string    `json:"self,omitempty"`
+	Id           string     `json:"id,omitempty"`
+	Self         string     `json:"self,omitempty"`
 	CreationTime *time.Time `json:"creationTime,omitempty"`
 
-	Type     string    `json:"type,omitempty"`
+	Type     string     `json:"type,omitempty"`
 	Time     *time.Time `json:"time,omitempty"`
-	Text     string    `json:"text,omitempty"`
-	Source   Source    `json:"source,omitempty"`
-	Status   Status    `json:"status,omitempty"`
-	Severity Severity  `json:"severity,omitempty"`
+	Text     string     `json:"text,omitempty"`
+	Source   Source     `json:"source,omitempty"`
+	Status   Status     `json:"status,omitempty"`
+	Severity Severity   `json:"severity,omitempty"`
 
-	Count               int       `json:"count,omitempty"`
+	Count               int        `json:"count,omitempty"`
 	FirstOccurrenceTime *time.Time `json:"firstOccurrenceTime,omitempty"`
 
-	// TODO: object - 0..n additional properties of the alarm.
+	AdditionalFields map[string]interface{} `jsonc:"flat"`
 }
 
 /*
@@ -77,10 +76,10 @@ Represents cumulocity's alarm structure for update purposes.
 See: https://cumulocity.com/guides/reference/alarms/#update-an-alarm
 */
 type UpdateAlarm struct {
-	Text     string   `json:"text,omitempty"`
-	Status   Status   `json:"status,omitempty"`
-	Severity Severity `json:"severity,omitempty"`
-	// TODO: object - 0..n additional properties of the alarm.
+	Text             string                 `json:"text,omitempty"`
+	Status           Status                 `json:"status,omitempty"`
+	Severity         Severity               `json:"severity,omitempty"`
+	AdditionalFields map[string]interface{} `jsonc:"flat"`
 }
 
 /*
@@ -89,7 +88,7 @@ See: https://cumulocity.com/guides/reference/alarms/#alarm-collection
 */
 type AlarmCollection struct {
 	Self       string                    `json:"self"`
-	Alarms     []Alarm                   `json:"alarms"`
+	Alarms     []Alarm                   `json:"alarms" jsonc:"collection"`
 	Statistics *generic.PagingStatistics `json:"statistics,omitempty"`
 	Prev       string                    `json:"prev,omitempty"`
 	Next       string                    `json:"next,omitempty"`

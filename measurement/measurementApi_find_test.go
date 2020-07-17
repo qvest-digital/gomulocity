@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	url "net/url"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -75,7 +75,10 @@ func TestMeasurementApi_FindWithFilter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			api.Find(&tt.query, 1)
+			measurementCollection, genericErr := api.Find(&tt.query, 1)
+			if genericErr != nil {
+				t.Error(genericErr)
+			}
 			cUrl, err := url.Parse(capturedUrl)
 
 			if err != nil {
@@ -85,6 +88,13 @@ func TestMeasurementApi_FindWithFilter(t *testing.T) {
 			if cUrl.RawQuery != tt.expectedQuery {
 				t.Errorf("Find() = %v, want %v", cUrl.RawQuery, tt.expectedQuery)
 			}
+
+			if len(measurementCollection.Measurements) != 1 {
+				t.Fatalf("Find() measurements count = %v, want %v", len(measurementCollection.Measurements), 1)
+			}
+
+			measurement := measurementCollection.Measurements[0]
+			assertMetricsOfMeasurement(measurement.Metrics, t)
 		})
 	}
 }
@@ -127,7 +137,7 @@ func TestMeasurementApi_Find_HandlesPageSize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			query := MeasurementQuery{
-				SourceId:   deviceId,
+				SourceId: deviceId,
 			}
 			_, err := api.Find(&query, tt.pageSize)
 

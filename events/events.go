@@ -1,7 +1,6 @@
 package events
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/tarent/gomulocity/generic"
 	"log"
@@ -113,7 +112,7 @@ func (e *events) DeleteEvent(eventId string) *generic.Error {
 }
 
 func (e *events) CreateEvent(event *CreateEvent) (*Event, *generic.Error) {
-	bytes, err := json.Marshal(event)
+	bytes, err := generic.JsonFromObject(event)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the event: %s", err.Error()), "CreateEvent")
 	}
@@ -130,7 +129,7 @@ func (e *events) CreateEvent(event *CreateEvent) (*Event, *generic.Error) {
 }
 
 func (e *events) UpdateEvent(eventId string, event *UpdateEvent) (*Event, *generic.Error) {
-	bytes, err := json.Marshal(event)
+	bytes, err := generic.JsonFromObject(event)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the update event: %s", err.Error()), "UpdateEvent")
 	}

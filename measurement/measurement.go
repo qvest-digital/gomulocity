@@ -9,7 +9,7 @@ import (
 )
 
 type MeasurementCollection struct {
-	Measurements []Measurement             `json:"measurements"`
+	Measurements []Measurement             `json:"measurements" jsonc:"collection"`
 	Self         string                    `json:"self,omitempty"`
 	Statistics   *generic.PagingStatistics `json:"statistics,omitempty"`
 	Prev         string                    `json:"prev,omitempty"`
@@ -17,7 +17,7 @@ type MeasurementCollection struct {
 }
 
 type NewMeasurements struct {
-	Measurements []NewMeasurement `json:"measurements"`
+	Measurements []NewMeasurement `json:"measurements" jsonc:"collection"`
 }
 
 type Source struct {
@@ -26,24 +26,19 @@ type Source struct {
 }
 
 type NewMeasurement struct {
-	Time            *time.Time  `json:"time"`
-	MeasurementType string      `json:"type"`
-	Source          Source      `json:"source"`
-	Temperature     Temperature `json:"Temperature,omitempty"`
+	Time            *time.Time             `json:"time"`
+	MeasurementType string                 `json:"type"`
+	Source          Source                 `json:"source"`
+	Metrics         map[string]interface{} `jsonc:"flat"`
 }
 
 type Measurement struct {
-	Id              string      `json:"id"`
-	Self            string      `json:"self"`
-	Time            *time.Time  `json:"time"`
-	MeasurementType string      `json:"type"`
-	Source          Source      `json:"source"`
-	Temperature     Temperature `json:"Temperature,omitempty"`
-}
-
-type Temperature struct {
-	Cellar      ValueFragment `json:"Cellar,omitempty"`
-	GroundFloor ValueFragment `json:"GroundFloor,omitempty"`
+	Id              string                 `json:"id"`
+	Self            string                 `json:"self"`
+	Time            *time.Time             `json:"time"`
+	MeasurementType string                 `json:"type"`
+	Source          Source                 `json:"source"`
+	Metrics         map[string]interface{} `jsonc:"flat"`
 }
 
 type ValueFragment struct {

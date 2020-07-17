@@ -26,6 +26,8 @@ func TestMeasurementApi_Get_ExistingId(t *testing.T) {
 	if measurement.Id != measurementId {
 		t.Errorf("Get() measurement id = %v, want %v", measurement.Id, measurementId)
 	}
+
+	assertMetricsOfMeasurement(measurement.Metrics, t)
 }
 
 func TestMeasurementApi_Get_NotExistingId(t *testing.T) {

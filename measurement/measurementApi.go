@@ -1,7 +1,6 @@
 package measurement
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/tarent/gomulocity/generic"
 	"log"
@@ -71,7 +70,7 @@ Creates a measurement for an existing device.
 Returns created 'Measurement' on success, otherwise an error.
 */
 func (measurementApi *measurementApi) Create(measurement *NewMeasurement) (*Measurement, *generic.Error) {
-	bytes, err := json.Marshal(measurement)
+	bytes, err := generic.JsonFromObject(measurement)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marhalling the measurement: %s", err.Error()), "CreateMeasurement")
 	}
@@ -94,7 +93,7 @@ Creates many measurements at once for an existing device.
 Returns a 'Measurement' collection on success, otherwise an error.
 */
 func (measurementApi *measurementApi) CreateMany(measurements *NewMeasurements) (*MeasurementCollection, *generic.Error) {
-	bytes, err := json.Marshal(measurements)
+	bytes, err := generic.JsonFromObject(measurements)
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marhalling the measurements: %s", err.Error()), "CreateManyMeasurement")
 	}
@@ -142,7 +141,7 @@ Deletes measurement by id.
 */
 func (measurementApi *measurementApi) Delete(measurementId string) *generic.Error {
 	if len(measurementId) == 0 {
-		return generic.ClientError("Deleting measurement without an id will lead into deletion of all measurements " +
+		return generic.ClientError("Deleting measurement without an id will lead into deletion of all measurements "+
 			"which is not allowed by this function. Therefore use `DeleteAll()` instead.", "DeleteMeasurement")
 	}
 
@@ -203,7 +202,6 @@ func (measurementApi *measurementApi) DeleteAll() *generic.Error {
 	return nil
 }
 
-
 func (measurementApi *measurementApi) GetForDevice(sourceId string, pageSize int) (*MeasurementCollection, *generic.Error) {
 	return measurementApi.Find(&MeasurementQuery{SourceId: sourceId}, pageSize)
 }
@@ -230,8 +228,6 @@ func (measurementApi *measurementApi) NextPage(c *MeasurementCollection) (*Measu
 func (measurementApi *measurementApi) PreviousPage(c *MeasurementCollection) (*MeasurementCollection, *generic.Error) {
 	return measurementApi.getPage(c.Prev)
 }
-
-
 
 // -- internal
 
@@ -275,7 +271,7 @@ func (measurementApi *measurementApi) getCommon(path string) (*MeasurementCollec
 func parseMeasurementResponse(body []byte) (*Measurement, *generic.Error) {
 	var result Measurement
 	if len(body) > 0 {
-		err := json.Unmarshal(body, &result)
+		err := generic.ObjectFromJson(body, &result)
 		if err != nil {
 			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 		}
@@ -289,7 +285,7 @@ func parseMeasurementResponse(body []byte) (*Measurement, *generic.Error) {
 func parseMeasurementCollectionResponse(body []byte) (*MeasurementCollection, *generic.Error) {
 	var result MeasurementCollection
 	if len(body) > 0 {
-		err := json.Unmarshal(body, &result)
+		err := generic.ObjectFromJson(body, &result)
 		if err != nil {
 			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "CollectionResponseParser")
 		}

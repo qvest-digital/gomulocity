@@ -7,26 +7,26 @@ import (
 	"reflect"
 )
 
-func JsonFromObject(o interface{}) (string, error) {
+func JsonFromObject(o interface{}) ([]byte, error) {
 	// is it a pointer of struct?
 	structValue, ok := pointerOfStruct(&o)
 	if ok == false {
-		return "", errors.New("input is not a pointer of struct")
+		return nil, errors.New("input is not a pointer of struct")
 	}
 
 	// Convert the struct to a map
 	mapValue, err := mapFromStruct(structValue)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Marshal the map to a json string
 	j, err := json.Marshal(mapValue)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return string(j), nil
+	return j, nil
 }
 
 /*

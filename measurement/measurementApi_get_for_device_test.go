@@ -35,6 +35,8 @@ func TestMeasurementApi_GetForDevice_ExistingId(t *testing.T) {
 	if measurement.Id != measurementId {
 		t.Errorf("GetForDevice() measurement id = %v, want %v", measurement.Id, measurementId)
 	}
+
+	assertMetricsOfMeasurement(measurement.Metrics, t)
 }
 
 func TestMeasurementApi_GetForDevice_HandlesPageSize(t *testing.T) {

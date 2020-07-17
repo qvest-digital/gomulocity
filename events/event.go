@@ -12,14 +12,16 @@ type Source struct {
 
 // application/vnd.com.nsn.cumulocity.event+json
 type CreateEvent struct {
-	Type   string    `json:"type"`
-	Time   time.Time `json:"time"`
-	Text   string    `json:"text"`
-	Source Source    `json:"source"`
+	Type             string                 `json:"type"`
+	Time             time.Time              `json:"time"`
+	Text             string                 `json:"text"`
+	Source           Source                 `json:"source"`
+	AdditionalFields map[string]interface{} `jsonc:"flat"`
 }
 
 type UpdateEvent struct {
-	Text string `json:"text"`
+	Text             string                 `json:"text"`
+	AdditionalFields map[string]interface{} `jsonc:"flat"`
 }
 
 // ---- Event
