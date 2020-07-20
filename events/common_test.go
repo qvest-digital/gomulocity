@@ -85,11 +85,11 @@ var event = `{
 	"creationTime": "2020-01-01T01:00:10.000Z",
 	"source": {
 		"name": "test-device",
-		"self": "https://t0818.cumulocity.com/inventory/managedObjects/1111111",
+		"self": "https://t0815.cumulocity.com/inventory/managedObjects/1111111",
 		"id": "1111111"
 	},
 	"type": "threshold",
-	"self": "https://t0818.cumulocity.com/event/events/2222222",
+	"self": "https://t0815.cumulocity.com/event/events/2222222",
 	"time": "2020-01-01T01:00:00.000Z",
 	"text": "over 21°C",
 	"id": "2222222",
@@ -99,7 +99,7 @@ var event = `{
 	]
 }`
 var eventCollectionTemplate = `{
-    "next": "https://t0818.cumulocity.com/event/events?source=1111111&pageSize=5&currentPage=2",
+    "next": "https://t0815.cumulocity.com/event/events?source=1111111&pageSize=5&currentPage=2",
     "self": "https://t0815.cumulocity.com/event/events?source=1111111&pageSize=5&currentPage=1",
     "events": [%s],
     "statistics": {

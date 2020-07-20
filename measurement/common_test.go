@@ -100,7 +100,7 @@ var measurement = `{
 }`
 
 var measurementCollectionTemplate = `{
-    "next": "https://t0818.cumulocity.com/measurement/measurements?source=1111111&pageSize=5&currentPage=2",
+    "next": "https://t0815.cumulocity.com/measurement/measurements?source=1111111&pageSize=5&currentPage=2",
     "self": "https://t0815.cumulocity.com/measurement/measurements?source=1111111&pageSize=5&currentPage=1",
     "measurements": [%s],
     "statistics": {

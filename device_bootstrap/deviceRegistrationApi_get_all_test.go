@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -27,7 +28,7 @@ func TestDeviceRegistrationApi_CommonPropertiesOnGetAll(t *testing.T) {
 		reqBasicAuthUsername, reqBasicAuthPassword, _ = req.BasicAuth()
 		reqAccept = req.Header.Get("Accept")
 		reqContentType = req.Header.Get("Content-Type")
-		res.WriteHeader(http.StatusCreated)
+		res.WriteHeader(http.StatusOK)
 		_, err = res.Write([]byte(`{}`))
 		if err != nil {
 			t.Fatalf("failed to write resp body: %s", err)
@@ -124,7 +125,7 @@ func TestDeviceRegistrationApi_GetAll(t *testing.T) {
 			c8yRespBody: `#`,
 			expectedErr: &generic.Error{
 				ErrorType: "500: ClientError",
-				Message:   "Error while parsing response JSON [#]: invalid character '#' looking for beginning of value",
+				Message:   "Error while parsing response JSON \\[#\\]: invalid character '#' looking for beginning of value",
 				Info:      "CreateErrorFromResponse",
 			},
 		}, {
@@ -146,11 +147,10 @@ func TestDeviceRegistrationApi_GetAll(t *testing.T) {
 			},
 		}, {
 			name:        "post error",
-			c8yRespCode: http.StatusInternalServerError,
 			expectedErr: &generic.Error{
-				ErrorType: "500: ClientError",
-				Message:   "Error while parsing response JSON []: unexpected end of JSON input",
-				Info:      "CreateErrorFromResponse",
+				ErrorType: "ClientError",
+				Message:   "Error while getting deviceRegistrations: Get.*",
+				Info:      "GetDeviceRegistrationCollection",
 			},
 		},
 	}
@@ -176,9 +176,8 @@ func TestDeviceRegistrationApi_GetAll(t *testing.T) {
 			deviceRegistrationApi := buildDeviceRegistrationApi(testServer)
 			deviceRegistration, err := deviceRegistrationApi.GetAll(11)
 
-			setDynamicUrl(tt.expectedErr, testServer.URL)
-			if fmt.Sprint(err) != fmt.Sprint(tt.expectedErr) {
-				t.Fatalf("respond with unexpected error. \nExpected: %s\nGiven:    %s", tt.expectedErr, err)
+			if matched, _ := regexp.MatchString(fmt.Sprint(tt.expectedErr), fmt.Sprint(err)); !matched {
+				t.Fatalf("received an unexpected error: %s\nExpected: %s", err, tt.expectedErr)
 			}
 
 			if !reflect.DeepEqual(deviceRegistration, tt.expectedDeviceRegistrations) {

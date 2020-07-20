@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"regexp"
 	"testing"
 )
 
@@ -115,7 +116,7 @@ func TestDeviceRegistrationApi_Create(t *testing.T) {
 			c8yRespBody: `#`,
 			expectedErr: &generic.Error{
 				ErrorType: "500: ClientError",
-				Message:   "Error while parsing response JSON [#]: invalid character '#' looking for beginning of value",
+				Message:   "Error while parsing response JSON \\[#\\]: invalid character '#' looking for beginning of value",
 				Info:      "CreateErrorFromResponse",
 			},
 			c8yExpectedRequestBody: `{"id": "4711"}`,
@@ -155,15 +156,14 @@ func TestDeviceRegistrationApi_Create(t *testing.T) {
 			},
 			c8yExpectedRequestBody: `{"id": "4711"}`,
 		}, {
-			name:        "post error",
+			name:        "error without status code on POST",
 			deviceId:    "4711",
-			c8yRespCode: http.StatusInternalServerError,
-			expectedErr: &generic.Error{
-				ErrorType: "500: ClientError",
-				Message:   "Error while parsing response JSON []: unexpected end of JSON input",
-				Info:      "CreateErrorFromResponse",
-			},
 			c8yExpectedRequestBody: `{"id": "4711"}`,
+			expectedErr: &generic.Error{
+				ErrorType: "ClientError",
+				Message:   "Error while posting a new deviceRegistration: Post.*",
+				Info:      "CreateDeviceRegistration",
+			},
 		},
 	}
 
@@ -195,9 +195,8 @@ func TestDeviceRegistrationApi_Create(t *testing.T) {
 				t.Errorf("unexpected c8y request body. Expected %q. Given: %q", tt.c8yExpectedRequestBody, reqBody)
 			}
 
-			setDynamicUrl(tt.expectedErr, testServer.URL)
-			if fmt.Sprint(err) != fmt.Sprint(tt.expectedErr) {
-				t.Fatalf("respond with unexpected error. \nExpected: %s\nGiven:    %s", tt.expectedErr, err)
+			if matched, _ := regexp.MatchString(fmt.Sprint(tt.expectedErr), fmt.Sprint(err)); !matched {
+				t.Fatalf("received an unexpected error: %s\nExpected: %s", err, tt.expectedErr)
 			}
 
 			if !reflect.DeepEqual(deviceRegistration, tt.expectedDeviceRegistration) {
