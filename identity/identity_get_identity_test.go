@@ -20,7 +20,7 @@ func TestEvents_Get_Existing_Identity(t *testing.T) {
 		t.Fatalf("GetIdentity() returns nil.")
 	}
 
-	if Identity.self == "" {
+	if Identity.Self == "" {
 		t.Fatalf("GetIdentity() returns empty Identity")
 	}
 }

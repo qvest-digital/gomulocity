@@ -17,9 +17,9 @@ const (
 )
 
 type Identity struct {
-	self                 string `json:"self"`
-	externalId           string `json:"externalId"`
-	externalIdOfGlobalId string `json:"externalIdOfGlobalId"`
+	Self                 string `json:"self"`
+	ExternalId           string `json:"externalId"`
+	ExternalIdOfGlobalId string `json:"externalIdOfGlobalId"`
 }
 
 type ExternalIDCollection struct {
