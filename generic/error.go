@@ -35,12 +35,15 @@ func ClientError(message string, info string) *Error {
 
 func CreateErrorFromResponse(responseBody []byte, status int) *Error {
 	var error Error
-	err := json.Unmarshal(responseBody, &error)
-	if err != nil {
-		error = *ClientError(fmt.Sprintf("Error while parsing response JSON [%s]: %s", responseBody, err.Error()), "CreateErrorFromResponse")
+	if len(responseBody) > 0 {
+		err := json.Unmarshal(responseBody, &error)
+		if err != nil {
+			error = *ClientError(fmt.Sprintf("Error while parsing response JSON [%s]: %s", responseBody, err.Error()), "CreateErrorFromResponse")
+		}
+		error.ErrorType = fmt.Sprintf("%d: %s", status, error.ErrorType)
+	} else {
+		return ClientError("given response body is empty", "CreateErrorFromResponse")
 	}
-
-	error.ErrorType = fmt.Sprintf("%d: %s", status, error.ErrorType)
 
 	return &error
 }
