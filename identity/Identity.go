@@ -30,10 +30,10 @@ type ExternalIDCollection struct {
 }
 
 type ExternalID struct {
-	self          string
-	externalId    string
-	typ           string
-	managedObject deviceinformation.ManagedObject
+	Self          string
+	ExternalId    string
+	Type          string
+	ManagedObject deviceinformation.ManagedObject
 }
 
 type IdentityAPI interface {
@@ -71,10 +71,10 @@ func (i identityAPI) GetIdentity() (*Identity, *generic.Error) {
 	if len(body) > 0 {
 		err := generic.ObjectFromJson(body, &result)
 		if err != nil {
-			generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
+			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 		}
 	} else {
-		generic.ClientError("Response body was empty", "GetEvent")
+		return nil, generic.ClientError("Response body was empty", "GetEvent")
 	}
 
 	return &result, nil

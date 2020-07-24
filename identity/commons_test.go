@@ -1,11 +1,29 @@
 package identity
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/tarent/gomulocity/deviceinformation"
 	"github.com/tarent/gomulocity/generic"
 )
+
+var identity = `{
+	"self": "https://t0818.cumulocity.com/identity",
+	"externalId": "SomeExternalUrl/urltype/externalId",
+	"externalIdsOfGlobalId": "someGlobalIdCollectionUrl/GlobalId/externalIds"
+	}`
+
+var requestCapture *http.Request
+var createExternalIdCapture *ExternalID
+var responseExternalId = ExternalID{
+	Self:          "someSelfAssignedURL",
+	ExternalId:    "someId",
+	Type:          "someType",
+	ManagedObject: deviceinformation.ManagedObject{},
+}
 
 func buildIdentityAPI(url string) IdentityAPI {
 	httpClient := http.DefaultClient
@@ -25,8 +43,18 @@ func buildHttpServer(status int, body string) *httptest.Server {
 	}))
 }
 
-var identity = `{
-	"self": "https://t0818.cumulocity.com/identity",
-	"externalId": "SomeExternalUrl/urltype/externalId",
-	"externalIdsOfGlobalId": "someGlobalIdCollectionUrl/GlobalId/externalIds"
-	}`
+func buildCreateIdHttpServer(status int) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+		body, _ := ioutil.ReadAll(r.Body)
+
+		var createExternalId ExternalID
+		_ = json.Unmarshal(body, &createExternalId)
+		createExternalIdCapture = &createExternalId
+		requestCapture = r
+
+		w.WriteHeader(status)
+		response, _ := json.Marshal(responseExternalId)
+		_, _ = w.Write(response)
+	}))
+}
