@@ -20,7 +20,9 @@ var externalID = `{
 	"self": "selfUrl",
 	"externalId": "someExternalId",
 	"type": "someType",
-	"managedObject":{},
+	"managedObject":{
+
+	}
 	}`
 
 var requestCapture *http.Request

@@ -12,7 +12,7 @@ func TestIdentity_Get_Existing_ExternalId(t *testing.T) {
 	// and: the api as system under test
 	api := buildIdentityAPI(ts.URL)
 
-	receivedID, err := api.GetExternalID("someExternalId", "someType")
+	receivedID, err := api.GetExternalID("someType", "someId")
 
 	if err != nil {
 		t.Fatalf("GetExternalId() got an unexpected error: %s", err.Error())
@@ -34,7 +34,7 @@ func TestIdentity_Get_Nonexisting_ExternalId(t *testing.T) {
 
 	// and: the api as system under test
 	api := buildIdentityAPI(ts.URL)
-	receivedId, err := api.GetExternalID("nonexistentId", "someType")
+	receivedId, err := api.GetExternalID("someType", "someNonextistentId")
 
 	if err == nil {
 		t.Fatalf("GetExternalId() returned no Error")
