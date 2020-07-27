@@ -16,6 +16,13 @@ var identity = `{
 	"externalIdsOfGlobalId": "someGlobalIdCollectionUrl/GlobalId/externalIds"
 	}`
 
+var externalID = `{
+	"self": "selfUrl",
+	"externalId": "someExternalId",
+	"type": "someType",
+	"managedObject":{},
+	}`
+
 var requestCapture *http.Request
 var createExternalIdCapture *ExternalID
 var responseExternalId = ExternalID{

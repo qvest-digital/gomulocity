@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestEvents_Get_Existing_Identity(t *testing.T) {
+func TestIdentity_Get_Existing_Identity(t *testing.T) {
 	// given: A test server
 	ts := buildHttpServer(200, identity)
 	defer ts.Close()
@@ -27,7 +27,7 @@ func TestEvents_Get_Existing_Identity(t *testing.T) {
 	}
 }
 
-func TestEvents_Get_Nonexisting_Identity(t *testing.T) {
+func TestIdentity_Get_Nonexisting_Identity(t *testing.T) {
 	// given: A test server
 	ts := buildHttpServer(200, ``)
 	defer ts.Close()

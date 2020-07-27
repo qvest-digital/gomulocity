@@ -23,10 +23,10 @@ type Identity struct {
 }
 
 type ExternalIDCollection struct {
-	self        string
-	externalIds []ExternalID
-	prev        string
-	next        string
+	Self        string
+	ExternalIds []ExternalID
+	Prev        string
+	Next        string
 }
 
 type ExternalID struct {
@@ -38,7 +38,7 @@ type ExternalID struct {
 
 type IdentityAPI interface {
 	GetIdentity() (*Identity, *generic.Error)
-	GetExternalID(externalIDType, externalID string) (ExternalID, *generic.Error)
+	GetExternalID(externalIDType, externalID string) (*ExternalID, *generic.Error)
 	CreateExternalID(ID ExternalID) (ExternalID, *generic.Error)
 	DeleteExternalID(externalIDType, externalID string) *generic.Error
 }
@@ -102,25 +102,25 @@ func (i identityAPI) CreateExternalID(externalId ExternalID) (ExternalID, *gener
 	return result, nil
 }
 
-func (i identityAPI) GetExternalID(externalIDtype string, externalID string) (ExternalID, *generic.Error) {
+func (i identityAPI) GetExternalID(externalIDtype string, externalID string) (*ExternalID, *generic.Error) {
 	body, status, err := i.client.Get(fmt.Sprintf("%s/%s/%s/%s", i.basePath, url.QueryEscape("extrenalIds"), url.QueryEscape(externalIDtype), url.QueryEscape(externalID)), generic.AcceptHeader(IDENTITY_TYPE))
 
 	if err != nil {
-		return ExternalID{}, generic.ClientError(fmt.Sprintf("Error while getting an externalID: %s", err.Error()), "get")
+		return nil, generic.ClientError(fmt.Sprintf("Error while getting an externalID: %s", err.Error()), "get")
 	}
 	if status == http.StatusNotFound {
-		return ExternalID{}, nil
+		return nil, nil
 	}
 	if status != http.StatusOK {
-		return ExternalID{}, generic.CreateErrorFromResponse(body, status)
+		return nil, generic.CreateErrorFromResponse(body, status)
 	}
 	result := ExternalID{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return ExternalID{}, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
+		return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 	}
 
-	return result, nil
+	return &result, nil
 }
 
 func (i identityAPI) DeleteExternalID(externalIDType, externalID string) *generic.Error {
