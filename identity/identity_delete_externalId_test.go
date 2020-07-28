@@ -45,7 +45,7 @@ func TestIdentity_Delete_ExternalId_NotFound(t *testing.T) {
 	err := api.DeleteExternalID("someType", "nonexisting")
 
 	if err == nil {
-		t.Errorf("DeleteEvent() expected error on 404 - not found")
+		t.Errorf("DeleteExternalID() expected error on 404 - not found")
 		return
 	}
 }
