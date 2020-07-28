@@ -1,4 +1,4 @@
-![Gomulocity](https://github.com/tarent/gomulocity/docs/gomulocity.jpg?raw=true)
+![Gomulocity](https://github.com/tarent/gomulocity/blob/master/docs/gomulocity.jpg?raw=true)
 
 # Gomulocity REST SDK #
 
