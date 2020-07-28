@@ -21,7 +21,7 @@ func TestDeviceControl_CreateBulkOperation(t *testing.T) {
 		CreationRamp: 15,
 		OperationPrototype: map[string]interface{}{
 			"DeliveryType": "SMS",
-			"C8y_Command": struct {
+			"Command": struct {
 				Text string
 			}{
 				Text: "test",
@@ -46,7 +46,41 @@ func TestDeviceControl_CreateBulkOperation(t *testing.T) {
 		t.Errorf("Received an erroneous creationRamp. Expected: %v, actual: %v", newBulkOperation.CreationRamp, bulkOperation.CreationRamp)
 	}
 
-	_, _ = bulkOperation.OperationPrototype["operationPrototype"]
+	operationPrototype, ok := bulkOperation.OperationPrototype["operationPrototype"].(map[string]interface{})
+	if !ok {
+		t.Error("Error while casting OperationPrototype to map[string]interface")
+	}
+	var deliveryType string
+	var description string
+	var commandText string
+
+	for key, value := range operationPrototype {
+		switch key {
+		case "deliveryType":
+			deliveryType = value.(string)
+		case "description":
+			description = value.(string)
+		default:
+			commandMap, ok := value.(map[string]interface{})
+			if !ok {
+				t.Error("could not cast interface into map[string]interface")
+			}
+			commandText, ok = commandMap["text"].(string)
+			if !ok {
+				t.Error("Error while casting commandMap value to string")
+			}
+		}
+	}
+
+	if deliveryType != "SMS" {
+		t.Errorf("Received an unexpected deliveryType. Expected: %v, actual: %v", "SMS", deliveryType)
+	}
+	if description != "Execute shell command" {
+		t.Errorf("Received an unexpected description. Expected: %v, actual: %v", "Execute shell command", description)
+	}
+	if commandText != "test" {
+		t.Errorf("Received an unexpected command-text. Expected: %v, actual: %v", "test", commandText)
+	}
 }
 
 func TestDeviceControl_CreateBulkOperation_invalid_status(t *testing.T) {
@@ -80,4 +114,3 @@ func TestDeviceControl_CreateBulkOperation_No_Pointer_Operation(t *testing.T) {
 		}
 	}
 }
-

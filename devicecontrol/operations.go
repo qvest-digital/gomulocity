@@ -38,25 +38,8 @@ type Operation struct {
 			Status string    `json:"status"`
 		} `json:"log"`
 	} `json:"delivery"`
-	AdditionalFields map[string]interface{} `jsonc:"flat"` //c8y_Command/c8y_Restart, ...
+	AdditionalFields map[string]interface{} `jsonc:"flat"`
 }
-
-/*
-"delivery": {
-        "time": "2020-05-14T10:18:33.880Z",
-        "status": "DELIVERED",
-        "log": [
-            {
-                "time": "2020-05-14T10:18:33.649Z",
-                "status": "PENDING"
-            },
-            {
-                "time": "2020-05-14T10:18:33.679Z",
-                "status": "SEND"
-            }
-        ]
-    },
-*/
 
 type NewOperation struct {
 	DeviceID         string                 `json:"deviceId"`
@@ -69,9 +52,9 @@ type UpdateOperation struct {
 }
 
 type NewBulkOperation struct {
-	StartDate          time.Time              `json:"startDate"`
-	CreationRamp       int                    `json:"creationRamp"`
-	OperationPrototype map[string]interface{} `jsonc:"flat"`
+	StartDate          time.Time `json:"startDate"`
+	CreationRamp       int       `json:"creationRamp"`
+	OperationPrototype map[string]interface{}
 }
 
 type BulkOperationCollection struct {
