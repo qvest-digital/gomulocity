@@ -74,7 +74,7 @@ func (i identityAPI) GetIdentity() (*Identity, *generic.Error) {
 			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 		}
 	} else {
-		return nil, generic.ClientError("Response body was empty", "GetEvent")
+		return nil, generic.ClientError("Response body was empty", "GetIdentity")
 	}
 
 	return &result, nil
@@ -83,12 +83,12 @@ func (i identityAPI) GetIdentity() (*Identity, *generic.Error) {
 func (i identityAPI) CreateExternalID(externalId ExternalID) (ExternalID, *generic.Error) {
 	bytes, err := json.Marshal(externalId)
 	if err != nil {
-		return ExternalID{}, generic.ClientError(fmt.Sprintf("Error while marshalling the event: %s", err.Error()), "CreateExternalID")
+		return ExternalID{}, generic.ClientError(fmt.Sprintf("Error while marshalling the externalId: %s", err.Error()), "CreateExternalID")
 	}
 
 	body, status, err := i.client.Post(i.basePath, bytes, generic.AcceptAndContentTypeHeader(EXTERNAL_ID_TYPE, EXTERNAL_ID_TYPE))
 	if err != nil {
-		return ExternalID{}, generic.ClientError(fmt.Sprintf("Error while posting a new event: %s", err.Error()), "CreateEvent")
+		return ExternalID{}, generic.ClientError(fmt.Sprintf("Error while posting a new externalId: %s", err.Error()), "CreateExternalID")
 	}
 	if status != http.StatusCreated {
 		return ExternalID{}, generic.CreateErrorFromResponse(body, status)
