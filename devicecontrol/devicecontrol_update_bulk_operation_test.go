@@ -94,4 +94,3 @@ func TestDeviceControl_UpdateBulkOperation_invalid_response(t *testing.T) {
 		}
 	}
 }
-
