@@ -22,7 +22,7 @@ func ObjectFromJson(j []byte, targetStruct interface{}) error {
 	// First - let json unmarshal to the target struct as far as it gets
 	err := json.Unmarshal(j, targetStruct)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Error while unmarshaling json: %v", err))
+		return errors.New(fmt.Sprintf("Error while unmarshalling json: %v", err))
 	}
 
 	// Second - Unmarshal json to a generic map: string -> interface
