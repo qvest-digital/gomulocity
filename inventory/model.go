@@ -1,13 +1,14 @@
 package inventory
 
 import (
+	"fmt"
 	"github.com/tarent/gomulocity/generic"
 	"time"
 )
 
 type NewManagedObject struct {
-	Type         string    `json:"type,omitempty"`
-	Name         string    `json:"name,omitempty"`
+	Type         string     `json:"type,omitempty"`
+	Name         string     `json:"name,omitempty"`
 	CreationTime *time.Time `json:"creationTime,omitempty"`
 }
 
@@ -19,7 +20,7 @@ type ManagedObjectUpdate struct {
 type (
 	ManagedObjectCollection struct {
 		Self           string                    `json:"self"`
-		ManagedObjects []ManagedObject           `json:"managedObjects"`
+		ManagedObjects []ManagedObject           `json:"managedObjects" jsonc:"collection"`
 		Statistics     *generic.PagingStatistics `json:"statistics,omitempty"`
 		Prev           string                    `json:"prev,omitempty"`
 		Next           string                    `json:"next,omitempty"`
@@ -42,17 +43,11 @@ type (
 		ChildAssets    ChildAssets    `json:"childAssets,omitempty"`
 		ChildDevices   ChildDevices   `json:"childDevices,omitempty"`
 
-		C8YActiveAlarmsStatus   *C8YActiveAlarmsStatus   `json:"c8y_ActiveAlarmsStatus,omitempty"`
-		C8YAvailability         *C8YAvailability         `json:"c8y_Availability,omitempty"`
-		C8YConnection           *C8YConnection           `json:"c8y_Connection,omitempty"`
-		C8YDataPoint            *C8YDataPoint            `json:"c8y_DataPoint,omitempty"`
-		C8YFirmware             *C8YFirmware             `json:"c8y_Firmware,omitempty"`
-		C8YHardware             *C8YHardware             `json:"c8y_Hardware,omitempty"`
-		C8YIsDevice             *interface{}             `json:"c8y_IsDevice,omitempty"`
-		C8YIsSensorPhone        *interface{}             `json:"c8y_IsSensorPhone,omitempty"`
-		C8YRequiredAvailability *C8YRequiredAvailability `json:"c8y_RequiredAvailability,omitempty"`
-		C8YSupportedOperations  *[]string                `json:"c8y_SupportedOperations,omitempty"`
-		C8YStatus               *C8YStatus               `json:"c8y_Status,omitempty"`
+		C8YIsDevice      *interface{} `json:"c8y_IsDevice,omitempty"`
+		C8YIsSensorPhone *interface{} `json:"c8y_IsSensorPhone,omitempty"`
+
+		C8YSupportedOperations *[]string              `json:"c8y_SupportedOperations,omitempty"`
+		AdditionalFields       map[string]interface{} `jsonc:"flat"`
 	}
 
 	AssetParents struct {
@@ -142,6 +137,18 @@ type (
 		Status string `json:"status,omitempty"`
 	}
 )
+
+// FilterAdditionalFieldByName returns an additional field by given name
+// and information on the structure of the field.
+// If no additional field found, an error is returned.
+func (m *ManagedObject) FilterAdditionalFieldByName(fieldName string) (interface{}, string, error) {
+	value, ok := m.AdditionalFields[fieldName]
+	if ok {
+		return value, fmt.Sprintf("%#v", value), nil
+	} else {
+		return nil, "", fmt.Errorf("field %v not found", fieldName)
+	}
+}
 
 type ReferenceType string
 

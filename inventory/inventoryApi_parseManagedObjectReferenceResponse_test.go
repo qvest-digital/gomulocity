@@ -25,7 +25,7 @@ func TestInventoryApi_ParseManagedObjectResponse(t *testing.T) {
 			expectedManagedObject: nil,
 			expectedErr: &generic.Error{
 				ErrorType: "ClientError",
-				Message:   "Error while parsing response JSON: unexpected end of JSON input",
+				Message:   "Error while parsing response JSON: Error while unmarshaling json: unexpected end of JSON input",
 				Info:      "ResponseParser",
 			},
 		}, {
