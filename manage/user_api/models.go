@@ -3,7 +3,6 @@ package user_api
 import (
 	"fmt"
 	"github.com/tarent/gomulocity/generic"
-	"github.com/tarent/gomulocity/manage/user_api/roles"
 	"net/url"
 	"time"
 )
@@ -18,14 +17,14 @@ type User struct {
 	Self     string `json:"self"`
 	Username string `json:"userName"`
 	//Password          string      `json:"password"`
-	FirstName         string       `json:"firstName"`
-	LastName          string       `json:"lastName"`
-	Phone             string       `json:"phone"`
-	Email             string       `json:"email"`
-	Enabled           bool         `json:"enabled"`
-	Groups            []Group      `json:"groups"`
-	Roles             []roles.Role `json:"roles"`
-	DevicePermissions interface{}  `json:"devicePermissions"`
+	FirstName         string      `json:"firstName"`
+	LastName          string      `json:"lastName"`
+	Phone             string      `json:"phone"`
+	Email             string      `json:"email"`
+	Enabled           bool        `json:"enabled"`
+	Groups            []Group     `json:"groups"`
+	Roles             []Role      `json:"roles"`
+	DevicePermissions interface{} `json:"devicePermissions"`
 }
 
 type CreateUser struct {
@@ -41,33 +40,68 @@ type CreateUser struct {
 
 type UserCollection struct {
 	Self       string                    `json:"self"`
-	Users      []User                    `json:"userApi"`
+	Users      []User                    `json:"users"`
 	Statistics *generic.PagingStatistics `json:"statistics"`
 	Prev       string                    `json:"prev"`
 	Next       string                    `json:"next"`
 }
 
 type CurrentUser struct {
-	ID                  string       `json:"id"`
-	Self                string       `json:"self"`
-	Username            string       `json:"userName"`
-	FirstName           string       `json:"firstName"`
-	LastName            string       `json:"lastName"`
-	Phone               string       `json:"phone"`
-	Email               string       `json:"email"`
-	Enabled             bool         `json:"enabled"`
-	DevicePermissions   interface{}  `json:"devicePermissions"`
-	EffectiveRoles      []roles.Role `json:"effectiveRoles"`
-	ShouldResetPassword bool         `json:"shouldResetPassword"`
-	LastPasswordChange  time.Time    `json:"lastPasswordChange"`
+	ID                  string      `json:"id"`
+	Self                string      `json:"self"`
+	Username            string      `json:"userName"`
+	FirstName           string      `json:"firstName"`
+	LastName            string      `json:"lastName"`
+	Phone               string      `json:"phone"`
+	Email               string      `json:"email"`
+	Enabled             bool        `json:"enabled"`
+	DevicePermissions   interface{} `json:"devicePermissions"`
+	EffectiveRoles      []Role      `json:"effectiveRoles"`
+	ShouldResetPassword bool        `json:"shouldResetPassword"`
+	LastPasswordChange  time.Time   `json:"lastPasswordChange"`
 }
 
 type Group struct {
-	ID                string       `json:"id"`
-	Self              string       `json:"self"`
-	Name              string       `json:"name"`
-	Roles             []roles.Role `json:"roles"`
-	DevicePermissions struct{}     `json:"devicePermissions"`
+	ID                string   `json:"id"`
+	Self              string   `json:"self"`
+	Name              string   `json:"name"`
+	Roles             []Role   `json:"roles"`
+	DevicePermissions struct{} `json:"devicePermissions"`
+}
+
+type GroupReferenceCollection struct {
+	Self       string                    `json:"self"`
+	Next       string                    `json:"next"`
+	Prev       string                    `json:"prev"`
+	Groups     []Group                   `json:"groups"`
+	Statistics *generic.PagingStatistics `json:"statistics"`
+}
+
+type Role struct {
+	ID   string `json:"id"`
+	Self string `json:"self"`
+	Name string `json:"name"`
+}
+
+type RoleCollection struct {
+	Self       string                    `json:"self"`
+	Next       string                    `json:"next"`
+	Prev       string                    `json:"prev"`
+	Roles      []Role                    `json:"roles"`
+	Statistics *generic.PagingStatistics `json:"statistics"`
+}
+
+type RoleReferenceCollection struct {
+	Self       string                    `json:"self"`
+	Next       string                    `json:"next"`
+	Prev       string                    `json:"prev"`
+	References []RoleReference           `json:"references"`
+	Statistics *generic.PagingStatistics `json:"statistics"`
+}
+
+type RoleReference struct {
+	Self string `json:"self"`
+	Role Role   `json:"role"`
 }
 
 type QueryFilter struct {
@@ -113,8 +147,9 @@ func (q QueryFilter) addGroups(query *url.Values) string {
 		for _, group := range q.Groups {
 			groups += fmt.Sprintf("%v,", group.Name)
 		}
+		groups = groups[:len(groups)-1]
 	}
-	return query.Encode() + groups[:len(groups)-1]
+	return query.Encode() + groups
 }
 
 func (u User) HasDevicePermissions() bool {

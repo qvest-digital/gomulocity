@@ -17,7 +17,7 @@ func TestUsers_CreateUser_Happy(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedUrl = r.URL.String()
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(userJSON))
+		w.Write([]byte(testUserJSON))
 	}))
 	defer ts.Close()
 	// and: the api as system under test
@@ -43,7 +43,7 @@ func TestUsers_CreateUser_Happy(t *testing.T) {
 
 func TestUsers_CreateUser_invalid_status(t *testing.T) {
 	// given: A test server
-	ts := buildHttpServer(http.StatusInternalServerError, create_ErroneousResponseJSON)
+	ts := buildHttpServer(http.StatusInternalServerError, createErroneousResponseJSON)
 	defer ts.Close()
 
 	// and: the api as system under test
@@ -53,7 +53,7 @@ func TestUsers_CreateUser_invalid_status(t *testing.T) {
 	_, err := api.CreateUser(tenantID, createUser)
 
 	// then
-	expectedErr := create_ErroneousResponse(http.StatusInternalServerError).Error()
+	expectedErr := createErroneousResponse(http.StatusInternalServerError).Error()
 	if err.Error() != expectedErr {
 		t.Errorf("received an unexpected error: expected: %v, actual: %v", expectedErr, err)
 	}
@@ -61,7 +61,7 @@ func TestUsers_CreateUser_invalid_status(t *testing.T) {
 
 func TestUsers_CreateUser_empty_tenantID(t *testing.T) {
 	// given: A test server
-	ts := buildHttpServer(http.StatusInternalServerError, create_ErroneousResponseJSON)
+	ts := buildHttpServer(http.StatusInternalServerError, createErroneousResponseJSON)
 	defer ts.Close()
 
 	// and: the api as system under test
@@ -76,3 +76,5 @@ func TestUsers_CreateUser_empty_tenantID(t *testing.T) {
 		t.Errorf("received an unexpected error: expected: %v, actual: %v", expectedErr, err)
 	}
 }
+
+

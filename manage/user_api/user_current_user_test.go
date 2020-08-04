@@ -69,7 +69,7 @@ func TestUsers_GetCurrentUser_invalid_json(t *testing.T) {
 	_, err := api.GetCurrentUser()
 
 	// then
-	expectedErr := generic.ClientError("Error while unmarshalling request body: invalid character '<' looking for beginning of value", "GetCurrentUser")
+	expectedErr := generic.ClientError("Error while unmarshalling response body: invalid character '<' looking for beginning of value", "GetCurrentUser")
 	if err.Error() != expectedErr.Error() {
 		t.Errorf("received an unexpected error: expected: %v, actual: %v", expectedErr, err)
 	}

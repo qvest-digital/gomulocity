@@ -1,6 +1,7 @@
 package user_api
 
 import (
+	"net/url"
 	"reflect"
 	"testing"
 )
@@ -21,7 +22,12 @@ func TestQueryFilter_QueryParams(t *testing.T) {
 		WithSubUsersCount: true,
 	}
 
-	query := filter.QueryParams()
+	params := &url.Values{}
+	err := filter.QueryParams(params)
+	if err != nil {
+		t.Errorf("Received an unxpected error while building query: %s", err)
+	}
+	query := filter.addGroups(params)
 
 	expectedQuery := "onlyDevices=true&owner=owner&username=username&withSubusersCount=true&groups=group1,group2"
 	if query != expectedQuery {
@@ -41,7 +47,12 @@ func TestQueryFilter_QueryParams_OnlyGroup(t *testing.T) {
 		},
 	}
 
-	query := filter.QueryParams()
+	params := &url.Values{}
+	err := filter.QueryParams(params)
+	if err != nil {
+		t.Errorf("Received an unxpected error while building query: %s", err)
+	}
+	query := filter.addGroups(params)
 
 	expectedQuery := "groups=group1,group2"
 	if query != expectedQuery {
