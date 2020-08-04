@@ -81,6 +81,9 @@ var expectedManagedObject = &ManagedObject{
 	}{}, Self: "https://t0815.cumulocity.com/inventory/managedObjects/9963944/childAdditions"},
 	ChildAssets:  ChildAssets{References: []interface{}{}, Self: "https://t0815.cumulocity.com/inventory/managedObjects/9963944/childAssets"},
 	ChildDevices: ChildDevices{References: []interface{}{}, Self: "https://t0815.cumulocity.com/inventory/managedObjects/9963944/childDevices"},
+	AdditionalFields: map[string]interface{}{
+		"custom": "hello",
+	},
 }
 
 var givenResponseBody = `{
@@ -114,63 +117,64 @@ var givenResponseBody = `{
 				"childDevices": {
 					"references": [],
 					"self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/childDevices"
-				}
+				},
+				"custom":"hello"
 			}`
 
 var expectedManagedObjectCollection = &ManagedObjectCollection{
 	Self:           "https://t0815.cumulocity.com/inventory/managedObjects?ids=9963944&text=Test%20Device&type=integration-test&pageSize=5&currentPage=1",
 	ManagedObjects: []ManagedObject{*expectedManagedObject},
-	Statistics:     &generic.PagingStatistics {
-		PageSize:     5,
-		CurrentPage:  1,
+	Statistics: &generic.PagingStatistics{
+		PageSize:    5,
+		CurrentPage: 1,
 	},
-	Next:           "https://t0815.cumulocity.com/inventory/managedObjects?ids=9963944&text=Test%20Device&type=integration-test&pageSize=5&currentPage=2",
+	Next: "https://t0815.cumulocity.com/inventory/managedObjects?ids=9963944&text=Test%20Device&type=integration-test&pageSize=5&currentPage=2",
 }
 
-
 var givenManagedObjectCollectionResponse = `{
-		"self": "https://t0815.cumulocity.com/inventory/managedObjects?ids=9963944&text=Test%20Device&type=integration-test&pageSize=5&currentPage=1",
-		"managedObjects": [
-			{
-				"id": "9963944",
-				"type": "test-type",
-				"name": "Test Device",
-				"creationTime": "2020-07-03T10:16:35.870+02:00",
-				"lastUpdated": "2020-07-03T10:16:35.870+02:00",
-				"self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944",
-				"owner": "gomulocity",
-				"additionParents": {
-					"references": [],
-					"self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/additionParents"
-				},
-				"assetParents": {
-					"references": [],
-					"self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/assetParents"
-				},
-				"deviceParents": {
-					"references": [],
-					"self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/deviceParents"
-				},
-				"childAdditions": {
-					"references": [],
-					"self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/childAdditions"
-				},
-				"childAssets": {
-					"references": [],
-					"self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/childAssets"
-				},
-				"childDevices": {
-					"references": [],
-					"self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/childDevices"
-				}
-			}
-    	],
-		"statistics": {
-			"pageSize": 5,
-			"currentPage": 1
-		},
-		"next": "https://t0815.cumulocity.com/inventory/managedObjects?ids=9963944&text=Test%20Device&type=integration-test&pageSize=5&currentPage=2"
-	}`
+    "self": "https://t0815.cumulocity.com/inventory/managedObjects?ids=9963944&text=Test%20Device&type=integration-test&pageSize=5&currentPage=1",
+    "managedObjects": [
+        {
+            "id": "9963944",
+            "type": "test-type",
+            "name": "Test Device",
+            "creationTime": "2020-07-03T10:16:35.870+02:00",
+            "lastUpdated": "2020-07-03T10:16:35.870+02:00",
+            "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944",
+            "owner": "gomulocity",
+            "additionParents": {
+                "references": [],
+                "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/additionParents"
+            },
+            "assetParents": {
+                "references": [],
+                "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/assetParents"
+            },
+            "deviceParents": {
+                "references": [],
+                "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/deviceParents"
+            },
+            "childAdditions": {
+                "references": [],
+                "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/childAdditions"
+            },
+            "childAssets": {
+                "references": [],
+                "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/childAssets"
+            },
+            "childDevices": {
+                "references": [],
+                "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/childDevices"
+            },
+			"custom":"hello"
+        }
+    ],
+    "statistics": {
+        "pageSize": 5,
+        "currentPage": 1
+    },
+    "next": "https://t0815.cumulocity.com/inventory/managedObjects?ids=9963944&text=Test%20Device&type=integration-test&pageSize=5&currentPage=2"
+}`
 
 var managedObjectCollectionTemplate = `{
     "self": "https://t0815.cumulocity.com/inventory/managedObjects?type=test-type&pageSize=5&currentPage=1",
@@ -183,8 +187,8 @@ var managedObjectCollectionTemplate = `{
 }`
 
 var childManagedObject = &ManagedObject{
-	Id:           "4711",
-	Self:         "https://t0815.cumulocity.com/inventory/managedObjects/4711",
+	Id:   "4711",
+	Self: "https://t0815.cumulocity.com/inventory/managedObjects/4711",
 }
 
 var expectedManagedObjectReference = &ManagedObjectReference{
@@ -233,4 +237,52 @@ var managedObjectReferenceCollectionTemplate = `{
 			"pageSize": 5,
 			"currentPage": 1
 	}
+}`
+
+var givenManagedObjectCollectionResponseWithAdditionalFields = `{
+    "self": "https://t0815.cumulocity.com/inventory/managedObjects?ids=9963944&text=Test%20Device&type=integration-test&pageSize=5&currentPage=1",
+    "managedObjects": [
+        {
+            "id": "9963944",
+            "type": "test-type",
+            "name": "Test Device",
+            "creationTime": "2020-07-03T10:16:35.870+02:00",
+            "lastUpdated": "2020-07-03T10:16:35.870+02:00",
+            "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944",
+            "owner": "gomulocity",
+            "additionParents": {
+                "references": [],
+                "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/additionParents"
+            },
+            "assetParents": {
+                "references": [],
+                "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/assetParents"
+            },
+            "deviceParents": {
+                "references": [],
+                "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/deviceParents"
+            },
+            "childAdditions": {
+                "references": [],
+                "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/childAdditions"
+            },
+            "childAssets": {
+                "references": [],
+                "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/childAssets"
+            },
+            "childDevices": {
+                "references": [],
+                "self": "https://t0815.cumulocity.com/inventory/managedObjects/9963944/childDevices"
+            },
+			"custom1":"hello",
+			"custom2":{
+				"foo":"bar"
+			}
+        }
+    ],
+    "statistics": {
+        "pageSize": 5,
+        "currentPage": 1
+    },
+    "next": "https://t0815.cumulocity.com/inventory/managedObjects?ids=9963944&text=Test%20Device&type=integration-test&pageSize=5&currentPage=2"
 }`
