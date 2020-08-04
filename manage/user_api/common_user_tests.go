@@ -34,7 +34,7 @@ var createErroneousResponse = func(status int) *generic.Error {
 	}
 }
 
-var createErroneousResponseJSON = `
+var erroneousResponseJSON = `
 {
     "error": "userManagement/Forbidden",
     "message": "authenticated user's tenant different from the one in URL path",
@@ -45,6 +45,7 @@ var createErroneousResponseJSON = `
 var testUserJSON = `
 {
     "id":"msmith",
+	"self":"https://t200588189.cumulocity.com/user/msmith",
     "userName" : "msmith",
     "firstName" : "Michael",
     "lastName" : "Smith",
@@ -75,6 +76,7 @@ var testUserJSON = `
 
 var testUser = &User{
 	ID:        "msmith",
+	Self:      "https://t200588189.cumulocity.com/user/msmith",
 	Username:  "msmith",
 	FirstName: "Michael",
 	LastName:  "Smith",
@@ -102,8 +104,14 @@ var testUser = &User{
 	DevicePermissions: nil,
 }
 
-var tenantID = "1111111"
-var username = "msmith"
+var (
+	tenantID  = "1111111"
+	userID    = "msmith"
+	username  = "msmith"
+	roleName  = "ROLE_ACCOUNT_ADMIN"
+	groupID   = "12"
+	groupName = "TEST_GROUP"
+)
 
 var createUser = &CreateUser{
 	Username:  "username",
@@ -325,5 +333,12 @@ var userCollectionJSON = `
     ]
 }
 `
-
-
+var userCollectionTemplate = `{
+    "next": "https://t200588189.cumulocity.com/user/1111111/users?username=mmark&pageSize=2&currentPage=2",
+    "self": "https://t200588189.cumulocity.com/user/1111111/users?username=mmark&pageSize=2&currentPage=1",
+    "users": [%s],
+    "statistics": {
+        "currentPage": 1,
+        "pageSize": 5
+    }
+}`

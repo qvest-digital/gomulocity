@@ -22,19 +22,18 @@ type UserApi interface {
 	FindRoleCollection(pageSize int) (*RoleCollection, *generic.Error)
 	NextPageRoleCollection(r *RoleCollection) (*RoleCollection, *generic.Error)
 	PreviousPageRoleCollection(r *RoleCollection) (*RoleCollection, *generic.Error)
-	FindRoleReferenceCollection(tenantID, username string, groupID, pageSize int) (*RoleReferenceCollection, *generic.Error)
+	FindRoleReferenceCollection(tenantID, username, groupID string, pageSize int) (*RoleReferenceCollection, *generic.Error)
 	AssignRoleToUser(tenantID, username string, reference *RoleReference) (*RoleReference, *generic.Error)
 	AssignRoleToGroup(tenantID, groupID string, reference *RoleReference) (*RoleReference, *generic.Error)
 	UnassignRoleFromUser(tenantID, username, roleName string) *generic.Error
 	UnassignRoleFromGroup(tenantID, groupID, roleName string) *generic.Error
 	GetAllRolesOfAUser(tenantID, username string, pageSize int) (*RoleReferenceCollection, *generic.Error)
-	GetAllRolesOfAGroup(tenantID string, groupID, pageSize int) (*RoleReferenceCollection, *generic.Error)
+	GetAllRolesOfAGroup(tenantID, groupID string, pageSize int) (*RoleReferenceCollection, *generic.Error)
 
-	GroupDetails(groupID int) (*Group, *generic.Error)
-	GroupByName(tenantID, groupName string) (Group, *generic.Error)
-	RepresentationOfGroupByName(tenantID, groupName string) (*Group, *generic.Error)
-	RemoveGroup(tenantID string, groupID int) *generic.Error
-	UpdateGroup(tenantID string, groupID int, group *Group) (*Group, *generic.Error)
+	GroupDetails(groupID string) (*Group, *generic.Error)
+	GroupByName(tenantID, groupName string) (*Group, *generic.Error)
+	RemoveGroup(tenantID, groupID string) *generic.Error
+	UpdateGroup(tenantID, groupID string, group *Group) (*Group, *generic.Error)
 	GetAllGroupsOfUser(tenantID, username string, pageSize int) (*GroupReferenceCollection, *generic.Error)
 	FindGroupReferenceCollection(tenantID, username string, pageSize int) (*GroupReferenceCollection, *generic.Error)
 	NextPageGroupReferenceCollection(r *GroupReferenceCollection) (*GroupReferenceCollection, *generic.Error)
@@ -194,20 +193,6 @@ func (u *userApi) getCommonUserCollection(path string) (*UserCollection, *generi
 	return parseUserCollectionResponse(body)
 }
 
-func parseUserResponse(body []byte) (*User, *generic.Error) {
-	var result User
-	if len(body) > 0 {
-		err := generic.ObjectFromJson(body, &result)
-		if err != nil {
-			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
-		}
-	} else {
-		return nil, generic.ClientError("Response body was empty", "GetMeasurement")
-	}
-
-	return &result, nil
-}
-
 func parseUserCollectionResponse(body []byte) (*UserCollection, *generic.Error) {
 	var result UserCollection
 	if len(body) > 0 {
@@ -228,21 +213,21 @@ func (u *userApi) FindRoleCollection(pageSize int) (*RoleCollection, *generic.Er
 	queryParamsValues := &url.Values{}
 	err := generic.PageSizeParameter(pageSize, queryParamsValues)
 	if err != nil {
-		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch measurements: %s", err.Error()), "FindMeasurements")
+		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch role collection: %s", err.Error()), "FindRoleCollection")
 	}
-	return u.getCommonRoleCollection(fmt.Sprintf("%s/roles", u.basePath))
+	return u.getCommonRoleCollection(fmt.Sprintf("%s/roles?%v", u.basePath, queryParamsValues.Encode()))
 }
 
-func (u *userApi) FindRoleReferenceCollection(tenantID, username string, groupID, pageSize int) (*RoleReferenceCollection, *generic.Error) {
+func (u *userApi) FindRoleReferenceCollection(tenantID, username, groupID string, pageSize int) (*RoleReferenceCollection, *generic.Error) {
 	queryParamsValues := &url.Values{}
 	err := generic.PageSizeParameter(pageSize, queryParamsValues)
 	if err != nil {
-		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch measurements: %s", err.Error()), "FindRoleReferenceCollection")
+		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch reference collection: %s", err.Error()), "FindRoleReferenceCollection")
 	}
 
 	if len(username) > 0 {
 		return u.getCommonRoleReferenceCollection(fmt.Sprintf("%s/%s/users/%s/roles?%s", u.basePath, tenantID, username, queryParamsValues.Encode()))
-	} else if groupID > 0 {
+	} else if len(groupID) > 0 {
 		return u.getCommonRoleReferenceCollection(fmt.Sprintf("%s/%s/groups/%v/roles?%s", u.basePath, tenantID, groupID, queryParamsValues.Encode()))
 	} else {
 		return nil, generic.ClientError("Getting role reference collection without username or groupID is not allowed", "FindRoleReferenceCollection")
@@ -305,20 +290,6 @@ func (u *userApi) getCommonRoleReferenceCollection(path string) (*RoleReferenceC
 	}
 
 	return parseRoleReferenceCollectionResponse(body)
-}
-
-func parseRoleResponse(body []byte) (*Role, *generic.Error) {
-	var result Role
-	if len(body) > 0 {
-		err := generic.ObjectFromJson(body, &result)
-		if err != nil {
-			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
-		}
-	} else {
-		return nil, generic.ClientError("Response body was empty", "GetMeasurement")
-	}
-
-	return &result, nil
 }
 
 func parseRoleCollectionResponse(body []byte) (*RoleCollection, *generic.Error) {
@@ -426,7 +397,7 @@ func (u *userApi) UnassignRoleFromGroup(tenantID, groupID, roleName string) *gen
 		return generic.ClientError("Unassign role from group without tenantID, groupID or roleName is not allowed", "UnassignRoleFromGroup")
 	}
 
-	body, status, err := u.client.Delete(fmt.Sprintf("%v/%v/users/%v/roles/%v", u.basePath, tenantID, groupID, roleName), generic.EmptyHeader())
+	body, status, err := u.client.Delete(fmt.Sprintf("%v/%v/groups/%v/roles/%v", u.basePath, tenantID, groupID, roleName), generic.EmptyHeader())
 	if err != nil {
 		return generic.ClientError(fmt.Sprintf("Error while unassign role %v from group %v: %s", roleName, groupID, err), "UnassignRoleFromGroup")
 	}
@@ -438,15 +409,15 @@ func (u *userApi) UnassignRoleFromGroup(tenantID, groupID, roleName string) *gen
 }
 
 func (u *userApi) GetAllRolesOfAUser(tenantID, username string, pageSize int) (*RoleReferenceCollection, *generic.Error) {
-	return u.FindRoleReferenceCollection(tenantID, username, 0, pageSize)
+	return u.FindRoleReferenceCollection(tenantID, username, "", pageSize)
 }
 
-func (u *userApi) GetAllRolesOfAGroup(tenantID string, groupID, pageSize int) (*RoleReferenceCollection, *generic.Error) {
+func (u *userApi) GetAllRolesOfAGroup(tenantID, groupID string, pageSize int) (*RoleReferenceCollection, *generic.Error) {
 	return u.FindRoleReferenceCollection(tenantID, "", groupID, pageSize)
 }
 
-func (u *userApi) GroupDetails(groupID int) (*Group, *generic.Error) {
-	if groupID == 0 {
+func (u *userApi) GroupDetails(groupID string) (*Group, *generic.Error) {
+	if len(groupID) == 0 {
 		return nil, generic.ClientError("Getting group details without groupID is not allowed", "GroupDetails")
 	}
 
@@ -466,35 +437,14 @@ func (u *userApi) GroupDetails(groupID int) (*Group, *generic.Error) {
 	return group, nil
 }
 
-func (u *userApi) GroupByName(tenantID, groupName string) (Group, *generic.Error) {
+func (u *userApi) GroupByName(tenantID, groupName string) (*Group, *generic.Error) {
 	if len(tenantID) == 0 || len(groupName) == 0 {
-		return Group{}, generic.ClientError("Getting group without tenantID or group name is not allowed", "GroupByName")
+		return nil, generic.ClientError("Getting group without tenantID or group name is not allowed", "GroupByName")
 	}
 
 	body, status, err := u.client.Get(fmt.Sprintf("%v/%v/groupByName/%v", u.basePath, tenantID, groupName), generic.AcceptHeader(USER_ACCEPT))
 	if err != nil {
-		return Group{}, generic.ClientError(fmt.Sprintf("Error while getting group %v by name: %s", groupName, err), "GroupByName")
-	}
-
-	if status != http.StatusOK {
-		return Group{}, generic.CreateErrorFromResponse(body, status)
-	}
-
-	group := Group{}
-	if err := json.Unmarshal(body, &group); err != nil {
-		return Group{}, generic.ClientError(fmt.Sprintf("Error while unmarshalling response body: %s", err), "GroupByName")
-	}
-	return group, nil
-}
-
-func (u *userApi) RepresentationOfGroupByName(tenantID, groupName string) (*Group, *generic.Error) {
-	if len(tenantID) == 0 || len(groupName) == 0 {
-		return nil, generic.ClientError("Getting a representation of a group without tenantID and groupName is not allowed", "RepresentationOfGroupByName")
-	}
-
-	body, status, err := u.client.Get(fmt.Sprintf("%v/%v/groupByName/%v", u.basePath, tenantID, groupName), generic.AcceptHeader(USER_ACCEPT))
-	if err != nil {
-		return nil, generic.ClientError(fmt.Sprintf("Error while getting representation of group: %v, %s", groupName, err), "RepresentationOfGroupByName")
+		return nil, generic.ClientError(fmt.Sprintf("Error while getting group %v by name: %s", groupName, err), "GroupByName")
 	}
 
 	if status != http.StatusOK {
@@ -503,13 +453,13 @@ func (u *userApi) RepresentationOfGroupByName(tenantID, groupName string) (*Grou
 
 	group := &Group{}
 	if err := json.Unmarshal(body, group); err != nil {
-		return nil, generic.ClientError(fmt.Sprintf("Error while unmarshalling response body: %s", err), "RepresentationOfGroupByName")
+		return nil, generic.ClientError(fmt.Sprintf("Error while unmarshalling response body: %s", err), "GroupByName")
 	}
 	return group, nil
 }
 
-func (u *userApi) RemoveGroup(tenantID string, groupID int) *generic.Error {
-	if len(tenantID) == 0 || groupID == 0 {
+func (u *userApi) RemoveGroup(tenantID, groupID string) *generic.Error {
+	if len(tenantID) == 0 || len(groupID) == 0 {
 		return generic.ClientError("Removing a group without tenantID and groupID is not allowed", "RemoveGroup")
 	}
 
@@ -524,8 +474,8 @@ func (u *userApi) RemoveGroup(tenantID string, groupID int) *generic.Error {
 	return nil
 }
 
-func (u *userApi) UpdateGroup(tenantID string, groupID int, group *Group) (*Group, *generic.Error) {
-	if len(tenantID) == 0 || groupID == 0 {
+func (u *userApi) UpdateGroup(tenantID, groupID string, group *Group) (*Group, *generic.Error) {
+	if len(tenantID) == 0 || len(groupID) == 0 {
 		return nil, generic.ClientError("Updating a group without tenantID and groupID is not allowed", "UpdateGroup")
 	}
 
@@ -555,6 +505,10 @@ func (u *userApi) GetAllGroupsOfUser(tenantID, username string, pageSize int) (*
 }
 
 func (u *userApi) FindGroupReferenceCollection(tenantID, username string, pageSize int) (*GroupReferenceCollection, *generic.Error) {
+	if len(tenantID) == 0 || len(username) == 0 {
+		return nil, generic.ClientError("Getting a group reference collection without tenantID and username is not allowed", "FindGroupReferenceCollection")
+	}
+
 	queryParamsValues := &url.Values{}
 	err := generic.PageSizeParameter(pageSize, queryParamsValues)
 	if err != nil {

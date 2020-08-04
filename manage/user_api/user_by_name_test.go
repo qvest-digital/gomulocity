@@ -64,7 +64,7 @@ func TestUserApi_UserByName_invalid_status(t *testing.T) {
 	// given: A test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(createErroneousResponseJSON))
+		w.Write([]byte(erroneousResponseJSON))
 	}))
 	defer ts.Close()
 	// and: the api as system under test

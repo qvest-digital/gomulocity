@@ -77,7 +77,7 @@ func TestUserApi_UserCollection_invalid_pageSize(t *testing.T) {
 
 func TestUserApi_UserCollection_invalid_status(t *testing.T) {
 	// given: A test server
-	ts := buildHttpServer(http.StatusInternalServerError, createErroneousResponseJSON)
+	ts := buildHttpServer(http.StatusInternalServerError, erroneousResponseJSON)
 	defer ts.Close()
 	// and: the api as system under test
 	api := buildUserApi(ts.URL)
@@ -94,7 +94,7 @@ func TestUserApi_UserCollection_invalid_status(t *testing.T) {
 
 func TestUserApi_UserCollection_without_filter(t *testing.T) {
 	// given: A test server
-	ts := buildHttpServer(http.StatusInternalServerError, createErroneousResponseJSON)
+	ts := buildHttpServer(http.StatusInternalServerError, erroneousResponseJSON)
 	defer ts.Close()
 	// and: the api as system under test
 	api := buildUserApi(ts.URL)

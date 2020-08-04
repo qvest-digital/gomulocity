@@ -62,11 +62,11 @@ type CurrentUser struct {
 }
 
 type Group struct {
-	ID                string   `json:"id"`
-	Self              string   `json:"self"`
-	Name              string   `json:"name"`
-	Roles             []Role   `json:"roles"`
-	DevicePermissions struct{} `json:"devicePermissions"`
+	ID                string      `json:"id"`
+	Self              string      `json:"self"`
+	Name              string      `json:"name"`
+	Roles             []Role      `json:"roles"`
+	DevicePermissions interface{} `json:"devicePermissions"`
 }
 
 type GroupReferenceCollection struct {

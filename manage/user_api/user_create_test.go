@@ -43,7 +43,7 @@ func TestUsers_CreateUser_Happy(t *testing.T) {
 
 func TestUsers_CreateUser_invalid_status(t *testing.T) {
 	// given: A test server
-	ts := buildHttpServer(http.StatusInternalServerError, createErroneousResponseJSON)
+	ts := buildHttpServer(http.StatusInternalServerError, erroneousResponseJSON)
 	defer ts.Close()
 
 	// and: the api as system under test
@@ -61,7 +61,7 @@ func TestUsers_CreateUser_invalid_status(t *testing.T) {
 
 func TestUsers_CreateUser_empty_tenantID(t *testing.T) {
 	// given: A test server
-	ts := buildHttpServer(http.StatusInternalServerError, createErroneousResponseJSON)
+	ts := buildHttpServer(http.StatusInternalServerError, erroneousResponseJSON)
 	defer ts.Close()
 
 	// and: the api as system under test
