@@ -1,2 +1,4 @@
+github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0Ufc=
+github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/orasik/gocomparejson v0.0.0-20171229174629-2835e0393d0f h1:NwnFJN3HhnNVT7dvwSDXgnfET3tFq4I+8xPJnYroPmI=
 github.com/orasik/gocomparejson v0.0.0-20171229174629-2835e0393d0f/go.mod h1:oedqrMK95caM7GZZtl46wFqiSp7//yGGU5KM1hFdTRg=
