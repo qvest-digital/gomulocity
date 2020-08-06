@@ -1,4 +1,4 @@
-package realtime_subscription
+package main
 
 import (
 	"flag"
@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var addr = flag.String("addr", "localhost:8080", "http service address")
+var addr = flag.String("addr", "echo.websocket.org", "http service address")
 
 func main() {
 	flag.Parse()
@@ -20,12 +20,13 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: *addr, Path: "/echo"}
+	u := url.URL{Scheme: "ws", Host: *addr}
 	log.Printf("connecting to %s", u.String())
 
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	c, resp, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	log.Print(resp.Location())
 	if err != nil {
-		log.Fatal("dial:", err)
+		log.Fatalf("dial: %s with responsecode: %v", err, resp.StatusCode)
 	}
 	defer c.Close()
 
