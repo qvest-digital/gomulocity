@@ -2,6 +2,7 @@ package gomulocity
 
 import (
 	"github.com/tarent/gomulocity/alarm"
+	"github.com/tarent/gomulocity/audit"
 	"github.com/tarent/gomulocity/device_bootstrap"
 	"github.com/tarent/gomulocity/generic"
 	"github.com/tarent/gomulocity/inventory"
@@ -19,6 +20,7 @@ type Gomulocity struct {
 	MeasurementApi     measurement.MeasurementApi
 	Inventory          inventory.InventoryApi
 	UserApi            user_api.UserApi
+	Audit              audit.AuditApi
 }
 
 func NewGomulocity(baseURL, username, password string, bootstrapUsername, bootstrapPassword string) Gomulocity {
@@ -47,5 +49,6 @@ func NewGomulocity(baseURL, username, password string, bootstrapUsername, bootst
 		MeasurementApi:     measurement.NewMeasurementApi(client),
 		Inventory:          inventory.NewInventoryApi(client),
 		UserApi:            user_api.NewUserApi(client),
+		Audit:              audit.NewAuditApi(client),
 	}
 }

@@ -2,6 +2,7 @@
 
 # Gomulocity REST SDK #
 
+![Go](https://github.com/tarent/gomulocity/workflows/Go/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tarent/gomulocity)](https://goreportcard.com/report/github.com/tarent/gomulocity)
 ![GitHub](https://img.shields.io/github/license/tarent/gomulocity)
 ![GitHub last commit](https://img.shields.io/github/last-commit/tarent/gomulocity)
