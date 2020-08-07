@@ -6,6 +6,8 @@ import (
 	"github.com/tarent/gomulocity/device_bootstrap"
 	"github.com/tarent/gomulocity/generic"
 	"github.com/tarent/gomulocity/inventory"
+	"github.com/tarent/gomulocity/manage/user"
+	"github.com/tarent/gomulocity/manage/user_api"
 	"github.com/tarent/gomulocity/measurement"
 	"net/http"
 	"time"
@@ -17,6 +19,7 @@ type Gomulocity struct {
 	AlarmApi           alarm.AlarmApi
 	MeasurementApi     measurement.MeasurementApi
 	Inventory          inventory.InventoryApi
+	UserApi            user_api.UserApi
 	Audit              audit.AuditApi
 }
 
@@ -45,6 +48,7 @@ func NewGomulocity(baseURL, username, password string, bootstrapUsername, bootst
 		AlarmApi:           alarm.NewAlarmApi(client),
 		MeasurementApi:     measurement.NewMeasurementApi(client),
 		Inventory:          inventory.NewInventoryApi(client),
+		UserApi:            user_api.NewUserApi(client),
 		Audit:              audit.NewAuditApi(client),
 	}
 }

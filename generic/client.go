@@ -28,6 +28,10 @@ func ContentTypeHeader(contentType string) map[string][]string {
 	return map[string][]string{"Content-Type": {contentType}}
 }
 
+func ContentTypeHeaderAndContentLength(contentType string, contentLength int) map[string][]string {
+	return map[string][]string{"Content-Type": {contentType}, "Content-Length": {string(contentLength)}}
+}
+
 func AcceptAndContentTypeHeader(accept string, contentType string) map[string][]string {
 	return map[string][]string{"Accept": {accept}, "Content-Type": {contentType}}
 }
