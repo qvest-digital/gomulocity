@@ -10,6 +10,8 @@ import (
 const (
 	USER_CONTENT_TYPE = "application/vnd.com.nsn.cumulocity.user+json;ver=0.9"
 	USER_ACCEPT       = "application/vnd.com.nsn.cumulocity.user+json;ver=0.9"
+
+	INVENTORY_ROLE_CONTENT_TYPE = "application/vnd.com.nsn.cumulocity.inventoryrole+json"
 )
 
 type User struct {
@@ -102,6 +104,29 @@ type RoleReferenceCollection struct {
 type RoleReference struct {
 	Self string `json:"self"`
 	Role Role   `json:"role"`
+}
+
+type InventoryRolesCollection struct {
+	Self       string                    `json:"self"`
+	Next       string                    `json:"next"`
+	Prev       string                    `json:"prev"`
+	Roles      []InventoryRole           `json:"roles"`
+	Statistics *generic.PagingStatistics `json:"statistics"`
+}
+
+type InventoryRole struct {
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Self        string       `json:"self"`
+	ID          int          `json:"id"`
+	Permissions []Permission `json:"permissions"`
+}
+
+type Permission struct {
+	ID         int    `json:"id"`
+	Permission string `json:"permission"`
+	Type       string `json:"type"`
+	Scope      string `json:"scope"`
 }
 
 type QueryFilter struct {

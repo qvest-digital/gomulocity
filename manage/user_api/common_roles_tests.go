@@ -18,6 +18,7 @@ var roleCollection = &RoleCollection{
 }
 
 var roleID = "ROLE_ACCOUNT_ADMIN"
+var inventoryRoleID = 2
 
 var roles = []Role{
 	{
@@ -155,3 +156,198 @@ var roleCollectionTemplate = `{
         "pageSize": 5
     }
 }`
+
+var testInventoryRoleCollection = &InventoryRolesCollection{
+	Self:       "https://t200588189.cumulocity.com/user/inventoryroles?pageSize=5&currentPage=2",
+	Next:       "https://t200588189.cumulocity.com/user/inventoryroles?pageSize=5&currentPage=1",
+	Prev:       "",
+	Roles:      testInventoryRoles,
+	Statistics: nil,
+}
+
+var testInventoryRoles = []InventoryRole{
+	{
+		Name:        "Reader",
+		Description: "Can read all data of the asset and manage all inventory data, but cannot perform operations. Can also acknowledge and clear alarms. Can create and updates dashboards.",
+		Self:        "https://t200588189.cumulocity.com/user/inventoryroles/2",
+		ID:          2,
+		Permissions: []Permission{
+			{
+				ID:         2,
+				Permission: "READ",
+				Type:       "*",
+				Scope:      "*",
+			},
+			{
+				ID:         3,
+				Permission: "ADMIN",
+				Type:       "*",
+				Scope:      "MANAGED_OBJECT",
+			},
+		},
+	},
+	{
+		ID:          2,
+		Name:        "Manager",
+		Description: "Can read all data of the asset and manage all inventory data, but cannot perform operations. Can also acknowledge and clear alarms. Can create and updates dashboards.",
+		Self:        "https://t200588189.cumulocity.com/user/inventoryroles/2",
+		Permissions: []Permission{
+			{
+				ID:         2,
+				Permission: "READ",
+				Type:       "*",
+				Scope:      "*",
+			},
+			{
+				ID:         3,
+				Permission: "ADMIN",
+				Type:       "*",
+				Scope:      "MANAGED_OBJECT",
+			},
+		},
+	},
+}
+
+var testInventoryRoleCollectionJSON = `
+{
+    "self": "https://t200588189.cumulocity.com/user/inventoryroles?pageSize=5&currentPage=2",
+    "next": "https://t200588189.cumulocity.com/user/inventoryroles?pageSize=5&currentPage=1",
+    "prev": "",
+    "roles": [
+        {
+            "id": 2,
+            "name": "Reader",
+            "self": "https://t200588189.cumulocity.com/user/inventoryroles/2",
+            "description": "Can read all data of the asset and manage all inventory data, but cannot perform operations. Can also acknowledge and clear alarms. Can create and updates dashboards.",
+            "permissions": [
+                {
+                    "id": 2,
+                    "type": "*",
+                    "scope": "*",
+                    "permission": "READ"
+                },
+                {
+                    "id": 3,
+                    "type": "*",
+                    "scope": "MANAGED_OBJECT",
+                    "permission": "ADMIN"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "name": "Manager",
+            "self": "https://t200588189.cumulocity.com/user/inventoryroles/2",
+            "description": "Can read all data of the asset and manage all inventory data, but cannot perform operations. Can also acknowledge and clear alarms. Can create and updates dashboards.",
+            "permissions": [
+                {
+                    "id": 2,
+                    "type": "*",
+                    "scope": "*",
+                    "permission": "READ"
+                },
+                {
+                    "id": 3,
+                    "type": "*",
+                    "scope": "MANAGED_OBJECT",
+                    "permission": "ADMIN"
+                }
+            ]
+        }
+    ],
+    "statistics": null
+}
+`
+
+var testInventoryRole = func(name string) *InventoryRole {
+	return &InventoryRole{
+		ID:          2,
+		Name:        name,
+		Self:        "https://t200588189.cumulocity.com/user/inventoryroles/2",
+		Description: "Can read all data of the asset and manage all inventory data, but cannot perform operations. Can also acknowledge and clear alarms. Can create and updates dashboards.",
+		Permissions: []Permission{
+			{
+				ID:         2,
+				Permission: "READ",
+				Type:       "*",
+				Scope:      "*",
+			},
+			{
+				ID:         3,
+				Permission: "ADMIN",
+				Type:       "*",
+				Scope:      "MANAGED_OBJECT",
+			},
+		},
+	}
+}
+
+var testInventoryRoleJSON = func(name string) string {
+	return `
+{
+        "id": 2,
+        "name": "` + name + `",
+        "self": "https://t200588189.cumulocity.com/user/inventoryroles/2",
+        "description": "Can read all data of the asset and manage all inventory data, but cannot perform operations. Can also acknowledge and clear alarms. Can create and updates dashboards.",
+        "permissions": [
+            {
+                "id": 2,
+                "type": "*",
+                "scope": "*",
+                "permission": "READ"
+			},
+			{
+				"id": 3,
+				"type": "*",
+				"scope": "MANAGED_OBJECT",
+				"permission": "ADMIN"
+			}
+		]
+}
+`
+}
+
+var TestInventoryRolesJSON = `
+[
+    {
+        "id": 2,
+        "name": "Reader",
+        "self": "https://t200588189.cumulocity.com/user/inventoryroles/2",
+        "description": "Can read all data of the asset and manage all inventory data, but cannot perform operations. Can also acknowledge and clear alarms. Can create and updates dashboards.",
+        "permissions": [
+            {
+                "id": 2,
+                "type": "*",
+                "scope": "*",
+                "permission": "READ"
+            },
+            {
+                "id": 3,
+                "type": "*",
+                "scope": "MANAGED_OBJECT",
+                "permission": "ADMIN"
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "name": "Manager",
+        "self": "https://t200588189.cumulocity.com/user/inventoryroles/2",
+        "description": "Can read all data of the asset and manage all inventory data, but cannot perform operations. Can also acknowledge and clear alarms. Can create and updates dashboards.",
+        "permissions": [
+            {
+                "id": 2,
+                "type": "*",
+                "scope": "*",
+                "permission": "READ"
+            },
+            {
+                "id": 3,
+                "type": "*",
+                "scope": "MANAGED_OBJECT",
+                "permission": "ADMIN"
+            }
+        ]
+    }
+]
+`
