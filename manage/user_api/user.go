@@ -38,6 +38,14 @@ type UserApi interface {
 	FindGroupReferenceCollection(tenantID, username string, pageSize int) (*GroupReferenceCollection, *generic.Error)
 	NextPageGroupReferenceCollection(r *GroupReferenceCollection) (*GroupReferenceCollection, *generic.Error)
 	PreviousPageGroupCollection(r *GroupReferenceCollection) (*GroupReferenceCollection, *generic.Error)
+
+	InventoryRoleCollection() (*InventoryRolesCollection, *generic.Error)
+	NextPageInventoryRoleCollection(i *InventoryRolesCollection) (*InventoryRolesCollection, *generic.Error)
+	PreviousPageInventoryRoleCollection(i *InventoryRolesCollection) (*InventoryRolesCollection, *generic.Error)
+	AssignNewInventoryRole(role *InventoryRole) (*InventoryRole, *generic.Error)
+	InventoryRole(id int) (*InventoryRole, *generic.Error)
+	UpdateInventoryRole(id int, role *InventoryRole) (*InventoryRole, *generic.Error)
+	DeleteInventoryRole(id int) *generic.Error
 }
 
 func NewUserApi(client *generic.Client) UserApi {
@@ -574,4 +582,152 @@ func parseGroupReferenceCollectionResponse(body []byte) (*GroupReferenceCollecti
 	}
 
 	return &result, nil
+}
+
+func (u *userApi) InventoryRoleCollection() (*InventoryRolesCollection, *generic.Error) {
+	return u.getCommonInventoryRoleCollection(fmt.Sprintf("%s/inventoryroles", u.basePath))
+}
+
+func (u *userApi) NextPageInventoryRoleCollection(i *InventoryRolesCollection) (*InventoryRolesCollection, *generic.Error) {
+	return u.getPageInventoryRoleCollection(i.Next)
+}
+
+func (u *userApi) PreviousPageInventoryRoleCollection(i *InventoryRolesCollection) (*InventoryRolesCollection, *generic.Error) {
+	return u.getPageInventoryRoleCollection(i.Prev)
+}
+
+func (u *userApi) getPageInventoryRoleCollection(reference string) (*InventoryRolesCollection, *generic.Error) {
+	if reference == "" {
+		log.Print("No page reference given. Returning nil.")
+		return nil, nil
+	}
+
+	nextUrl, err := url.Parse(reference)
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Unparsable URL given for page reference: '%s'", reference), "GetPage")
+	}
+
+	collection, genErr := u.getCommonInventoryRoleCollection(fmt.Sprintf("%s?%s", nextUrl.Path, nextUrl.RawQuery))
+	if genErr != nil {
+		return nil, genErr
+	}
+
+	if len(collection.Roles) == 0 {
+		log.Print("Returned collection is empty. Returning nil.")
+		return nil, nil
+	}
+
+	return collection, nil
+}
+
+func (u *userApi) getCommonInventoryRoleCollection(path string) (*InventoryRolesCollection, *generic.Error) {
+	body, status, err := u.client.Get(path, generic.AcceptHeader(USER_ACCEPT))
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while getting inventory roles: %s", err.Error()), "getCommonInventoryRoleCollection")
+	}
+
+	if status != http.StatusOK {
+		return nil, generic.CreateErrorFromResponse(body, status)
+	}
+
+	return parseInventoryRoleCollectionResponse(body)
+}
+
+func parseInventoryRoleCollectionResponse(body []byte) (*InventoryRolesCollection, *generic.Error) {
+	var result InventoryRolesCollection
+	if len(body) > 0 {
+		err := generic.ObjectFromJson(body, &result)
+		if err != nil {
+			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "CollectionResponseParser")
+		}
+	} else {
+		return nil, generic.ClientError("Response body was empty", "CollectionResponseParser")
+	}
+
+	return &result, nil
+}
+
+func (u *userApi) AssignNewInventoryRole(role *InventoryRole) (*InventoryRole, *generic.Error) {
+	bytes, err := json.Marshal(role)
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling inventory role: %s", err), "AssignNewInventoryRole")
+	}
+
+	body, status, err := u.client.Post(fmt.Sprintf("%v/inventoryroles", u.basePath), bytes, generic.ContentTypeHeader(INVENTORY_ROLE_CONTENT_TYPE))
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while assigning role to inventory: %s", err), "AssignNewInventoryRole")
+	}
+
+	if status != http.StatusCreated {
+		return nil, generic.CreateErrorFromResponse(body, status)
+	}
+
+	inventoryRole := &InventoryRole{}
+	if err := json.Unmarshal(body, inventoryRole); err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while unmarshalling response body: %s", err), "AssignNewInventoryRole")
+	}
+	return inventoryRole, nil
+}
+
+func (u *userApi) InventoryRole(id int) (*InventoryRole, *generic.Error) {
+	if id <= 0 {
+		return nil, generic.ClientError("given id must not be zero or less", "InventoryRole")
+	}
+
+	body, status, err := u.client.Get(fmt.Sprintf("%v/inventoryroles/%v", u.basePath, id), generic.EmptyHeader())
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while getting inventory role by id: %v, %s", id, err), "InventoryRole")
+	}
+
+	if status != http.StatusOK {
+		return nil, generic.CreateErrorFromResponse(body, status)
+	}
+
+	inventoryRole := &InventoryRole{}
+	if err := json.Unmarshal(body, inventoryRole); err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while unmarshalling response body: %s", err), "InventoryRole")
+	}
+	return inventoryRole, nil
+}
+
+func (u *userApi) UpdateInventoryRole(id int, role *InventoryRole) (*InventoryRole, *generic.Error) {
+	if id <= 0 {
+		return nil, generic.ClientError("given id must not be zero or less", "InventoryRole")
+	}
+
+	bytes, err := json.Marshal(role)
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling inventory role: %s", err), "UpdateInventoryRole")
+	}
+
+	body, status, err := u.client.Put(fmt.Sprintf("%v/inventoryroles/%v", u.basePath, id), bytes, generic.ContentTypeHeader(INVENTORY_ROLE_CONTENT_TYPE))
+	if err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while updating inventory role: %v, %s", id, err), "UpdateInventoryRole")
+	}
+
+	if status != http.StatusOK {
+		return nil, generic.CreateErrorFromResponse(body, status)
+	}
+
+	inventoryRole := &InventoryRole{}
+	if err := json.Unmarshal(body, inventoryRole); err != nil {
+		return nil, generic.ClientError(fmt.Sprintf("Error while unmarshalling response body: %s", err), "UpdateInventoryRole")
+	}
+	return inventoryRole, nil
+}
+
+func (u *userApi) DeleteInventoryRole(id int) *generic.Error {
+	if id <= 0 {
+		return generic.ClientError("given id must not be zero or less", "DeleteInventoryRole")
+	}
+
+	body, status, err := u.client.Delete(fmt.Sprintf("%v/inventoryroles/%v", u.basePath, id), generic.EmptyHeader())
+	if err != nil {
+		return generic.ClientError(fmt.Sprintf("Error while deleting inventory role %v, %s", id, err), "DeleteInventoryRole")
+	}
+
+	if status != http.StatusNoContent {
+		return generic.CreateErrorFromResponse(body, status)
+	}
+	return nil
 }
