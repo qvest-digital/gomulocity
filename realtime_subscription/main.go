@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// cumulocityURL/meta/handshake
 var addr = flag.String("addr", "echo.websocket.org", "http service address")
 
 func main() {
@@ -44,15 +45,23 @@ func main() {
 		}
 	}()
 
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
+	msg := make(chan []byte)
+	defer close(msg)
+	ext := `{
+		"ext": {
+		"com.cumulocity.authn": {
+		"token": "credentials",
+		},
+		"systemOfUnits": "metric"
+	}`
+	msg <- []byte(ext)
 
 	for {
 		select {
 		case <-done:
 			return
-		case t := <-ticker.C:
-			err := c.WriteMessage(websocket.TextMessage, []byte(t.String()))
+		case t := <-msg:
+			err := c.WriteMessage(websocket.TextMessage, t)
 			if err != nil {
 				log.Println("write:", err)
 				return
@@ -74,4 +83,5 @@ func main() {
 			return
 		}
 	}
+
 }
