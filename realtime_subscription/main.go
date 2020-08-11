@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
 	"net/url"
@@ -33,6 +34,9 @@ func main() {
 
 	done := make(chan struct{})
 
+	response := make(chan []byte, 5)
+	defer close(response)
+
 	go func() {
 		defer close(done)
 		for {
@@ -41,12 +45,13 @@ func main() {
 				log.Println("read:", err)
 				return
 			}
+			response <- message
 			log.Printf("recv: %s", message)
 		}
 	}()
 
-	msg := make(chan []byte)
-	defer close(msg)
+	send := make(chan []byte, 5)
+	defer close(send)
 	ext := `{
 		"ext": {
 		"com.cumulocity.authn": {
@@ -54,34 +59,45 @@ func main() {
 		},
 		"systemOfUnits": "metric"
 	}`
-	msg <- []byte(ext)
 
-	for {
-		select {
-		case <-done:
-			return
-		case t := <-msg:
-			err := c.WriteMessage(websocket.TextMessage, t)
-			if err != nil {
-				log.Println("write:", err)
-				return
-			}
-		case <-interrupt:
-			log.Println("interrupt")
-
-			// Cleanly close the connection by sending a close message and then
-			// waiting (with timeout) for the server to close the connection.
-			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			if err != nil {
-				log.Println("write close:", err)
-				return
-			}
+	go func() {
+		for {
 			select {
 			case <-done:
-			case <-time.After(time.Second):
-			}
-			return
-		}
-	}
+				return
+			case t := <-send:
+				err := c.WriteMessage(websocket.TextMessage, t)
+				if err != nil {
+					log.Println("write:", err)
+					return
+				}
+			case <-interrupt:
+				log.Println("interrupt")
 
+				// Cleanly close the connection by sending a close message and then
+				// waiting (with timeout) for the server to close the connection.
+				err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+				if err != nil {
+					log.Println("write close:", err)
+					return
+				}
+				select {
+				case <-done:
+				case <-time.After(time.Second):
+				}
+				return
+			case <-time.After(time.Second):
+				return
+			}
+		}
+	}()
+	type handshake struct {
+		clientId string
+	}
+	send <- []byte(ext)
+	time.Sleep(3 * time.Second)
+	answer := <-response
+	respFromHandskake := handshake{}
+	json.Unmarshal(answer, respFromHandskake)
+	println(respFromHandskake.clientId)
 }
