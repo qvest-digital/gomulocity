@@ -105,16 +105,16 @@ Create DeviceCredentials:
 
 REST API:
 
-- [ ] inventory/managedObjects
+- [x] inventory/managedObjects
 - [x] measurement
 - [x] alarm
 - [x] event
-- [ ] deviceControl/operations
+- [x] deviceControl/operations
 - [x] bootstrapping
-- [ ] identity
+- [x] identity
 - [ ] Realtime notifications via websockets
-- [ ] audit
-- [ ] user
+- [x] audit
+- [x] user
 - [ ] tenant
 
 # Contributing #
