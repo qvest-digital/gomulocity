@@ -7,9 +7,10 @@ import (
 )
 
 type NewManagedObject struct {
-	Type         string     `json:"type,omitempty"`
-	Name         string     `json:"name,omitempty"`
-	CreationTime *time.Time `json:"creationTime,omitempty"`
+	Type         string      `json:"type,omitempty"`
+	Name         string      `json:"name,omitempty"`
+	CreationTime *time.Time  `json:"creationTime,omitempty"`
+	C8y_IsDevice interface{} `json:"c8y_IsDevice"`
 }
 
 type ManagedObjectUpdate struct {
