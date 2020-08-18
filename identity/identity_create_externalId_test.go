@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var createExternalId = &ExternalID{
+var createExternalId = &NewExternalID{
 	ExternalId: "someId",
 	Type:       "someType",
 }
@@ -17,7 +17,7 @@ func TestIdentity_Create_ExternalId_Success_SendsData(t *testing.T) {
 
 	// and: the api as system under test
 	api := buildIdentityAPI(ts.URL)
-	_, err := api.CreateExternalID(*createExternalId)
+	_, err := api.CreateExternalID(*createExternalId, "123")
 
 	if err != nil {
 		t.Fatalf("CreateExternalId() got an unexpected error: %s", err.Error())
@@ -45,7 +45,7 @@ func TestIdentity_Create_ExternalId_Success_ReceivesData(t *testing.T) {
 
 	// and: the api as system under test
 	api := buildIdentityAPI(ts.URL)
-	externalId, err := api.CreateExternalID(*createExternalId)
+	externalId, err := api.CreateExternalID(*createExternalId, "123")
 
 	if err != nil {
 		t.Fatalf("CreateExternalId() got an unexpected error: %s", err.Error())
@@ -63,7 +63,7 @@ func Test_Create_ExternalId_BadRequest(t *testing.T) {
 
 	// and: the api as system under test
 	api := buildIdentityAPI(ts.URL)
-	_, err := api.CreateExternalID(*createExternalId)
+	_, err := api.CreateExternalID(*createExternalId, "123")
 
 	if err == nil {
 		t.Errorf("CreateExternalID() expected error on 400 - bad request")

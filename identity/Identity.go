@@ -3,10 +3,10 @@ package identity
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/tarent/gomulocity/inventory"
 	"net/http"
 	"net/url"
 
-	"github.com/tarent/gomulocity/deviceinformation"
 	"github.com/tarent/gomulocity/generic"
 )
 
@@ -33,22 +33,27 @@ type ExternalID struct {
 	Self          string
 	ExternalId    string
 	Type          string
-	ManagedObject deviceinformation.ManagedObject
+	ManagedObject inventory.ManagedObject
+}
+
+type NewExternalID struct {
+	ExternalId string `json:"externalId"`
+	Type       string `json:"type"`
 }
 
 type IdentityAPI interface {
 	GetIdentity() (*Identity, *generic.Error)
 	GetExternalID(externalIDType, externalID string) (*ExternalID, *generic.Error)
-	CreateExternalID(ID ExternalID) (ExternalID, *generic.Error)
+	CreateExternalID(ID NewExternalID, deviceID string) (ExternalID, *generic.Error)
 	DeleteExternalID(externalIDType, externalID string) *generic.Error
 }
 
 type identityAPI struct {
 	basePath string
-	client   generic.Client
+	client   *generic.Client
 }
 
-func NewIdentityAPI(client generic.Client) identityAPI {
+func NewIdentityAPI(client *generic.Client) identityAPI {
 	return identityAPI{
 		client:   client,
 		basePath: "/identity",
@@ -80,13 +85,13 @@ func (i identityAPI) GetIdentity() (*Identity, *generic.Error) {
 	return &result, nil
 }
 
-func (i identityAPI) CreateExternalID(externalId ExternalID) (ExternalID, *generic.Error) {
+func (i identityAPI) CreateExternalID(externalId NewExternalID, deviceID string) (ExternalID, *generic.Error) {
 	bytes, err := json.Marshal(externalId)
 	if err != nil {
 		return ExternalID{}, generic.ClientError(fmt.Sprintf("Error while marshalling the externalId: %s", err.Error()), "CreateExternalID")
 	}
-
-	body, status, err := i.client.Post(i.basePath, bytes, generic.AcceptAndContentTypeHeader(EXTERNAL_ID_TYPE, EXTERNAL_ID_TYPE))
+	fmt.Println(string(bytes))
+	body, status, err := i.client.Post(fmt.Sprintf("%v/globalIds/%v/externalIds", i.basePath, deviceID), bytes, generic.AcceptAndContentTypeHeader(EXTERNAL_ID_TYPE, EXTERNAL_ID_TYPE))
 	if err != nil {
 		return ExternalID{}, generic.ClientError(fmt.Sprintf("Error while posting a new externalId: %s", err.Error()), "CreateExternalID")
 	}
