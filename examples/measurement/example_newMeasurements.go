@@ -1,9 +1,10 @@
 package measurement
 
 import (
-	"github.com/tarent/gomulocity/measurement"
 	"log"
 	"time"
+
+	"github.com/tarent/gomulocity/measurement"
 )
 
 var Example1NewMeasurements = measurement.NewMeasurement{
