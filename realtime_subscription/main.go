@@ -9,11 +9,13 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/tarent/gomulocity/devicecontrol"
+
 	"github.com/gorilla/websocket"
 )
 
 // buildingiot.test-ram.m2m.telekom.com/meta/handshake
-var addr = flag.String("addr", "echo.websocket.org", "http service address")
+var addr = flag.String("addr", "tarent-gmbh.cumulocity.com", "http service address")
 
 type AuthRequest struct {
 	Id                       string
@@ -80,7 +82,7 @@ type ConnectResponse struct {
 	Channel    string
 	ClientId   string
 	Successful bool
-	Data       []Notification
+	Data       []devicecontrol.Operation
 	Error      string
 }
 
@@ -121,13 +123,12 @@ func main() {
 	response := make(chan []byte, 5)
 	defer close(response)
 
-	u := url.URL{Scheme: "ws", Host: *addr}
+	u := url.URL{Scheme: "wss", Host: *addr, Path: "cep/realtime"}
 	log.Printf("connecting to %s", u.String())
 
-	c, resp, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	log.Print(resp.Location())
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		log.Fatalf("dial: %s with responsecode: %v", err, resp.StatusCode)
+		log.Fatalf("dial: %s with responsecode: ", err)
 	}
 	defer c.Close()
 
@@ -186,9 +187,59 @@ func main() {
 		log.Fatalf("failed to Marshal: %s", err)
 	}
 	send <- out
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 	answer := <-response
 	respFromHandshake := AuthResponse{}
 	json.Unmarshal(answer, respFromHandshake)
-	println(respFromHandskake.ClientId)
+	if !respFromHandshake.Successful {
+		log.Fatal("handshake failed")
+	}
+	log.Println("handshake successful")
+	clientID := respFromHandshake.ClientId
+
+	subscriptionrequest := SubscriptiobRequest{
+		Channel:      "/meta/subscribe",
+		ClientId:     clientID,
+		Subscription: "/operations/3329",
+	}
+	out, err = json.Marshal(subscriptionrequest)
+	if err != nil {
+		log.Fatalf("failed to Marshal: %s", err)
+	}
+	send <- out
+	time.Sleep(1 * time.Second)
+	answer = <-response
+	respFromSubscription := SubscriptionResponse{}
+	json.Unmarshal(answer, respFromSubscription)
+	if !respFromSubscription.Scuccessful {
+		log.Fatalf("error while subscribing: %s", respFromSubscription.Error)
+	}
+	connectrequest := ConnectRequest{
+		Channel:        "/meta/connect",
+		ClientId:       clientID,
+		ConnectionType: "websocket",
+	}
+	out, err = json.Marshal(connectrequest)
+	if err != nil {
+		log.Fatalf("failed to Marshal: %s", err)
+	}
+
+	timeout := time.After(2 * time.Minute)
+	tick := time.Tick(500 * time.Millisecond)
+	for {
+		select {
+		case <-timeout:
+			break
+		case <-tick:
+
+			send <- out
+			time.Sleep(1 * time.Second)
+			answer = <-response
+			respFromConnect := ConnectResponse{}
+			json.Unmarshal(answer, respFromConnect)
+			if !respFromSubscription.Scuccessful {
+				log.Fatalf("error while polling: %s", respFromSubscription.Error)
+			}
+		}
+	}
 }
