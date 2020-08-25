@@ -1,6 +1,7 @@
 package main
 
 import (
+	b64 "encoding/base64"
 	"encoding/json"
 	"flag"
 	"log"
@@ -18,36 +19,40 @@ import (
 var addr = flag.String("addr", "tarent-gmbh.cumulocity.com", "http service address")
 
 type AuthRequest struct {
-	Id                       string
-	Channel                  string
-	Ext                      Login
-	Version                  string
-	MinimumVersion           string `json:"omitempty"`
-	SupportedConnectionTypes []string
+	Channel                  string   `json:"channel"`
+	Ext                      Login    `json:"ext"`
+	Version                  string   `json:"version"`
+	MinimumVersion           string   `json:"minimumVersion"`
+	SupportedConnectionTypes []string `json:"supportedConnectionTypes"`
+	Advice                   Advice   `json:"advice"`
 }
 
 type Login struct {
-	Authentification Auth `json:"com.cumulocity.authn"`
-	SystemOfUnits    string
+	Authentification Auth   `json:"com.cumulocity.authn"`
+	SystemOfUnits    string `json:"systemOfunits"`
 }
 
 type Auth struct {
-	Token     string
-	Tfa       string `json:"omitempty"`
-	XsrfToken string `json:"omitempty"`
+	Token     string `json:"token"`
+	Tfa       string `json:"tfa,omitempty"`
+	XsrfToken string `json:"xsrfToken,omitempty"`
 }
 
 type AuthResponse struct {
-	Id                       string
-	Channel                  string
-	Version                  string   `json:"omitempty"`
-	MinimumVersion           string   `json:"omitempty"`
-	SupportedConnectionTypes []string `json:"omitempty"`
-	ClientId                 string   `json:"omitempty"`
-	Successful               bool
-	error                    string `json:"omitempty"`
+	//	Id                       string   `json:"id,omitempty"`
+	Ext                      Ext      `json:"ext"`
+	Channel                  string   `json:"channel"`
+	Version                  string   `json:"version"`
+	MinimumVersion           string   `json:"minimumVersion"`
+	SupportedConnectionTypes []string `json:"supportedConnectionTypes"`
+	ClientId                 string   `json:"clientId"`
+	Successful               bool     `json:"successful"`
+	Error                    string   `json:"error"`
 }
 
+type Ext struct {
+	Ack bool `json:"ack"`
+}
 type SubscriptiobRequest struct {
 	Id           string
 	Channel      string
@@ -65,16 +70,16 @@ type SubscriptionResponse struct {
 }
 
 type ConnectRequest struct {
-	Id             string `json:"omitempty"`
+	Id             string `json:"id"`
 	Channel        string
 	ClientId       string
 	ConnectionType string
-	Advice         Advice `json:"omitempty"`
+	Advice         Advice `json:"advice"`
 }
 
 type Advice struct {
-	Timeout  int `json:"omitempty"`
-	Interval int `json:"omitempty"`
+	Timeout  int `json:"timeout"`
+	Interval int `json:"interval"`
 }
 
 type ConnectResponse struct {
@@ -87,7 +92,7 @@ type ConnectResponse struct {
 }
 
 type DisconnectRequest struct {
-	Id       string `json:"omitempty"`
+	Id       string `json:"id"`
 	Channel  string
 	ClientId string
 }
@@ -100,13 +105,18 @@ type DisconnectResponse struct {
 	Error      string
 }
 
+var credentials = b64.StdEncoding.EncodeToString([]byte(""))
 var ext = AuthRequest{
 	Channel: "/meta/handshake",
 	Ext: Login{
 		Authentification: Auth{
-			Token: "login",
+			Token: credentials,
 		},
 		SystemOfUnits: "metric",
+	},
+	Advice: Advice{
+		Timeout:  60000,
+		Interval: 10000,
 	},
 	Version:                  "1.0",
 	MinimumVersion:           "1.0",
@@ -183,6 +193,7 @@ func main() {
 	}()
 
 	out, err := json.Marshal(ext)
+
 	if err != nil {
 		log.Fatalf("failed to Marshal: %s", err)
 	}
@@ -190,7 +201,12 @@ func main() {
 	time.Sleep(1 * time.Second)
 	answer := <-response
 	respFromHandshake := AuthResponse{}
-	json.Unmarshal(answer, respFromHandshake)
+	err = json.Unmarshal(answer, &respFromHandshake)
+	if err != nil {
+		log.Println(err)
+		log.Println(string(answer))
+		log.Println(respFromHandshake)
+	}
 	if !respFromHandshake.Successful {
 		log.Fatal("handshake failed")
 	}
@@ -242,4 +258,5 @@ func main() {
 			}
 		}
 	}
+
 }
