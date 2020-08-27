@@ -39,7 +39,7 @@ type Auth struct {
 }
 
 type AuthResponse struct {
-	//	Id                       string   `json:"id,omitempty"`
+	Id                       string   `json:"id,omitempty"`
 	Ext                      Ext      `json:"ext"`
 	Channel                  string   `json:"channel"`
 	Version                  string   `json:"version"`
@@ -54,26 +54,28 @@ type Ext struct {
 	Ack bool `json:"ack"`
 }
 type SubscriptiobRequest struct {
-	Id           string
-	Channel      string
-	ClientId     string
-	Subscription string
+	Id           string `json:"id,omitempty"`
+	Ext          Login  `json:"ext"`
+	Channel      string `json:"channel"`
+	ClientId     string `json:"cliendId"`
+	Subscription string `json:"subscription"`
 }
 
 type SubscriptionResponse struct {
-	Id           string
-	Channel      string
-	ClientId     string
-	Subscription string
-	Scuccessful  bool
-	Error        string
+	Id           string `json:"id"`
+	Channel      string `json:"channel"`
+	ClientId     string `json:"clientId"`
+	Subscription string `json:"subscription"`
+	Successful   bool   `json:"successful"`
+	Error        string `json:"error"`
 }
 
 type ConnectRequest struct {
 	Id             string `json:"id"`
-	Channel        string
-	ClientId       string
-	ConnectionType string
+	Ext            Login  `json:"ext"`
+	Channel        string `json:"channel"`
+	ClientId       string `json:"clientId"`
+	ConnectionType string `json:"connectionType"`
 	Advice         Advice `json:"advice"`
 }
 
@@ -83,37 +85,38 @@ type Advice struct {
 }
 
 type ConnectResponse struct {
-	Id         string
-	Channel    string
-	ClientId   string
-	Successful bool
-	Data       []devicecontrol.Operation
-	Error      string
+	Id         string                    `json:"id"`
+	Channel    string                    `json:"channel"`
+	ClientId   string                    `json:"clientId"`
+	Successful bool                      `json:"successful"`
+	Data       []devicecontrol.Operation `json:"data"`
+	Error      string                    `json:"error"`
 }
 
 type DisconnectRequest struct {
 	Id       string `json:"id"`
-	Channel  string
-	ClientId string
+	Channel  string `json:"channel"`
+	ClientId string `json:"clientId"`
 }
 
 type DisconnectResponse struct {
-	Id         string
-	Channel    string
-	Successful bool
-	ClientId   string
-	Error      string
+	Id         string `json:"id"`
+	Channel    string `json:"channel"`
+	Successful bool   `json:"successful"`
+	ClientId   string `json:"clientId"`
+	Error      string `json:"error"`
 }
 
 var credentials = b64.StdEncoding.EncodeToString([]byte(""))
+var login = Login{
+	Authentification: Auth{
+		Token: credentials,
+	},
+	SystemOfUnits: "metric",
+}
 var ext = AuthRequest{
 	Channel: "/meta/handshake",
-	Ext: Login{
-		Authentification: Auth{
-			Token: credentials,
-		},
-		SystemOfUnits: "metric",
-	},
+	Ext:     login,
 	Advice: Advice{
 		Timeout:  60000,
 		Interval: 10000,
@@ -130,7 +133,7 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	response := make(chan []byte, 5)
+	response := make(chan []byte, 10)
 	defer close(response)
 
 	u := url.URL{Scheme: "wss", Host: *addr, Path: "cep/realtime"}
@@ -167,6 +170,7 @@ func main() {
 				return
 			case t := <-send:
 				err := c.WriteMessage(websocket.TextMessage, t)
+				log.Println("sent: ", string(t))
 				if err != nil {
 					log.Println("write:", err)
 					return
@@ -200,38 +204,47 @@ func main() {
 	send <- out
 	time.Sleep(1 * time.Second)
 	answer := <-response
-	respFromHandshake := AuthResponse{}
+	respFromHandshake := make([]AuthResponse, 1)
 	err = json.Unmarshal(answer, &respFromHandshake)
 	if err != nil {
 		log.Println(err)
 		log.Println(string(answer))
 		log.Println(respFromHandshake)
 	}
-	if !respFromHandshake.Successful {
+	if !respFromHandshake[0].Successful {
 		log.Fatal("handshake failed")
 	}
 	log.Println("handshake successful")
-	clientID := respFromHandshake.ClientId
+	clientID := respFromHandshake[0].ClientId
+	log.Println(clientID)
 
-	subscriptionrequest := SubscriptiobRequest{
-		Channel:      "/meta/subscribe",
-		ClientId:     clientID,
-		Subscription: "/operations/3329",
-	}
+	subscriptionrequest := []SubscriptiobRequest{
+		SubscriptiobRequest{
+			Channel:      "/meta/subscribe",
+			Ext:          login,
+			ClientId:     clientID,
+			Subscription: "/operations/3329",
+		}}
 	out, err = json.Marshal(subscriptionrequest)
 	if err != nil {
 		log.Fatalf("failed to Marshal: %s", err)
 	}
 	send <- out
-	time.Sleep(1 * time.Second)
-	answer = <-response
-	respFromSubscription := SubscriptionResponse{}
+	log.Println("subrequest sent")
+	log.Println(string(out))
+	/* time.Sleep(5 * time.Second)
+	log.Println("waiting for response")
+	 answer = <-response
+	log.Println("response received")
+	respFromSubscription := make([]SubscriptionResponse, 1)
 	json.Unmarshal(answer, respFromSubscription)
-	if !respFromSubscription.Scuccessful {
-		log.Fatalf("error while subscribing: %s", respFromSubscription.Error)
+	if !respFromSubscription[0].Successful {
+		log.Fatalf("error while subscribing: %s", respFromSubscription[0].Error)
 	}
+	log.Println("subscription successful") */
 	connectrequest := ConnectRequest{
 		Channel:        "/meta/connect",
+		Ext:            login,
 		ClientId:       clientID,
 		ConnectionType: "websocket",
 	}
@@ -253,9 +266,7 @@ func main() {
 			answer = <-response
 			respFromConnect := ConnectResponse{}
 			json.Unmarshal(answer, respFromConnect)
-			if !respFromSubscription.Scuccessful {
-				log.Fatalf("error while polling: %s", respFromSubscription.Error)
-			}
+			log.Println(respFromConnect)
 		}
 	}
 
