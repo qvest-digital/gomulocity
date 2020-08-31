@@ -190,8 +190,6 @@ func main() {
 				case <-time.After(time.Second):
 				}
 				return
-			case <-time.After(time.Second):
-				return
 			}
 		}
 	}()
@@ -218,13 +216,12 @@ func main() {
 	clientID := respFromHandshake[0].ClientId
 	log.Println(clientID)
 
-	subscriptionrequest := []SubscriptiobRequest{
-		SubscriptiobRequest{
-			Channel:      "/meta/subscribe",
-			Ext:          login,
-			ClientId:     clientID,
-			Subscription: "/operations/3329",
-		}}
+	subscriptionrequest := SubscriptiobRequest{
+		Channel:      "/meta/subscribe",
+		Ext:          login,
+		ClientId:     clientID,
+		Subscription: "/operations/3329",
+	}
 	out, err = json.Marshal(subscriptionrequest)
 	if err != nil {
 		log.Fatalf("failed to Marshal: %s", err)
@@ -232,16 +229,26 @@ func main() {
 	send <- out
 	log.Println("subrequest sent")
 	log.Println(string(out))
-	/* time.Sleep(5 * time.Second)
+	timeout := time.After(10 * time.Second)
 	log.Println("waiting for response")
-	 answer = <-response
-	log.Println("response received")
 	respFromSubscription := make([]SubscriptionResponse, 1)
+
+	for {
+		select {
+		case <-timeout:
+			break
+		case answer := <-response:
+			log.Println("subresponse received")
+			log.Println(string(answer))
+			json.Unmarshal(answer, &respFromSubscription)
+			log.Println(respFromSubscription)
+		}
+	}
 	json.Unmarshal(answer, respFromSubscription)
 	if !respFromSubscription[0].Successful {
 		log.Fatalf("error while subscribing: %s", respFromSubscription[0].Error)
 	}
-	log.Println("subscription successful") */
+	log.Println("subscription successful")
 	connectrequest := ConnectRequest{
 		Channel:        "/meta/connect",
 		Ext:            login,
@@ -253,20 +260,19 @@ func main() {
 		log.Fatalf("failed to Marshal: %s", err)
 	}
 
-	timeout := time.After(2 * time.Minute)
-	tick := time.Tick(500 * time.Millisecond)
+	timeout = time.After(2 * time.Minute)
 	for {
 		select {
 		case <-timeout:
 			break
-		case <-tick:
+		case answer := <-response:
 
-			send <- out
-			time.Sleep(1 * time.Second)
-			answer = <-response
 			respFromConnect := ConnectResponse{}
 			json.Unmarshal(answer, respFromConnect)
 			log.Println(respFromConnect)
+		case <-time.After(time.Second):
+			send <- out
+			return
 		}
 	}
 
