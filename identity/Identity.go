@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/tarent/gomulocity/deviceinformation"
 	"github.com/tarent/gomulocity/generic"
+	"github.com/tarent/gomulocity/inventory"
 )
 
 const (
@@ -33,7 +33,7 @@ type ExternalID struct {
 	Self          string
 	ExternalId    string
 	Type          string
-	ManagedObject deviceinformation.ManagedObject
+	ManagedObject inventory.ManagedObject
 }
 
 type IdentityAPI interface {

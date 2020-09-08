@@ -1,4 +1,4 @@
-package realtimesubscription
+package realtimenotification
 
 import (
 	b64 "encoding/base64"
@@ -345,6 +345,9 @@ func (api *RealtimeNotificationAPI) DoUnsubscribe(subscription string) error {
 		return nil
 	}
 }
+func (api *RealtimeNotificationAPI) StartPolling() {
+	api.startPolling()
+}
 
 func (api *RealtimeNotificationAPI) startPolling() {
 	connectrequest := ConnectRequest{
@@ -359,6 +362,7 @@ func (api *RealtimeNotificationAPI) startPolling() {
 		for {
 			select {
 			case <-api.stopConnecting:
+				api.pollingRunning = false
 				return
 			case answer := <-api.response:
 				respFromConnect := ConnectResponse{}
@@ -373,5 +377,4 @@ func (api *RealtimeNotificationAPI) startPolling() {
 
 func (api *RealtimeNotificationAPI) stopPolling() {
 	api.stopConnecting <- struct{}{}
-	api.pollingRunning = false
 }
