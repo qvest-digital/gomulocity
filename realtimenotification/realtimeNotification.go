@@ -1,6 +1,7 @@
 package realtimenotification
 
 import (
+	"context"
 	b64 "encoding/base64"
 	"encoding/json"
 	"flag"
@@ -14,14 +15,18 @@ import (
 	websocket "github.com/gorilla/websocket"
 )
 
+// The API does not yet surveil the Connectionsstatus.
+
 type RealtimeNotificationAPI struct {
+	ctx                 context.Context
+	ctxcancel           context.CancelFunc
 	login               Login
 	connection          *websocket.Conn
 	send                chan []byte
 	response            chan []byte
 	interrupt           chan os.Signal
 	stopConnecting      chan struct{}
-	ResponseFromPolling chan []map[string]interface{}
+	ResponseFromPolling chan json.RawMessage
 	pollingRunning      bool
 	clientID            string
 }
@@ -93,12 +98,12 @@ type Advice struct {
 }
 
 type ConnectResponse struct {
-	Id         string                   `json:"id"`
-	Channel    string                   `json:"channel"`
-	ClientId   string                   `json:"clientId"`
-	Successful bool                     `json:"successful"`
-	Data       []map[string]interface{} `json:"data"`
-	Error      string                   `json:"error"`
+	Id         string          `json:"id"`
+	Channel    string          `json:"channel"`
+	ClientId   string          `json:"clientId"`
+	Successful bool            `json:"successful"`
+	Data       json.RawMessage `json:"data"`
+	Error      string          `json:"error"`
 }
 
 /*
@@ -117,20 +122,21 @@ type DisconnectResponse struct {
 } */
 
 // credentialspattern: "tenantid/userid:password"
-func StartRealtimeNotificationsAPI(credentials, adress string) (*RealtimeNotificationAPI, error) {
+func StartRealtimeNotificationsAPI(ctx context.Context, credentials, adress string) (*RealtimeNotificationAPI, error) {
+	ctxForAPI, cancel := context.WithCancel(ctx)
+
 	send := make(chan []byte, 5)
-	defer close(send)
 
 	response := make(chan []byte, 10)
-	defer close(response)
 
 	stopConnecting := make(chan struct{}, 10)
-	defer close(stopConnecting)
 
-	responseFromPolling := make(chan []map[string]interface{}, 10)
-	defer close(responseFromPolling)
+	responseFromPolling := make(chan json.RawMessage, 10)
 
-	connection, interrupt, err := initConnection(adress)
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
+
+	connection, err := initConnection(adress)
 
 	encodedCredentials := b64.StdEncoding.EncodeToString([]byte(credentials))
 
@@ -142,6 +148,8 @@ func StartRealtimeNotificationsAPI(credentials, adress string) (*RealtimeNotific
 	}
 
 	api := RealtimeNotificationAPI{
+		ctxcancel:           cancel,
+		ctx:                 ctxForAPI,
 		login:               login,
 		connection:          connection,
 		send:                send,
@@ -161,23 +169,18 @@ func StartRealtimeNotificationsAPI(credentials, adress string) (*RealtimeNotific
 
 }
 
-func initConnection(adress string) (*websocket.Conn, chan os.Signal, error) {
+func initConnection(adress string) (*websocket.Conn, error) {
 	flag.Parse()
 	log.SetFlags(0)
-
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
 
 	u := url.URL{Scheme: "wss", Host: adress, Path: "cep/realtime"}
 	log.Printf("connecting to %s", u.String())
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	defer c.Close()
-
-	return c, interrupt, nil
+	return c, nil
 }
 
 func (api *RealtimeNotificationAPI) startReadRoutine() {
@@ -212,15 +215,19 @@ func (api *RealtimeNotificationAPI) startSendRoutine() {
 }
 
 func (api *RealtimeNotificationAPI) stop() {
+	defer close(api.send)
+	defer close(api.response)
+	defer close(api.stopConnecting)
+	defer close(api.ResponseFromPolling)
 	// Cleanly close the connection by sending a close message and then
 	// waiting (with timeout) for the server to close the connection.
 
 	err := api.connection.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 	if err != nil {
 		log.Println("write close:", err)
-		os.Exit(1)
+		api.ctxcancel()
 	}
-	os.Exit(0)
+	api.ctxcancel()
 }
 
 func (api *RealtimeNotificationAPI) DoHandshake() error {
@@ -365,9 +372,11 @@ func (api *RealtimeNotificationAPI) startPolling() {
 				api.pollingRunning = false
 				return
 			case answer := <-api.response:
-				respFromConnect := ConnectResponse{}
+				respFromConnect := []ConnectResponse{}
 				json.Unmarshal(answer, &respFromConnect)
-				api.ResponseFromPolling <- respFromConnect.Data
+				if len(respFromConnect[0].Data) != 0 {
+					api.ResponseFromPolling <- respFromConnect[0].Data
+				}
 			case <-time.After(500 * time.Millisecond):
 				api.send <- out
 			}
