@@ -215,10 +215,9 @@ func (api *RealtimeNotificationAPI) startSendRoutine() {
 }
 
 func (api *RealtimeNotificationAPI) stop() {
-	defer close(api.send)
-	defer close(api.response)
-	defer close(api.stopConnecting)
-	defer close(api.ResponseFromPolling)
+	if api.pollingRunning == true {
+		api.stopPolling()
+	}
 	// Cleanly close the connection by sending a close message and then
 	// waiting (with timeout) for the server to close the connection.
 
@@ -386,4 +385,5 @@ func (api *RealtimeNotificationAPI) startPolling() {
 
 func (api *RealtimeNotificationAPI) stopPolling() {
 	api.stopConnecting <- struct{}{}
+	api.pollingRunning = false
 }
