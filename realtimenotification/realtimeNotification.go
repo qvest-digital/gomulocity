@@ -219,7 +219,7 @@ func (api *RealtimeNotificationAPI) startSendRoutine() {
 }
 
 func (api *RealtimeNotificationAPI) stop() {
-	if api.pollingRunning == true {
+	if api.pollingRunning {
 		api.stopPolling()
 	}
 	// Cleanly close the connection by sending a close message and then
