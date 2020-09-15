@@ -29,6 +29,7 @@ func Test_realtimeNotification_startPolling(t *testing.T) {
 	}
 
 	api := RealtimeNotificationAPI{
+		timeout:             5 * time.Second,
 		ctxcancel:           cancel,
 		ResponseFromPolling: ResponseFromPolling,
 		stopConnecting:      stopConnecting,
@@ -41,9 +42,10 @@ func Test_realtimeNotification_startPolling(t *testing.T) {
 	answer := `[{"data":{"realtimeAction":"CREATE","data":{"creationTime":"2020-09-10T08:04:54.747Z","deviceId":"deviceId","deviceName":"aDevice","self":"selflink","id":"1000","status":"PENDING","description":"Close relay","c8y_Relay":{"relayState":"CLOSED"}}},"channel":"/operations/2867","id":"24404966"}]`
 	api.startPolling()
 	api.response <- []byte(answer)
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 	api.stopPolling()
 	answerFromPolling := <-api.ResponseFromPolling
 	expected := `{"realtimeAction":"CREATE","data":{"creationTime":"2020-09-10T08:04:54.747Z","deviceId":"deviceId","deviceName":"aDevice","self":"selflink","id":"1000","status":"PENDING","description":"Close relay","c8y_Relay":{"relayState":"CLOSED"}}}`
 	assert.Equal(t, expected, string(answerFromPolling))
+	cancel()
 }

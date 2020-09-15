@@ -18,6 +18,7 @@ import (
 // The API does not yet surveil the Connectionsstatus.
 
 type RealtimeNotificationAPI struct {
+	timeout             time.Duration
 	ctx                 context.Context
 	ctxcancel           context.CancelFunc
 	login               Login
@@ -122,7 +123,7 @@ type DisconnectResponse struct {
 } */
 
 // credentialspattern: "tenantid/userid:password"
-func StartRealtimeNotificationsAPI(ctx context.Context, credentials, adress string) (*RealtimeNotificationAPI, error) {
+func StartRealtimeNotificationsAPI(ctx context.Context, credentials, adress string, timeout time.Duration) (*RealtimeNotificationAPI, error) {
 	ctxForAPI, cancel := context.WithCancel(ctx)
 
 	send := make(chan []byte, 5)
@@ -148,6 +149,7 @@ func StartRealtimeNotificationsAPI(ctx context.Context, credentials, adress stri
 	}
 
 	api := RealtimeNotificationAPI{
+		timeout:             timeout,
 		ctxcancel:           cancel,
 		ctx:                 ctxForAPI,
 		login:               login,
@@ -164,6 +166,8 @@ func StartRealtimeNotificationsAPI(ctx context.Context, credentials, adress stri
 	}
 	api.startSendRoutine()
 	api.startReadRoutine()
+	api.doHandshake()
+	api.startPolling()
 
 	return &api, nil
 
@@ -229,7 +233,7 @@ func (api *RealtimeNotificationAPI) stop() {
 	api.ctxcancel()
 }
 
-func (api *RealtimeNotificationAPI) DoHandshake() error {
+func (api *RealtimeNotificationAPI) doHandshake() error {
 	ext := AuthRequest{
 		Channel: "/meta/handshake",
 		Ext:     api.login,
@@ -248,10 +252,9 @@ func (api *RealtimeNotificationAPI) DoHandshake() error {
 		return err
 	}
 	api.send <- out
-	timeout := time.After(5 * time.Second)
 
 	select {
-	case <-timeout:
+	case <-time.After(api.timeout):
 		return fmt.Errorf("timeout waiting for response from handshake")
 	case answer := <-api.response:
 		respFromHandshake := make([]AuthResponse, 1)
@@ -284,11 +287,10 @@ func (api *RealtimeNotificationAPI) DoSubscribe(subscription string) error {
 		return err
 	}
 	api.send <- out
-	timeout := time.After(5 * time.Second)
 	respFromSubscription := make([]SubscriptionResponse, 1)
 
 	select {
-	case <-timeout:
+	case <-time.After(api.timeout):
 		if mustRestartPolling {
 			api.startPolling()
 		}
@@ -328,11 +330,10 @@ func (api *RealtimeNotificationAPI) DoUnsubscribe(subscription string) error {
 		return err
 	}
 	api.send <- out
-	timeout := time.After(5 * time.Second)
 	respFromSubscription := make([]SubscriptionResponse, 1)
 
 	select {
-	case <-timeout:
+	case <-time.After(api.timeout):
 		if mustRestartPolling {
 			api.startPolling()
 		}
