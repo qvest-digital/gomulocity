@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	MANAGED_OBJECT_TYPE = "application/vnd.com.nsn.cumulocity.managedObject+json"
+	MANAGED_OBJECT_TYPE            = "application/vnd.com.nsn.cumulocity.managedObject+json"
 	MANAGED_OBJECT_COLLECTION_TYPE = "application/vnd.com.nsn.cumulocity.managedObjectCollection+json"
 
 	INVENTORY_API_PATH = "/inventory/managedObjects"
@@ -107,7 +107,6 @@ func (inventoryApi *inventoryApi) Get(managedObjectId string) (*ManagedObject, *
 	return parseManagedObjectResponse(body)
 }
 
-
 /*
 Updates the managedObject with given Id.
 
@@ -190,7 +189,6 @@ func (inventoryApi *inventoryApi) FindByQuery(query string, pageSize int) (*Mana
 	return inventoryApi.getCommon(fmt.Sprintf("%s?%s", inventoryApi.basePath, queryParamsValues.Encode()))
 }
 
-
 func (inventoryApi *inventoryApi) NextPage(c *ManagedObjectCollection) (*ManagedObjectCollection, *generic.Error) {
 	return inventoryApi.getPage(c.Next)
 }
@@ -198,8 +196,6 @@ func (inventoryApi *inventoryApi) NextPage(c *ManagedObjectCollection) (*Managed
 func (inventoryApi *inventoryApi) PreviousPage(c *ManagedObjectCollection) (*ManagedObjectCollection, *generic.Error) {
 	return inventoryApi.getPage(c.Prev)
 }
-
-
 
 // -- internal
 
@@ -239,7 +235,7 @@ func (inventoryApi *inventoryApi) getCommon(path string) (*ManagedObjectCollecti
 
 	var result ManagedObjectCollection
 	if len(body) > 0 {
-		err = json.Unmarshal(body, &result)
+		err = generic.ObjectFromJson(body, &result)
 		if err != nil {
 			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "GetManagedObjectCollection")
 		}
@@ -253,7 +249,7 @@ func (inventoryApi *inventoryApi) getCommon(path string) (*ManagedObjectCollecti
 func parseManagedObjectResponse(body []byte) (*ManagedObject, *generic.Error) {
 	var result ManagedObject
 	if len(body) > 0 {
-		err := json.Unmarshal(body, &result)
+		err := generic.ObjectFromJson(body, &result)
 		if err != nil {
 			return nil, generic.ClientError(fmt.Sprintf("Error while parsing response JSON: %s", err.Error()), "ResponseParser")
 		}

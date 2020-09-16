@@ -2,6 +2,7 @@
 
 # Gomulocity REST SDK #
 
+![Go](https://github.com/tarent/gomulocity/workflows/Go/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tarent/gomulocity)](https://goreportcard.com/report/github.com/tarent/gomulocity)
 ![GitHub](https://img.shields.io/github/license/tarent/gomulocity)
 ![GitHub last commit](https://img.shields.io/github/last-commit/tarent/gomulocity)
@@ -104,16 +105,16 @@ Create DeviceCredentials:
 
 REST API:
 
-- [ ] inventory/managedObjects
+- [x] inventory/managedObjects
 - [x] measurement
 - [x] alarm
 - [x] event
-- [ ] deviceControl/operations
+- [x] deviceControl/operations
 - [x] bootstrapping
-- [ ] identity
+- [x] identity
 - [ ] Realtime notifications via websockets
-- [ ] audit
-- [ ] user
+- [x] audit
+- [x] user
 - [ ] tenant
 
 # Contributing #

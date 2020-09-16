@@ -68,6 +68,15 @@ func TestInventoryApi_CommonPropertiesOnCreate(t *testing.T) {
 	if reqURL != expectedC8YRequestURL {
 		t.Errorf("unexpected c8y request url. Expected %q. Given: %q", expectedC8YRequestURL, reqURL)
 	}
+
+	custom, ok := managedObject.AdditionalFields["custom"].(string)
+	if !ok {
+		t.Error("additional fields do not contain 'custom'")
+	}
+
+	if custom != "hello" {
+		t.Errorf("Received an unexpected value from additionalFields map. Expected: %v, actual: %v", "hello", custom)
+	}
 }
 
 func TestInventoryApi_CreateManagedObject(t *testing.T) {

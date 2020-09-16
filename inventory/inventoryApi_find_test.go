@@ -67,6 +67,16 @@ func TestInventoryApi_CommonPropertiesOnFind(t *testing.T) {
 	if reqURL != expectedC8YRequestURL {
 		t.Errorf("unexpected c8y request url. Expected %q. Given: %q", expectedC8YRequestURL, reqURL)
 	}
+
+	if len(managedObjects.ManagedObjects) > 0 {
+		custom, ok := managedObjects.ManagedObjects[0].AdditionalFields["custom"].(string)
+		if !ok {
+			t.Error("additional fields do not contain 'custom'")
+		}
+		if custom != "hello" {
+			t.Errorf("Received an unexpected value from additionalFields map. Expected: %v, actual: %v", "hello", custom)
+		}
+	}
 }
 
 func TestInventoryApi_FindManagedObject(t *testing.T) {
@@ -98,25 +108,25 @@ func TestInventoryApi_FindManagedObject(t *testing.T) {
 				Info:      "FindManagedObject",
 			},
 		}, {
-			name:        "empty response body",
+			name:            "empty response body",
 			inventoryFilter: *inventoryFilter,
 			pageSize:        5,
-			c8yRespCode: http.StatusOK,
-			c8yRespBody: "",
+			c8yRespCode:     http.StatusOK,
+			c8yRespBody:     "",
 			expectedErr: &generic.Error{
 				ErrorType: "ClientError",
 				Message:   "Response body was empty",
 				Info:      "GetManagedObjectCollection",
 			},
 		}, {
-			name:        "unparsable response body",
+			name:            "unparsable response body",
 			inventoryFilter: *inventoryFilter,
 			pageSize:        5,
-			c8yRespCode: http.StatusOK,
-			c8yRespBody: "{",
+			c8yRespCode:     http.StatusOK,
+			c8yRespBody:     "{",
 			expectedErr: &generic.Error{
 				ErrorType: "ClientError",
-				Message:   "Error while parsing response JSON: unexpected end of JSON input",
+				Message:   "Error while parsing response JSON: Error while unmarshaling json: unexpected end of JSON input",
 				Info:      "GetManagedObjectCollection",
 			},
 		}, {
@@ -165,5 +175,40 @@ func TestInventoryApi_FindManagedObject(t *testing.T) {
 				t.Fatalf("received an unexpected error: %s\nExpected: %s", err, tt.expectedErr)
 			}
 		})
+	}
+}
+
+func TestInventoryApi_Find_AdditionalFields(t *testing.T) {
+	testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusOK)
+		_, err := res.Write([]byte(givenManagedObjectCollectionResponseWithAdditionalFields))
+		if err != nil {
+			t.Fatalf("failed to write resp body: %s", err)
+		}
+	}))
+	defer testServer.Close()
+
+	inventoryApi := buildInventoryApi(testServer)
+	managedObjectCollection, err := inventoryApi.Find(inventoryFilter, 1)
+	if err != nil {
+		t.Errorf("received an unexpected error: %s", err)
+	}
+
+	if len(managedObjectCollection.ManagedObjects) > 0 {
+		value1, ok := managedObjectCollection.ManagedObjects[0].AdditionalFields["custom1"].(string)
+		if !ok {
+			t.Error("Error while casting 'custom1' to string")
+		}
+		if value1 != "hello" {
+			t.Errorf("Received an unexpected value from additional fields: expected: %v, actual: %v", "hello", value1)
+		}
+
+		value2, ok := managedObjectCollection.ManagedObjects[0].AdditionalFields["custom2"].(map[string]interface{})
+		if !ok {
+			t.Error("Error while getting custom2 from additional fields")
+		}
+		if value2["foo"] != "bar" {
+			t.Errorf("Received an unexpected value from additinal fields: expected: %v, actual: %v", "bar", value2["foo"])
+		}
 	}
 }
