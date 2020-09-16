@@ -4,9 +4,7 @@ import (
 	"context"
 	b64 "encoding/base64"
 	"encoding/json"
-	"flag"
 	"fmt"
-	"log"
 	"net/url"
 	"os"
 	"os/signal"
@@ -19,6 +17,7 @@ import (
 
 type RealtimeNotificationAPI struct {
 	timeout             time.Duration
+	bufferLength        int
 	ctx                 context.Context
 	ctxcancel           context.CancelFunc
 	login               Login
@@ -107,26 +106,25 @@ type ConnectResponse struct {
 	Error      string          `json:"error"`
 }
 
-/*
-type DisconnectRequest struct {
-	Id       string `json:"id"`
-	Channel  string `json:"channel"`
-	ClientId string `json:"clientId"`
-}
+// StartRealtimeNotificationsAPI assembles all components, opens the connection via websocket. credential have to follow the pattern:"tenantid/userid:password"
+func StartRealtimeNotificationsAPI(ctx context.Context, credentials, adress string, opts ...APIOption) (*RealtimeNotificationAPI, error) {
+	const (
+		defaultTimeout      = 5 * time.Second
+		defaultBufferLength = 5
+	)
 
-type DisconnectResponse struct {
-	Id         string `json:"id"`
-	Channel    string `json:"channel"`
-	Successful bool   `json:"successful"`
-	ClientId   string `json:"clientId"`
-	Error      string `json:"error"`
-} */
+	api := RealtimeNotificationAPI{
+		timeout:      defaultTimeout,
+		bufferLength: defaultBufferLength,
+	}
 
-// credentialspattern: "tenantid/userid:password"
-func StartRealtimeNotificationsAPI(ctx context.Context, credentials, adress string, timeout time.Duration) (*RealtimeNotificationAPI, error) {
+	for _, opt := range opts {
+		opt(api)
+	}
+
 	ctxForAPI, cancel := context.WithCancel(ctx)
 
-	send := make(chan []byte, 5)
+	send := make(chan []byte)
 
 	response := make(chan []byte, 10)
 
@@ -137,7 +135,7 @@ func StartRealtimeNotificationsAPI(ctx context.Context, credentials, adress stri
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	connection, err := initConnection(adress)
+	connection, err := initConnection(ctxForAPI, adress)
 
 	encodedCredentials := b64.StdEncoding.EncodeToString([]byte(credentials))
 
@@ -148,18 +146,15 @@ func StartRealtimeNotificationsAPI(ctx context.Context, credentials, adress stri
 		SystemOfUnits: "metric",
 	}
 
-	api := RealtimeNotificationAPI{
-		timeout:             timeout,
-		ctxcancel:           cancel,
-		ctx:                 ctxForAPI,
-		login:               login,
-		connection:          connection,
-		send:                send,
-		response:            response,
-		stopConnecting:      stopConnecting,
-		ResponseFromPolling: responseFromPolling,
-		interrupt:           interrupt,
-	}
+	api.ctxcancel = cancel
+	api.ctx = ctxForAPI
+	api.login = login
+	api.connection = connection
+	api.send = send
+	api.response = response
+	api.stopConnecting = stopConnecting
+	api.ResponseFromPolling = responseFromPolling
+	api.interrupt = interrupt
 
 	if err != nil {
 		return nil, err
@@ -170,106 +165,9 @@ func StartRealtimeNotificationsAPI(ctx context.Context, credentials, adress stri
 	api.startPolling()
 
 	return &api, nil
-
 }
 
-func initConnection(adress string) (*websocket.Conn, error) {
-	flag.Parse()
-	log.SetFlags(0)
-
-	u := url.URL{Scheme: "wss", Host: adress, Path: "cep/realtime"}
-	log.Printf("connecting to %s", u.String())
-
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	return c, nil
-}
-
-func (api *RealtimeNotificationAPI) startReadRoutine() {
-	go func() {
-		for {
-			_, message, err := api.connection.ReadMessage()
-			if err != nil {
-				log.Println("error while reading from websocket:", err)
-			}
-			api.response <- message
-		}
-	}()
-}
-
-func (api *RealtimeNotificationAPI) startSendRoutine() {
-	go func() {
-		for {
-			select {
-			case t := <-api.send:
-				err := api.connection.WriteMessage(websocket.TextMessage, t)
-				if err != nil {
-					log.Println("write:", err)
-					return
-				}
-			case <-api.interrupt:
-				log.Println("interrupt")
-				api.stop()
-				return
-			}
-		}
-	}()
-}
-
-func (api *RealtimeNotificationAPI) stop() {
-	if api.pollingRunning {
-		api.stopPolling()
-	}
-	// Cleanly close the connection by sending a close message and then
-	// waiting (with timeout) for the server to close the connection.
-
-	err := api.connection.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-	if err != nil {
-		log.Println("write close:", err)
-		api.ctxcancel()
-	}
-	api.ctxcancel()
-}
-
-func (api *RealtimeNotificationAPI) doHandshake() error {
-	ext := AuthRequest{
-		Channel: "/meta/handshake",
-		Ext:     api.login,
-		Advice: Advice{
-			Timeout:  60000,
-			Interval: 10000,
-		},
-		Version:                  "1.0",
-		MinimumVersion:           "1.0",
-		SupportedConnectionTypes: []string{"websocket"},
-	}
-
-	out, err := json.Marshal(ext)
-
-	if err != nil {
-		return err
-	}
-	api.send <- out
-
-	select {
-	case <-time.After(api.timeout):
-		return fmt.Errorf("timeout waiting for response from handshake")
-	case answer := <-api.response:
-		respFromHandshake := make([]AuthResponse, 1)
-		err = json.Unmarshal(answer, &respFromHandshake)
-		if err != nil {
-			return err
-		}
-		if !respFromHandshake[0].Successful {
-			return fmt.Errorf("handshake failed with response: %v", respFromHandshake)
-		}
-		api.clientID = respFromHandshake[0].ClientId
-		return nil
-	}
-}
-
+//DoSubscribe subscribes to a given Channel ex "operations/1234"
 func (api *RealtimeNotificationAPI) DoSubscribe(subscription string) error {
 	subscriptionrequest := SubscriptionRequest{
 		Channel:      "/meta/subscribe",
@@ -310,6 +208,7 @@ func (api *RealtimeNotificationAPI) DoSubscribe(subscription string) error {
 	}
 }
 
+// DoUnsubscribe does unsubscribe from a given channel ex "operation/1234"
 func (api *RealtimeNotificationAPI) DoUnsubscribe(subscription string) error {
 	subscriptionrequest := SubscriptionRequest{
 		Channel:      "/meta/unsubscribe",
@@ -352,9 +251,6 @@ func (api *RealtimeNotificationAPI) DoUnsubscribe(subscription string) error {
 		return nil
 	}
 }
-func (api *RealtimeNotificationAPI) StartPolling() {
-	api.startPolling()
-}
 
 func (api *RealtimeNotificationAPI) startPolling() {
 	connectrequest := ConnectRequest{
@@ -384,7 +280,111 @@ func (api *RealtimeNotificationAPI) startPolling() {
 	}()
 }
 
+func initConnection(ctx context.Context, adress string) (*websocket.Conn, error) {
+
+	u := url.URL{Scheme: "wss", Host: adress, Path: "cep/realtime"}
+
+	c, _, err := websocket.DefaultDialer.DialContext(ctx, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+func (api *RealtimeNotificationAPI) startReadRoutine() {
+	go func() {
+		for {
+			_, message, err := api.connection.ReadMessage()
+			if err != nil {
+			}
+			api.response <- message
+		}
+	}()
+}
+
+func (api *RealtimeNotificationAPI) startSendRoutine() {
+	go func() {
+		for {
+			select {
+			case t := <-api.send:
+				err := api.connection.WriteMessage(websocket.TextMessage, t)
+				if err != nil {
+					return
+				}
+			case <-api.interrupt:
+				api.stop()
+				return
+			}
+		}
+	}()
+}
+
+func (api *RealtimeNotificationAPI) stop() {
+	if api.pollingRunning {
+		api.stopPolling()
+	}
+	// Cleanly close the connection by sending a close message and then
+	// waiting (with timeout) for the server to close the connection.
+
+	err := api.connection.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+	if err != nil {
+		api.ctxcancel()
+	}
+	api.ctxcancel()
+}
+
+func (api *RealtimeNotificationAPI) doHandshake() error {
+	ext := AuthRequest{
+		Channel: "/meta/handshake",
+		Ext:     api.login,
+		Advice: Advice{
+			Timeout:  60000,
+			Interval: 10000,
+		},
+		Version:                  "1.0",
+		MinimumVersion:           "1.0",
+		SupportedConnectionTypes: []string{"websocket"},
+	}
+
+	out, err := json.Marshal(ext)
+
+	if err != nil {
+		return err
+	}
+	api.send <- out
+
+	select {
+	case <-time.After(api.timeout):
+		return fmt.Errorf("timeout waiting for response from handshake")
+	case answer := <-api.response:
+		respFromHandshake := make([]AuthResponse, 1)
+		err = json.Unmarshal(answer, &respFromHandshake)
+		if err != nil {
+			return err
+		}
+		if !respFromHandshake[0].Successful {
+			return fmt.Errorf("handshake failed with response: %v", respFromHandshake)
+		}
+		api.clientID = respFromHandshake[0].ClientId
+		return nil
+	}
+}
+
 func (api *RealtimeNotificationAPI) stopPolling() {
 	api.stopConnecting <- struct{}{}
 	api.pollingRunning = false
+}
+
+type APIOption func(RealtimeNotificationAPI)
+
+func withTimeout(timeout time.Duration) APIOption {
+	return func(api RealtimeNotificationAPI) {
+		api.timeout = timeout
+	}
+}
+
+func withBufferLength(bufferlength int) APIOption {
+	return func(api RealtimeNotificationAPI) {
+		api.bufferLength = bufferlength
+	}
 }
