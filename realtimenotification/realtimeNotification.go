@@ -110,7 +110,7 @@ type ConnectResponse struct {
 func StartRealtimeNotificationsAPI(ctx context.Context, credentials, adress string, opts ...APIOption) (*RealtimeNotificationAPI, error) {
 	const (
 		defaultTimeout      = 5 * time.Second
-		defaultBufferLength = 5
+		defaultBufferLength = 10
 	)
 
 	api := RealtimeNotificationAPI{
@@ -126,11 +126,11 @@ func StartRealtimeNotificationsAPI(ctx context.Context, credentials, adress stri
 
 	send := make(chan []byte)
 
-	response := make(chan []byte, 10)
+	response := make(chan []byte, api.bufferLength)
 
-	stopConnecting := make(chan struct{}, 10)
+	stopConnecting := make(chan struct{}, api.bufferLength)
 
-	responseFromPolling := make(chan json.RawMessage, 10)
+	responseFromPolling := make(chan json.RawMessage, api.bufferLength)
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
