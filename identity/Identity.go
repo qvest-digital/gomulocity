@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	"github.com/tarent/gomulocity/generic"
+	"github.com/tarent/gomulocity/inventory"
 )
 
 const (
