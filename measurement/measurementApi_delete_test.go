@@ -37,7 +37,7 @@ func TestMeasurementApi_Delete_Success(t *testing.T) {
 
 func TestMeasurementApi_Delete_NotFound(t *testing.T) {
 	// given: A test server
-	ts := buildHttpServer(http.StatusNotFound, "")
+	ts := buildHttpServer(http.StatusNotFound, "<>")
 	defer ts.Close()
 
 	// and: the api as system under test

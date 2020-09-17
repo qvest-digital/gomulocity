@@ -8,7 +8,6 @@ import (
 	"net/url"
 
 	"github.com/tarent/gomulocity/generic"
-	"github.com/tarent/gomulocity/inventory"
 )
 
 const (
@@ -91,7 +90,6 @@ func (i identityAPI) CreateExternalID(externalId NewExternalID, deviceID string)
 	if err != nil {
 		return ExternalID{}, generic.ClientError(fmt.Sprintf("Error while marshalling the externalId: %s", err.Error()), "CreateExternalID")
 	}
-	fmt.Println(string(bytes))
 	body, status, err := i.client.Post(fmt.Sprintf("%v/globalIds/%v/externalIds", i.basePath, deviceID), bytes, generic.AcceptAndContentTypeHeader(EXTERNAL_ID_TYPE, EXTERNAL_ID_TYPE))
 	if err != nil {
 		return ExternalID{}, generic.ClientError(fmt.Sprintf("Error while posting a new externalId: %s", err.Error()), "CreateExternalID")

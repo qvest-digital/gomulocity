@@ -9,6 +9,8 @@ import (
 
 func main() {
 	// Initializes a new gomulocity client
+	examples.InitConfig()
+
 	client := gomulocity.NewGomulocity(examples.AgentConfig.BaseURL, examples.AgentConfig.Username, examples.AgentConfig.Password,
 		examples.AgentConfig.BootstrapUsername, examples.AgentConfig.BootstrapPassword)
 

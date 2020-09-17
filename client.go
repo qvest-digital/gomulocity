@@ -7,7 +7,6 @@ import (
 	"github.com/tarent/gomulocity/generic"
 	"github.com/tarent/gomulocity/identity"
 	"github.com/tarent/gomulocity/inventory"
-	"github.com/tarent/gomulocity/manage/user"
 	"github.com/tarent/gomulocity/manage/user_api"
 	"github.com/tarent/gomulocity/measurement"
 	"net/http"

@@ -27,8 +27,10 @@ func TestIdentity_Create_ExternalId_Success_SendsData(t *testing.T) {
 		t.Fatalf("CreateExternalId() Captured ID is nil.")
 	}
 
-	if !reflect.DeepEqual(createExternalId, createExternalIdCapture) {
-		t.Errorf("CreateExternalId() ID = %v, want %v", createExternalId, *createExternalIdCapture)
+
+	if createExternalId.ExternalId != createExternalIdCapture.ExternalId ||
+		createExternalId.Type != createExternalIdCapture.Type {
+		t.Errorf("CreateExternalId() ID = %v, want %v as ID and %v as type", createExternalId, createExternalIdCapture.ExternalId, createExternalIdCapture.Type)
 	}
 
 	header := requestCapture.Header.Get("Accept")

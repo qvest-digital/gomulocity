@@ -2,11 +2,11 @@ package identity
 
 import (
 	"encoding/json"
+	"github.com/tarent/gomulocity/inventory"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/tarent/gomulocity/deviceinformation"
 	"github.com/tarent/gomulocity/generic"
 )
 
@@ -31,12 +31,12 @@ var responseExternalId = ExternalID{
 	Self:          "someSelfAssignedURL",
 	ExternalId:    "someId",
 	Type:          "someType",
-	ManagedObject: deviceinformation.ManagedObject{},
+	ManagedObject: inventory.ManagedObject{},
 }
 
 func buildIdentityAPI(url string) IdentityAPI {
 	httpClient := http.DefaultClient
-	client := generic.Client{
+	client := &generic.Client{
 		HTTPClient: httpClient,
 		BaseURL:    url,
 		Username:   "foo",

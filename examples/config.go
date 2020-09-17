@@ -15,7 +15,7 @@ type Config struct {
 
 var AgentConfig *Config
 
-func init() {
+func InitConfig() {
 	baseURL := os.Getenv("C8Y_AGENT_BASE_URL")
 	if len(baseURL) == 0 {
 		log.Fatal("Environment variable 'C8Y_AGENT_BASE_URL' must be set")
