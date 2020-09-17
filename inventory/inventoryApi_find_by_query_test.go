@@ -116,7 +116,7 @@ func TestInventoryApi_FindManagedObjectByQuery(t *testing.T) {
 			c8yRespBody: "{",
 			expectedErr: &generic.Error{
 				ErrorType: "ClientError",
-				Message:   "Error while parsing response JSON: Error while unmarshaling json: unexpected end of JSON input",
+				Message:   "Error while parsing response JSON: Error while unmarshalling json: unexpected end of JSON input",
 				Info:      "GetManagedObjectCollection",
 			},
 		}, {

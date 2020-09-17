@@ -47,7 +47,7 @@ var managedObjectUpdate = &ManagedObjectUpdate{
 }
 var expectedUpdateRequestBody = `{"type":"updated test-type","name":"updated Test Device"}`
 
-var expectedRequestBody = `{"type":"test-type","name":"Test Device","creationTime":"2020-07-03T10:16:35.87+02:00"}`
+var expectedRequestBody = `{"type":"test-type","name":"Test Device","creationTime":"2020-07-03T10:16:35.87+02:00", "c8y_IsDevice":null}`
 var managedObjectId = "9963944"
 var referenceId = "4711"
 var query = "$filter=name eq '*Test*' $orderby=id desc"

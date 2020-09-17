@@ -46,7 +46,7 @@ func TestMeasurementApi_DeleteMany_Success(t *testing.T) {
 
 func TestMeasurementApi_DeleteMany_BadRequest(t *testing.T) {
 	// given: A test server
-	ts := buildHttpServer(http.StatusBadRequest, "")
+	ts := buildHttpServer(http.StatusBadRequest, "<>")
 	defer ts.Close()
 
 	// and: the api as system under test
