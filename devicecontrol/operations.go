@@ -106,15 +106,15 @@ func (o *OperationQuery) QueryParams(params *url.Values) {
 
 	if len(o.AgentIDAndStatus) == 0 && len(o.DeviceIDAndStatus) == 0 {
 		if len(o.DeviceID) > 0 {
-			params.Add("operationsByDeviceId", o.DeviceID)
+			params.Add("deviceId", o.DeviceID)
 		}
 
 		if len(o.Status) > 0 {
-			params.Add("operationsByStatus", o.Status)
+			params.Add("status", o.Status)
 		}
 
 		if len(o.AgentID) > 0 {
-			params.Add("operationsByAgentId", o.AgentID)
+			params.Add("agentId", o.AgentID)
 		}
 	}
 }
