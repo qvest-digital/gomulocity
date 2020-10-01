@@ -9,7 +9,7 @@ import (
 	"net/url"
 )
 
-func NewDeviceControlApi(client generic.Client) DeviceControl {
+func NewDeviceControlApi(client *generic.Client) DeviceControl {
 	return &deviceControl{client, "/devicecontrol/operations", "/devicecontrol/bulkoperations"}
 }
 
@@ -31,7 +31,7 @@ type DeviceControl interface {
 }
 
 type deviceControl struct {
-	client                 generic.Client
+	client                 *generic.Client
 	basePathOperations     string
 	basePathBulkOperations string
 }
