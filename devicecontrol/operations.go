@@ -30,6 +30,7 @@ type Operation struct {
 	Status        string    `json:"status"`
 	FailureReason string    `json:"failureReason"`
 	Description   string    `json:"description"`
+	RelayArray    []string  `json:"c8y_RelayArray"`
 	Delivery      struct {
 		Time   time.Time `json:"time"`
 		Status string    `json:"status"`

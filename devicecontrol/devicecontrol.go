@@ -278,8 +278,10 @@ func (d *deviceControl) FindOperationCollection(query OperationQuery, pageSize i
 	if len(*queryParams) == 0 {
 		return nil, generic.ClientError("No filter set", "FindOperationCollection")
 	}
-
-	err := generic.PageSizeParameter(pageSize, queryParams)
+	var err error
+	if pageSize != 0 {
+		err = generic.PageSizeParameter(pageSize, queryParams)
+	}
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch measurements: %s", err.Error()), "FindMeasurements")
 	}
