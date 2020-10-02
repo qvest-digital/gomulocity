@@ -15,8 +15,10 @@
 - [Gomulocity REST SDK](#gomulocity-rest-sdk)
 - [Usage](#usage)
     - [Device Bootstrap](#device-bootstrap)
+        - [Configuration](#configuration)
         - [Device Registration API](#device-registration-api)
         - [Device Credentials API](#device-credentials-api)
+- [Realtime Notification](#realtime-notification)
 - [Feature coverage](#feature-coverage)
 - [Contributing](#contributing)
 - [License](#license)
@@ -100,7 +102,28 @@ Create DeviceCredentials:
 ```go
     deviceCredentials, err := gomulocity.DeviceCredentials.Create("123")
 ```
+# Realtime Notification #
+To use the Realtime-notification-API you need to import it with:
 
+```go
+import "github.com/tarent/gomulocity/realtimenotification"
+```
+
+To build and start the API use StartRealtimeNotificationsAPI() which requires a context.Context to work with as well as credentials and an adress to connect to.
+credentials have to be provided in the following pattern: "tenantID/username:password"
+```go
+api, err := StartRealtimeNotificationsAPI(ctx,"mycumulocitytenant/myusername:mypassword", "myadress.cumulocity.com")
+```
+
+After this we can Subscribe and Unsubscribe to channels by using:
+```go
+api.DoSubscribe("operations/{deviceID})
+api.DoUnsubscribe("measurement/{deviceID}")
+```
+
+To stop the API we can cancel the context, or use an OS.Interrupt Signal.
+
+All answers from c8y are available in the ```api.ResponseFromPolling``` channel as raw json. You need to unmarshall it to the corresponding objects depending on your subscriptions.
 # Feature coverage #
 
 REST API:
@@ -112,7 +135,7 @@ REST API:
 - [x] deviceControl/operations
 - [x] bootstrapping
 - [x] identity
-- [ ] Realtime notifications via websockets
+- [x] Realtime notifications via websockets
 - [x] audit
 - [x] user
 - [ ] tenant
