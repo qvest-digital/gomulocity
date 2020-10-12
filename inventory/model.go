@@ -14,8 +14,9 @@ type NewManagedObject struct {
 }
 
 type ManagedObjectUpdate struct {
-	Type string `json:"type,omitempty"`
-	Name string `json:"name,omitempty"`
+	Type       string   `json:"type,omitempty"`
+	Name       string   `json:"name,omitempty"`
+	RelayArray []string `json:"c8y_RelayArray"`
 }
 
 type (
@@ -49,6 +50,8 @@ type (
 
 		C8YSupportedOperations *[]string              `json:"c8y_SupportedOperations,omitempty"`
 		AdditionalFields       map[string]interface{} `jsonc:"flat"`
+
+		RelayArray []string `json:"c8y_RelayArray"`
 	}
 
 	AssetParents struct {
