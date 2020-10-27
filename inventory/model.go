@@ -14,8 +14,9 @@ type NewManagedObject struct {
 }
 
 type ManagedObjectUpdate struct {
-	Type string `json:"type,omitempty"`
-	Name string `json:"name,omitempty"`
+	Type             string                 `json:"type,omitempty"`
+	Name             string                 `json:"name,omitempty"`
+	AdditionalFields map[string]interface{} `jsonc:"flat"`
 }
 
 type (

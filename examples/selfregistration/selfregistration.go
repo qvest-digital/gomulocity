@@ -13,23 +13,43 @@ import (
 	"time"
 )
 
-func SelfRegistration(client gomulocity.Gomulocity) (string, *generic.Error) {
+func SelfRegistration(client gomulocity.Gomulocity, timer time.Duration) (*device_bootstrap.DeviceCredentials, *generic.Error) {
 	// checks if credentials are already exist
 	deviceCredentials, err := readDeviceCredentials()
 	if err != nil {
-		return "", generic.ClientError(fmt.Sprintf("could not read device credentials from file: %s", err), "Agent-SelfRegistration")
+		return nil, generic.ClientError(fmt.Sprintf("could not read device credentials from file: %s", err), "Agent-SelfRegistration")
 	}
 	if validateDeviceCredentials(deviceCredentials) {
-		return "", generic.ClientError(fmt.Sprintf("Device credentials are already saved: %#v", deviceCredentials), "Agent-SelfRegistration")
+		return nil, generic.ClientError(fmt.Sprintf("Device credentials are already saved: %#v", deviceCredentials), "Agent-SelfRegistration")
 	}
+
+	var deviceRegistration *device_bootstrap.DeviceRegistration
+	var genericErr *generic.Error
 
 	// reads registration credentials from file
-	deviceRegistration, err := readDeviceRegistrationCredentials()
+	deviceRegistration, err = readDeviceRegistrationCredentials()
 	if err != nil {
-		return "", generic.ClientError(err.Error(), "Agent-SelfRegistration")
+		return nil, generic.ClientError(err.Error(), "Agent-SelfRegistration")
 	}
 
-	var genericErr *generic.Error
+	if !validateDeviceRegistrationData(deviceRegistration) {
+		// generates a new random id
+		deviceID := generateRandomDeviceID(100000, 999999999)
+
+		for {
+			// Requests device credentials from cumulocity by using the provided deviceID
+			// If genericErr is nil and deviceCredentials is not nil, the device registration is completed
+			deviceCredentials, genericErr = client.DeviceCredentials.Create(deviceID)
+			if genericErr != nil {
+				log.Println(genericErr.Error())
+			}
+			if deviceCredentials != nil {
+				break
+			}
+			time.Sleep(timer * time.Second)
+		}
+	}
+
 	defer func() {
 		// Writes device registration data to file at the end of the function
 		if genericErr == nil {
@@ -39,46 +59,11 @@ func SelfRegistration(client gomulocity.Gomulocity) (string, *generic.Error) {
 		}
 	}()
 
-	if !validateDeviceRegistrationData(deviceRegistration) {
-		// generates a new random id
-		deviceID := generateRandomDeviceID(100000, 999999999)
-
-		// Creates a new device registration by given id
-		deviceRegistration, genericErr = client.DeviceRegistration.Create(deviceID)
-		if genericErr != nil {
-			return "", genericErr
-		}
-	}
-
-	// checks if a registration is available for the given deviceRegistrationID
-	if _, err := registrationIsAvailable(client, deviceRegistration.Id); err != nil {
-		return "", generic.ClientError(fmt.Sprintf("no registration found for device: %v, %s", deviceRegistration.Id, err), "Agent-SelfRegistration")
-	}
-
-	// Informs cumulocity that the device exists - status: Waiting for acceptance
-	_, genericErr = client.DeviceCredentials.Create(deviceRegistration.Id)
-	if !isExpectedErr(genericErr) {
-		return "", genericErr
-	}
-
-	// Updates status to ACCEPTED
-	deviceRegistration, genericErr = client.DeviceRegistration.Update(deviceRegistration.Id, device_bootstrap.ACCEPTED)
-	if genericErr != nil {
-		return "", genericErr
-	}
-
-	// Requests device credentials from cumulocity by using the provided deviceRegistrationID
-	// If genericErr is nil, the device registration is completed
-	deviceCredentials, genericErr = client.DeviceCredentials.Create(deviceRegistration.Id)
-	if genericErr != nil {
-		return "", genericErr
-	}
-
-	// Writes device credentials to file (device_credentials.json)
+	// Writes device credentials to file (device_creds.json)
 	if err = storeDeviceCredentials(deviceCredentials); err != nil {
-		return "", generic.ClientError(err.Error(), "Agent-SelfRegistration")
+		return nil, generic.ClientError(err.Error(), "Agent-SelfRegistration")
 	}
-	return deviceCredentials.ID, nil
+	return deviceCredentials, nil
 }
 
 func registrationIsAvailable(client gomulocity.Gomulocity, ID string) (*device_bootstrap.DeviceRegistration, *generic.Error) {

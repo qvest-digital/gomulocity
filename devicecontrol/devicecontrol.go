@@ -9,7 +9,7 @@ import (
 	"net/url"
 )
 
-func NewDeviceControlApi(client generic.Client) DeviceControl {
+func NewDeviceControlApi(client *generic.Client) DeviceControl {
 	return &deviceControl{client, "/devicecontrol/operations", "/devicecontrol/bulkoperations"}
 }
 
@@ -31,7 +31,7 @@ type DeviceControl interface {
 }
 
 type deviceControl struct {
-	client                 generic.Client
+	client                 *generic.Client
 	basePathOperations     string
 	basePathBulkOperations string
 }
@@ -278,8 +278,10 @@ func (d *deviceControl) FindOperationCollection(query OperationQuery, pageSize i
 	if len(*queryParams) == 0 {
 		return nil, generic.ClientError("No filter set", "FindOperationCollection")
 	}
-
-	err := generic.PageSizeParameter(pageSize, queryParams)
+	var err error
+	if pageSize != 0 {
+		err = generic.PageSizeParameter(pageSize, queryParams)
+	}
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while building pageSize parameter to fetch measurements: %s", err.Error()), "FindMeasurements")
 	}

@@ -54,7 +54,7 @@ func (client *Client) Get(path string, header map[string][]string) ([]byte, int,
 
 func (client *Client) request(method, path string, body []byte, header map[string][]string) ([]byte, int, error) {
 	url := client.BaseURL + path
-	log.Printf("HTTP %s on URL %s", method, url)
+	//log.Printf("HTTP %s on URL %s", method, url)
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	if err != nil {
@@ -74,7 +74,7 @@ func (client *Client) request(method, path string, body []byte, header map[strin
 		log.Printf("An error occured: %s", err.Error())
 		return nil, 0, err
 	}
-	log.Printf("Got status %d", resp.StatusCode)
+	//log.Printf("Got status %d", resp.StatusCode)
 	defer resp.Body.Close()
 
 	result, err := ioutil.ReadAll(resp.Body)
@@ -83,6 +83,6 @@ func (client *Client) request(method, path string, body []byte, header map[strin
 		return nil, 0, err
 	}
 
-	log.Printf("Debug: Response body was: %s", result)
+	//log.Printf("Debug: Response body was: %s", result)
 	return result, resp.StatusCode, nil
 }

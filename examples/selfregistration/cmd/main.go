@@ -5,6 +5,7 @@ import (
 	"github.com/tarent/gomulocity/examples"
 	"github.com/tarent/gomulocity/examples/selfregistration"
 	"log"
+	"time"
 )
 
 func main() {
@@ -14,12 +15,13 @@ func main() {
 	client := gomulocity.NewGomulocity(examples.AgentConfig.BaseURL, examples.AgentConfig.Username, examples.AgentConfig.Password,
 		examples.AgentConfig.BootstrapUsername, examples.AgentConfig.BootstrapPassword)
 
-	deviceCredentialsID, genericErr := selfregistration.SelfRegistration(client)
+	timer := 15 * time.Second
+	deviceCredentials, genericErr := selfregistration.SelfRegistration(client, timer)
 	if genericErr != nil {
 		log.Fatal(genericErr)
 	}
 
-	managedObject, genericErr := selfregistration.CreateManagedObjectForCredentials(client, deviceCredentialsID, "GolangDevice")
+	managedObject, genericErr := selfregistration.CreateManagedObjectForCredentials(client, deviceCredentials.ID, "GolangDevice")
 	if genericErr != nil {
 		log.Fatal(genericErr)
 	}
@@ -28,7 +30,7 @@ func main() {
 		log.Println(err.Error())
 	}
 
-	externalID, genericErr := selfregistration.CreateExternalID(client, deviceCredentialsID, "c8y_Serial", managedObject.Id)
+	externalID, genericErr := selfregistration.CreateExternalID(client, deviceCredentials.ID, "c8y_Serial", managedObject.Id)
 	if genericErr != nil {
 		log.Fatal(genericErr)
 	}
