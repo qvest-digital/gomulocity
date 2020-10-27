@@ -30,7 +30,7 @@ func buildOperationApi(url string) DeviceControl {
 		Username:   "foo",
 		Password:   "bar",
 	}
-	return NewDeviceControlApi(client)
+	return NewDeviceControlApi(&client)
 }
 
 func buildHttpServer(status int, body string) *httptest.Server {
