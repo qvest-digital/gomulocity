@@ -40,7 +40,7 @@ func TestDeviceControl_DeleteOperationCollection_Happy_single_query_values(t *te
 
 func TestDeviceControl_DeleteOperationCollection_Happy_combined_query_values(t *testing.T) {
 	var capturedUrl string
-	url := "/devicecontrol/operations?operationsByDeviceIdAndStatus=deviceIDAndStatus"
+	url := "/devicecontrol/operations?deviceId=deviceId&status=status"
 	// given: A test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedUrl = r.URL.String()
@@ -53,7 +53,8 @@ func TestDeviceControl_DeleteOperationCollection_Happy_combined_query_values(t *
 	api := buildOperationApi(ts.URL)
 
 	query := OperationQuery{
-		DeviceIDAndStatus: "deviceIDAndStatus",
+		DeviceID: "deviceId",
+		Status:   "status",
 	}
 
 	err := api.DeleteOperationCollection(query)
