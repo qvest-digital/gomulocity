@@ -96,25 +96,15 @@ type OperationQuery struct {
 }
 
 func (o *OperationQuery) QueryParams(params *url.Values) {
-	if len(o.DeviceIDAndStatus) > 0 {
-		params.Add("operationsByDeviceIdAndStatus", o.DeviceIDAndStatus)
+	if len(o.DeviceID) > 0 {
+		params.Add("deviceId", o.DeviceID)
 	}
 
-	if len(o.AgentIDAndStatus) > 0 {
-		params.Add("operationsByAgentIdAndStatus", o.AgentIDAndStatus)
+	if len(o.Status) > 0 {
+		params.Add("status", o.Status)
 	}
 
-	if len(o.AgentIDAndStatus) == 0 && len(o.DeviceIDAndStatus) == 0 {
-		if len(o.DeviceID) > 0 {
-			params.Add("deviceId", o.DeviceID)
-		}
-
-		if len(o.Status) > 0 {
-			params.Add("status", o.Status)
-		}
-
-		if len(o.AgentID) > 0 {
-			params.Add("agentId", o.AgentID)
-		}
+	if len(o.AgentID) > 0 {
+		params.Add("agentId", o.AgentID)
 	}
 }
