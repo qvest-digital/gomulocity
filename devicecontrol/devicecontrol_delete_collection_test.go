@@ -9,7 +9,7 @@ import (
 
 func TestDeviceControl_DeleteOperationCollection_Happy_single_query_values(t *testing.T) {
 	var capturedUrl string
-	url := "/devicecontrol/operations?operationsByAgentId=agentID&operationsByDeviceId=deviceID&operationsByStatus=status"
+	url := "/devicecontrol/operations?agentId=agentID&deviceId=deviceID&status=status"
 	// given: A test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedUrl = r.URL.String()
@@ -28,7 +28,8 @@ func TestDeviceControl_DeleteOperationCollection_Happy_single_query_values(t *te
 	}
 
 	err := api.DeleteOperationCollection(query)
-	if err != nil {t.Errorf("invalid url. Expected: %v, actual: %v", url, capturedUrl)
+	if err != nil {
+		t.Errorf("invalid url. Expected: %v, actual: %v", url, capturedUrl)
 		t.Errorf("received an unexpected error: %s", err)
 	}
 
@@ -39,7 +40,7 @@ func TestDeviceControl_DeleteOperationCollection_Happy_single_query_values(t *te
 
 func TestDeviceControl_DeleteOperationCollection_Happy_combined_query_values(t *testing.T) {
 	var capturedUrl string
-	url := "/devicecontrol/operations?operationsByDeviceIdAndStatus=deviceIDAndStatus"
+	url := "/devicecontrol/operations?deviceId=deviceId&status=status"
 	// given: A test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedUrl = r.URL.String()
@@ -52,7 +53,8 @@ func TestDeviceControl_DeleteOperationCollection_Happy_combined_query_values(t *
 	api := buildOperationApi(ts.URL)
 
 	query := OperationQuery{
-		DeviceIDAndStatus: "deviceIDAndStatus",
+		DeviceID: "deviceId",
+		Status:   "status",
 	}
 
 	err := api.DeleteOperationCollection(query)
@@ -67,7 +69,7 @@ func TestDeviceControl_DeleteOperationCollection_Happy_combined_query_values(t *
 
 func TestDeviceControl_DeleteOperationCollection_Unhappy_invalid_status(t *testing.T) {
 	var capturedUrl string
-	url := "/devicecontrol/operations?operationsByAgentId=agentID&operationsByDeviceId=deviceID&operationsByStatus=status"
+	url := "/devicecontrol/operations?agentId=agentID&deviceId=deviceID&status=status"
 
 	// given: A test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

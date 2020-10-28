@@ -9,7 +9,7 @@ import (
 
 func TestDeviceControl_GetOperationCollection(t *testing.T) {
 	var capturedUrl string
-	url := "/devicecontrol/operations?operationsByAgentId=agentID&operationsByDeviceId=deviceID&operationsByStatus=status&pageSize=10"
+	url := "/devicecontrol/operations?agentId=agentID&deviceId=deviceID&pageSize=10&status=status"
 	// given: A test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedUrl = r.URL.String()
@@ -50,7 +50,7 @@ func TestDeviceControl_GetOperationCollection(t *testing.T) {
 
 func TestDeviceControl_GetOperationCollection_invalid_status(t *testing.T) {
 	var capturedUrl string
-	url := "/devicecontrol/operations?operationsByAgentId=agentID&operationsByDeviceId=deviceID&operationsByStatus=status&pageSize=10"
+	url := "/devicecontrol/operations?agentId=agentID&deviceId=deviceID&pageSize=10&status=status"
 	// given: A test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedUrl = r.URL.String()

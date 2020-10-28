@@ -116,8 +116,15 @@ func (inventoryApi *inventoryApi) Update(managedObjectId string, managedObject *
 	if len(managedObjectId) == 0 {
 		return nil, generic.ClientError("Updating managedObject without an id is not allowed", "UpdateManagedObject")
 	}
+	var bytes []byte
+	var err error
+	if managedObject == nil {
+		bytes, err = json.Marshal(managedObject)
 
-	bytes, err := generic.JsonFromObject(managedObject)
+	} else {
+		bytes, err = generic.JsonFromObject(managedObject)
+
+	}
 	if err != nil {
 		return nil, generic.ClientError(fmt.Sprintf("Error while marshalling the update managedObject: %s", err.Error()), "UpdateManagedObject")
 	}
