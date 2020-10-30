@@ -88,11 +88,9 @@ type BulkOperation struct {
 }
 
 type OperationQuery struct {
-	DeviceID          string
-	Status            string
-	AgentID           string
-	AgentIDAndStatus  string
-	DeviceIDAndStatus string
+	DeviceID string
+	Status   string
+	AgentID  string
 }
 
 func (o *OperationQuery) QueryParams(params *url.Values) {
