@@ -22,7 +22,7 @@ var responseOperation = &Operation{
 	AdditionalFields: map[string]interface{}{},
 }
 
-func buildOperationApi(url string) DeviceControl {
+func buildOperationApi(url string) DeviceControlApi {
 	httpClient := http.DefaultClient
 	client := generic.Client{
 		HTTPClient: httpClient,

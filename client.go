@@ -17,7 +17,7 @@ import (
 type Gomulocity struct {
 	DeviceCredentials  device_bootstrap.DeviceCredentialsApi
 	DeviceRegistration device_bootstrap.DeviceRegistrationApi
-	DeviceControl      devicecontrol.DeviceControl
+	DeviceControl      devicecontrol.DeviceControlApi
 	AlarmApi           alarm.AlarmApi
 	MeasurementApi     measurement.MeasurementApi
 	Inventory          inventory.InventoryApi

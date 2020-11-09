@@ -9,11 +9,11 @@ import (
 	"net/url"
 )
 
-func NewDeviceControlApi(client *generic.Client) DeviceControl {
+func NewDeviceControlApi(client *generic.Client) DeviceControlApi {
 	return &deviceControl{client, "/devicecontrol/operations", "/devicecontrol/bulkoperations"}
 }
 
-type DeviceControl interface {
+type DeviceControlApi interface {
 	GetOperation(operationID string) (*Operation, *generic.Error)
 	CreateOperation(operation *NewOperation) (*Operation, *generic.Error)
 	UpdateOperation(operationID string, operation *UpdateOperation) (string, *generic.Error)
